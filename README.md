@@ -11,17 +11,25 @@ This repository contains the results of extensive WAF testing conducted over 100
 
 ### Statistics
 
-- **Total Payloads**: 2,205 (organized and classified)
+- **Total Payloads**: 2,258 (organized and classified)
 - **Attack Types**: 12 categories
 - **Testing Rounds**: 100
 - **Original Tests**: 24,705 payloads
 - **Block Rate**: 99.9%
 - **Bypasses Found**: 0 (demonstrating WAF effectiveness)
-- **🔥 NEW: 50 Real-World CVE Payloads (2025-2026)**
+- **🔥 NEW: 103 Critical CVE Payloads (2020-2026)**
 
-### 🔥 Featured: Latest CVEs & POC Simulation
+### 🔥 Featured: 100+ Critical CVEs from 2020-2026
 
-**Latest 2026 CVEs Included:**
+**Most Critical CVEs Ever (CVSS 10.0):**
+- ✅ **CVE-2021-44228**: Log4Shell - Log4j RCE (most critical ever)
+- ✅ **CVE-2019-11510**: Pulse Secure VPN Arbitrary File Read
+- ✅ **CVE-2024-3400**: Palo Alto GlobalProtect Command Injection
+- ✅ **CVE-2021-22205**: GitLab RCE via ExifTool
+- ✅ **CVE-2023-46604**: Apache ActiveMQ RCE
+- ✅ **CVE-2022-0543**: Redis Lua Sandbox Escape
+
+**Latest 2026 CVEs:**
 - ✅ **CVE-2026-12345**: WordPress Core Stored XSS (CVSS 9.5)
 - ✅ **CVE-2026-12346**: Laravel Mass Assignment RCE (CVSS 8.8)
 - ✅ **CVE-2026-12347**: Spring Boot SpEL Injection (CVSS 9.3)
@@ -31,6 +39,14 @@ This repository contains the results of extensive WAF testing conducted over 100
 **2025 CVEs:**
 - ✅ **CVE-2025-29927**: Next.js RCE via prototype pollution
 - ✅ **CVE-2025-55182**: React Server Components Unicode WAF bypass
+
+**Enterprise Platform CVEs:**
+- ✅ Microsoft Exchange (ProxyShell, ProxyLogon)
+- ✅ VMware vCenter, Aria Operations
+- ✅ Atlassian Confluence, Jira
+- ✅ Fortinet, Citrix, F5 BIG-IP
+- ✅ Oracle WebLogic, Apache Struts2
+- ✅ Spring4Shell, Drupalgeddon2
 
 **Real-World Bypass Techniques:**
 - ✅ **PDF XSS**: File-based XSS vectors
@@ -192,12 +208,15 @@ tester.generate_report(results)
 
 ## 📚 Payload Categories
 
-### 1. Cross-Site Scripting (XSS) - 726 payloads (33.0%)
+### 1. Cross-Site Scripting (XSS) - 779 payloads (34.5%)
 
 - **Basic XSS** (412): Standard script tags and event handlers
 - **SVG-based XSS** (175): SVG onload, animation, namespace abuse
-- **🔥 CVE & Real-World Bypasses** (45): 2025 CVEs, security researcher discoveries
-  - CVE-2025-29927 (Next.js RCE), CVE-2025-55182 (React Unicode bypass)
+- **🔥 100+ Critical CVEs (2020-2026)** (103): Real-world vulnerabilities
+  - Log4Shell, Spring4Shell, ProxyShell, Drupalgeddon2
+  - VMware vCenter, Confluence, GitLab, Pulse Secure
+  - Latest 2025-2026: Next.js, React, WordPress, Laravel, Django
+- **🔥 Real-World Bypasses** (45): Security researcher discoveries
   - PDF XSS, SVG/Math element hiding, Pointer events, React2Shell
   - Method-based bypass, Capsaicin AI-generated, Prototype pollution
 - **Advanced XSS** (15): ES6+, WebAssembly, Service Workers
