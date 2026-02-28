@@ -10,6 +10,14 @@
 # Install requests only if you want to use the interactive CLI tester
 
 # For development/testing:
-# pytest>=7.4.0
-# black>=23.0.0
-# flake8>=6.0.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+bandit>=1.7.5
+safety>=2.3.0
+flask>=3.0.0
+flask-cors>=4.0.0

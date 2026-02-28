@@ -31,9 +31,14 @@ python3 waf_tester.py --cve CVE-2021-44228
 
 # Or use Docker
 docker-compose up
+
+# Or start API server for JSON testing
+pip install flask flask-cors
+python3 api_example.py
+# API available at http://localhost:5000
 ```
 
-**That's it!** No dependencies needed. Pure Python standard library.
+**That's it!** No dependencies needed. Pure Python standard library (API requires Flask).
 
 ---
 
