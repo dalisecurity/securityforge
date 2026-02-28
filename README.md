@@ -223,7 +223,62 @@ python3 easy_payload_creator.py
 
 **[Read the Easy Payload Guide →](EASY_PAYLOAD_GUIDE.md)**
 
+### 🔍 CVE Checker (NEW!)
+
+**Check if a CVE is supported and auto-add if missing:**
+
+```bash
+# Interactive mode
+python3 scripts/cve_checker.py
+
+# Check specific CVE
+python3 scripts/cve_checker.py CVE-2026-12345
+
+# Auto-add missing CVE (creates PR)
+python3 scripts/cve_checker.py CVE-2026-12345 --add
+```
+
+**Features:**
+- 🔍 **Check CVE coverage** - Instantly check if a CVE is in the database
+- 📥 **Auto-fetch from NVD** - Automatically retrieves CVE information
+- 🤖 **Auto-create PR** - Generates pull request for missing CVEs
+- 📝 **Template generation** - Creates proper payload structure
+- ✅ **Zero manual work** - Fully automated CVE addition
+
+**Example in Easy Payload Creator:**
+```
+💬 What do you want to test?
+> Do we support CVE-2026-12345?
+
+🔍 Checking if CVE-2026-12345 is supported...
+💡 Tip: Use the CVE Checker tool for detailed information:
+   python3 scripts/cve_checker.py CVE-2026-12345
+```
+
 **[View all 2,200 payloads →](payloads/)**
+
+---
+
+## 🎯 OWASP Top 10:2025 Coverage
+
+**We provide comprehensive coverage for OWASP Top 10:2025!**
+
+| OWASP Category | Coverage | Payloads |
+|----------------|----------|----------|
+| **A01: Broken Access Control** | ✅ Full | 359 |
+| **A02: Security Misconfiguration** | ✅ Full | 220 CVEs |
+| **A03: Software Supply Chain** | ✅ Full | 220 CVEs |
+| **A04: Cryptographic Failures** | ⚠️ Partial | Limited |
+| **A05: Injection** | ✅ **Full** | **1,842** ⭐ |
+| **A06: Insecure Design** | ✅ Full | 138 |
+| **A07: Authentication Failures** | ✅ Full | 456 |
+| **A08: Integrity Failures** | ✅ Full | 220 CVEs |
+| **A09: Logging Failures** | ⚠️ Partial | 87 |
+| **A10: Exception Handling** | ✅ Full | 359 |
+
+**Overall: 9/10 categories fully supported (90%)**
+
+**[View detailed OWASP coverage →](OWASP_TOP10_COVERAGE.md)**
 
 ---
 

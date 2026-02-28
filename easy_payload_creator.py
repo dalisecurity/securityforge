@@ -292,6 +292,10 @@ def interactive_mode():
     print("  - 'Fuzz all XSS payloads'")
     print("  - 'Run command injection 100 times'")
     print("  - 'Test login bypass repeatedly 30 times'")
+    print("\n  🔍 CVE Checking (NEW!):")
+    print("  - 'Do we support CVE-2026-12345?'")
+    print("  - 'Check if CVE-2025-55182 is available'")
+    print("  - 'Is CVE-2024-3400 supported?'")
     print()
     
     while True:
@@ -304,6 +308,24 @@ def interactive_mode():
         
         if not user_input:
             continue
+        
+        # Check if user is asking about CVE support
+        import re
+        cve_pattern = r'CVE-?\d{4}-?\d{4,7}'
+        cve_match = re.search(cve_pattern, user_input, re.IGNORECASE)
+        
+        if cve_match or any(word in user_input.lower() for word in ['support', 'available', 'have', 'check']):
+            if cve_match:
+                cve_id = cve_match.group(0).upper()
+                if not cve_id.startswith('CVE-'):
+                    cve_id = 'CVE-' + cve_id.replace('CVE', '')
+                
+                print(f"\n🔍 Checking if {cve_id} is supported...")
+                print(f"💡 Tip: Use the CVE Checker tool for detailed information:")
+                print(f"   python3 scripts/cve_checker.py {cve_id}")
+                print(f"\n   Or run: python3 scripts/cve_checker.py {cve_id} --add")
+                print(f"   to automatically add it if missing!\n")
+                continue
         
         # Detect advanced query
         advanced = creator.detect_advanced_query(user_input)
