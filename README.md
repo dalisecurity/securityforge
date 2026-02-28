@@ -449,6 +449,117 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [XSS Payloads](https://github.com/pgaijin66/XSS-Payloads)
 - [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
 
+## ❓ Frequently Asked Questions
+
+### Is this legal to use?
+
+**Yes**, but only for **authorized testing**. This tool is designed for:
+- ✅ Systems you own
+- ✅ Systems you have written permission to test
+- ✅ Bug bounty programs (within scope)
+- ✅ Educational and research purposes
+
+**Never** use on systems without authorization. See [SECURITY.md](SECURITY.md) for legal guidelines.
+
+### How do I test my own WAF?
+
+See our comprehensive [POC_SIMULATION_GUIDE.md](POC_SIMULATION_GUIDE.md) for:
+- Step-by-step CVE testing tutorials
+- Interactive CLI usage examples
+- Automated testing scripts
+- Results interpretation
+
+Quick start:
+```bash
+python3 waf_tester.py -i
+```
+
+### Can I contribute payloads?
+
+**Absolutely!** We welcome contributions. Please:
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Use our [payload submission template](.github/ISSUE_TEMPLATE/payload_submission.md)
+3. Ensure payloads are safe and properly documented
+4. Follow responsible disclosure for CVEs
+
+### Is this better than SecLists or PayloadsAllTheThings?
+
+**Different focus**. We're **WAF-specific** with unique advantages:
+- ✅ 103 CVE coverage (2020-2026) - they have none
+- ✅ POC simulation guide - they don't have this
+- ✅ Interactive CLI tool - they're just files
+- ✅ AI-compatible (Claude Code, ChatGPT)
+- ✅ 100% WAF-focused vs ~10-15% in general collections
+
+See our [comparison table](#-comprehensive-comparison) for details.
+
+### How often is this updated?
+
+**Actively maintained**. We add:
+- New CVEs as they're disclosed
+- Community-contributed payloads
+- Latest bypass techniques
+- Documentation improvements
+
+Check [CHANGELOG.md](CHANGELOG.md) for update history.
+
+### What WAFs does this work against?
+
+Tested primarily against **Cloudflare WAF**, but payloads are applicable to:
+- AWS WAF
+- Azure WAF
+- Akamai
+- Imperva
+- F5 Advanced WAF
+- ModSecurity
+- Custom WAF implementations
+
+Results may vary by WAF vendor and configuration.
+
+### Can I use this for bug bounty hunting?
+
+**Yes!** Many payloads come from successful bug bounty discoveries. However:
+- ✅ Always follow program rules and scope
+- ✅ Get proper authorization
+- ✅ Practice responsible disclosure
+- ❌ Don't test out-of-scope targets
+
+### How do I report a security issue?
+
+**Do NOT open a public issue**. Instead:
+- Email: security@dalisecurity.com
+- See [SECURITY.md](SECURITY.md) for our disclosure policy
+- We follow a 90-day responsible disclosure timeline
+
+### Can I use this commercially?
+
+**Yes**, under MIT License. You can:
+- ✅ Use in commercial products
+- ✅ Integrate into security tools
+- ✅ Use for client assessments
+- ✅ Modify and distribute
+
+Just maintain the license and attribution.
+
+### Why are all payloads blocked?
+
+That's the point! This demonstrates:
+- ✅ WAF effectiveness (99.9% block rate)
+- ✅ Comprehensive testing methodology
+- ✅ What attackers try vs what works
+
+Use this to:
+- Validate your WAF is working
+- Understand attack patterns
+- Improve defensive measures
+
+### How do I get support?
+
+- **Questions**: [GitHub Discussions](https://github.com/dalisecurity/waf-payload-arsenal/discussions)
+- **Bugs**: [GitHub Issues](https://github.com/dalisecurity/waf-payload-arsenal/issues)
+- **Security**: security@dalisecurity.com
+- **Commercial**: contact@dalisecurity.com
+
 ## 📈 Roadmap
 
 - [ ] Add more payload categories
