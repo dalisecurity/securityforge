@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  waf-tester:
+    build: .
+    image: waf-tester:latest
+    container_name: waf-tester
+    volumes:
+      - ./reports:/app/reports
+    stdin_open: true
+    tty: true
+    network_mode: host
+    
+    # Override for command-line mode
+    # command: ["-t", "https://example.com", "-p", "payloads/xss/basic.json"]
