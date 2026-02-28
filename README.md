@@ -1,5 +1,8 @@
 # WAF Payload Arsenal
 
+> ⚠️ **FOR EDUCATIONAL AND AUTHORIZED SECURITY RESEARCH ONLY**  
+> This tool is designed for security professionals, researchers, and students to learn about WAF bypass techniques and test systems they own or have explicit permission to test. Unauthorized testing is illegal.
+
 **Your arsenal for WAF security testing** - A comprehensive collection of **2,155 Web Application Firewall (WAF) bypass payloads** tested against Cloudflare WAF, organized by attack type and technique. Extracted and classified from 24,700+ original test cases.
 
 ## 📊 Project Overview
