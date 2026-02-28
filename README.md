@@ -57,9 +57,10 @@ This repository contains the results of extensive WAF testing conducted over 100
 
 ### Statistics
 
-- **Total Payloads**: 2,200 (cleaned and properly categorized)
+- **Total Payloads**: 2,525 (cleaned and properly categorized)
 - **CVE Payloads**: 220 (2020-2026 critical vulnerabilities)
 - **Modern Bypass Techniques**: 138 (2025-2026 research)
+- **AI Security Payloads**: 200 (Prompt injection, jailbreaks) 🆕
 - **Payload Generator**: Interactive tool for custom payloads
 - **Attack Types**: 12 categories
 - **Testing Rounds**: 100
@@ -283,6 +284,56 @@ python3 scripts/cve_checker.py CVE-2026-12345 --add
 - ✅ A09: Logging Failures - 50 additional payloads (log injection, tampering, evasion)
 
 **[View detailed OWASP coverage →](OWASP_TOP10_COVERAGE.md)**
+
+---
+
+## 🤖 AI Security - Prompt Injection (NEW!)
+
+**200 AI/LLM security payloads for testing prompt injection vulnerabilities!**
+
+AI security is a **major trend in 2025-2026**. Test your AI applications against:
+
+| Category | Payloads | Description |
+|----------|----------|-------------|
+| **Jailbreaks** | 100 | Bypass AI safety guidelines (DAN, Evil Mode, etc.) |
+| **Prompt Leaking** | 50 | Extract system prompts and training data |
+| **Indirect Injection** | 50 | Inject via emails, documents, web pages |
+
+**Techniques Covered:**
+- ✅ DAN (Do Anything Now) jailbreaks
+- ✅ System prompt extraction
+- ✅ Training data leaking
+- ✅ Instruction bypass
+- ✅ Role-play attacks
+- ✅ Encoding bypass (Base64, Unicode)
+- ✅ Indirect injection (email, document, web)
+- ✅ Context manipulation
+- ✅ Function/plugin enumeration
+
+**Target Coverage:**
+- ChatGPT / GPT-4
+- Claude (Anthropic)
+- Custom AI assistants
+- AI plugins and tools
+- Email AI assistants
+- Document processing AIs
+
+**Example Usage:**
+```bash
+python3 easy_payload_creator.py
+> "Test DAN jailbreak on ChatGPT"
+> "Extract system prompt from AI"
+> "Inject malicious instructions via email"
+```
+
+**OWASP LLM Top 10 Coverage:**
+- ✅ LLM01: Prompt Injection
+- ✅ LLM02: Insecure Output Handling
+- ✅ LLM03: Training Data Poisoning
+- ✅ LLM06: Sensitive Information Disclosure
+- ✅ LLM07: Insecure Plugin Design
+
+**[View AI Security Guide →](AI_SECURITY_GUIDE.md)**
 
 ---
 
