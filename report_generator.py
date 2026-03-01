@@ -9,6 +9,13 @@ import datetime
 from pathlib import Path
 from collections import defaultdict
 
+# Import WAF recommendation engine
+try:
+    from waf_recommendation_engine import WAFRecommendationEngine
+    WAF_RECOMMENDATIONS_AVAILABLE = True
+except ImportError:
+    WAF_RECOMMENDATIONS_AVAILABLE = False
+
 class SecurityReportGenerator:
     """Generate professional security testing reports"""
     
@@ -25,13 +32,27 @@ class SecurityReportGenerator:
         </div>
         '''
     
-    def generate_html_report(self, test_results, output_file='security_report.html'):
+    def generate_html_report(self, test_results, output_file='security_report.html', waf_detection=None):
         """Generate comprehensive HTML security report"""
         
         # Calculate statistics
         stats = self._calculate_statistics(test_results)
         vulnerabilities = self._identify_vulnerabilities(test_results)
-        recommendations = self._generate_recommendations(vulnerabilities, stats)
+        
+        # Generate WAF recommendations if detection data is available
+        waf_recommendations = None
+        if WAF_RECOMMENDATIONS_AVAILABLE and waf_detection:
+            engine = WAFRecommendationEngine()
+            vuln_list = [f"{v['category'].upper()} ({v['count']} bypasses)" for v in vulnerabilities]
+            waf_recommendations = engine.generate_recommendations(
+                waf_detected=waf_detection.get('waf_detected', False),
+                waf_vendor=waf_detection.get('waf_vendor'),
+                confidence=waf_detection.get('confidence', 0),
+                target=waf_detection.get('target', ''),
+                vulnerabilities_found=vuln_list
+            )
+        
+        recommendations = self._generate_recommendations(vulnerabilities, stats, waf_recommendations)
         
         html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -606,9 +627,32 @@ class SecurityReportGenerator:
         }
         return descriptions.get(category, 'Security vulnerability detected in this category.')
     
-    def _generate_recommendations(self, vulnerabilities, stats):
+    def _generate_recommendations(self, vulnerabilities, stats, waf_recommendations=None):
         """Generate security recommendations"""
         recommendations = []
+        
+        # Add WAF-specific recommendations first (highest priority)
+        if waf_recommendations:
+            if not waf_recommendations.get('waf_detected'):
+                # No WAF detected - CRITICAL priority
+                recommendations.append({
+                    'priority': 'critical',
+                    'title': '🚨 CRITICAL: No WAF Protection Detected',
+                    'description': 'Your application has no Web Application Firewall protection, leaving it vulnerable to automated attacks and OWASP Top 10 vulnerabilities.',
+                    'action': 'Deploy a WAF immediately. Recommended: Cloudflare (5 min setup, $20/month) or AWS WAF (30 min setup, pay-as-you-go).',
+                    'waf_info': waf_recommendations
+                })
+            else:
+                # WAF detected - add vendor info
+                vendor = waf_recommendations.get('waf_vendor', 'Unknown')
+                confidence = waf_recommendations.get('confidence', 0)
+                recommendations.append({
+                    'priority': 'info',
+                    'title': f'✅ {vendor} WAF Detected',
+                    'description': f'WAF protection is active with {confidence}% confidence. Continue monitoring and tuning for optimal protection.',
+                    'action': f'Review {vendor} configuration and ensure all OWASP Top 10 protections are enabled.',
+                    'waf_info': waf_recommendations
+                })
         
         # Critical vulnerabilities
         critical_vulns = [v for v in vulnerabilities if v['severity'] == 'critical']
