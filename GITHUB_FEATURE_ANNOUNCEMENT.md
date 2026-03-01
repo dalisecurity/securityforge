@@ -1,5 +1,22 @@
 # 🛡️ New Feature: Intelligent WAF Detection & Security Recommendations
 
+<p align="center">
+  <img src="assets/icons/securityforge-logo.svg" alt="SecurityForge Logo" width="200"/>
+</p>
+
+<p align="center">
+  <strong>SecurityForge</strong> - Comprehensive Security Testing Platform
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Payloads-4000+-blue?style=for-the-badge" alt="Payloads"/>
+  <img src="https://img.shields.io/badge/WAF_Vendors-25+-green?style=for-the-badge" alt="WAF Vendors"/>
+  <img src="https://img.shields.io/badge/CVEs-3-red?style=for-the-badge" alt="CVEs"/>
+  <img src="https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge" alt="Status"/>
+</p>
+
+---
+
 ## Overview
 
 SecurityForge now includes **intelligent WAF detection and automated security recommendations** that help security professionals quickly identify protection gaps and deploy appropriate security controls.
@@ -102,7 +119,141 @@ Reports now include:
 
 ---
 
-## 📊 Use Cases
+## � Visual Showcase
+
+### WAF Detection in Action
+
+<table>
+<tr>
+<td width="50%">
+
+**No WAF Detected (Critical Alert)**
+
+```
+🚨 CRITICAL: No WAF Protection Detected
+
+Target: https://example.com
+Security Posture: CRITICAL
+
+IMMEDIATE ACTIONS:
+• Deploy WAF immediately
+• Conduct security assessment
+• Enable security headers
+• Implement input validation
+
+RECOMMENDED VENDORS:
+✅ Cloudflare - $20/month (5 min)
+✅ AWS WAF - $5/month + usage
+✅ ModSecurity - Free (open source)
+```
+
+*Terminal output showing critical security gap*
+
+</td>
+<td width="50%">
+
+**Cloudflare WAF Detected (Success)**
+
+```
+✅ Cloudflare WAF Detected
+
+Target: https://example.com
+Security Posture: GOOD
+Confidence: 95%
+
+WAF VENDOR: Cloudflare
+Type: Cloud WAF
+Pricing: $20/month
+Features: DDoS, Bot Management, CDN
+
+RECOMMENDATIONS:
+• Review WAF logs
+• Fine-tune rules
+• Enable advanced features
+```
+
+*Terminal output showing successful WAF detection*
+
+</td>
+</tr>
+</table>
+
+### Professional Security Reports
+
+<table>
+<tr>
+<td width="50%">
+
+**HTML Report - No WAF Scenario**
+
+![Report No WAF](assets/screenshots/report-no-waf-preview.png)
+
+*Professional security report with critical WAF deployment recommendations, vendor comparison, and quick deployment guide*
+
+**Key Features:**
+- 🚨 Critical security alerts
+- 💰 Vendor pricing comparison
+- ⚡ 5-minute deployment guide
+- 📊 Vulnerability statistics
+- 🛡️ Security best practices
+
+</td>
+<td width="50%">
+
+**HTML Report - WAF Detected**
+
+![Report With WAF](assets/screenshots/report-with-waf-preview.png)
+
+*Security report showing Cloudflare WAF detected with vendor information and optimization recommendations*
+
+**Key Features:**
+- ✅ WAF vendor confirmation
+- 📈 Detection confidence score
+- 🔧 Configuration improvements
+- 📊 Test results summary
+- 💡 Optimization tips
+
+</td>
+</tr>
+</table>
+
+### Feature Highlights
+
+<p align="center">
+  <img src="https://img.shields.io/badge/🛡️-WAF_Detection-blue?style=for-the-badge" alt="WAF Detection"/>
+  <img src="https://img.shields.io/badge/🏷️-Vendor_ID-green?style=for-the-badge" alt="Vendor ID"/>
+  <img src="https://img.shields.io/badge/📊-Confidence_Score-purple?style=for-the-badge" alt="Confidence"/>
+  <img src="https://img.shields.io/badge/💡-Smart_Recommendations-orange?style=for-the-badge" alt="Recommendations"/>
+</p>
+
+<table>
+<tr>
+<td width="25%" align="center">
+<img src="https://img.shields.io/badge/25+-WAF_Vendors-success?style=flat-square" alt="Vendors"/><br/>
+<strong>WAF Vendors</strong><br/>
+Cloudflare, AWS, Azure,<br/>GCP, Akamai, Imperva,<br/>F5, ModSecurity, etc.
+</td>
+<td width="25%" align="center">
+<img src="https://img.shields.io/badge/4000+-Payloads-blue?style=flat-square" alt="Payloads"/><br/>
+<strong>Attack Payloads</strong><br/>
+XSS, SQLi, XXE, SSTI,<br/>File Upload, WordPress,<br/>LLM Testing, etc.
+</td>
+<td width="25%" align="center">
+<img src="https://img.shields.io/badge/3-CVEs-red?style=flat-square" alt="CVEs"/><br/>
+<strong>WordPress CVEs</strong><br/>
+CVE-2026-28515<br/>CVE-2026-28516<br/>CVE-2026-28517
+</td>
+<td width="25%" align="center">
+<img src="https://img.shields.io/badge/100%-Coverage-brightgreen?style=flat-square" alt="Coverage"/><br/>
+<strong>Test Coverage</strong><br/>
+OWASP Top 10<br/>Mobile Security<br/>AI/LLM Testing
+</td>
+</tr>
+</table>
+
+---
+
+## �📊 Use Cases
 
 ### Use Case 1: CVE Testing with WAF Recommendations
 
