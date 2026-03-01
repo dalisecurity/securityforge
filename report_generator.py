@@ -13,20 +13,27 @@ class SecurityReportGenerator:
     """Generate professional security testing reports"""
     
     def __init__(self):
-        self.dali_logo_svg = '''
-        <svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="60" height="60" rx="10" fill="url(#grad1)"/>
-            <text x="70" y="25" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2d3748">DALI</text>
-            <text x="70" y="45" font-family="Arial, sans-serif" font-size="14" fill="#718096">SECURITY</text>
-            <circle cx="30" cy="30" r="15" fill="none" stroke="white" stroke-width="3"/>
-            <path d="M 30 20 L 30 30 L 38 30" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </svg>
+        self.dali_logo_html = '''
+        <div class="dali-logo-container">
+            <a href="http://localhost:8090/" target="_blank">
+                <img src="http://localhost:8090/logo.png" alt="Dali Security" style="height: 60px; max-width: 250px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            </a>
+            <div style="display: none;">
+                <svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="0" y="0" width="60" height="60" rx="10" fill="url(#grad1)"/>
+                    <text x="70" y="25" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2d3748">DALI</text>
+                    <text x="70" y="45" font-family="Arial, sans-serif" font-size="14" fill="#718096">SECURITY</text>
+                    <circle cx="30" cy="30" r="15" fill="none" stroke="white" stroke-width="3"/>
+                    <path d="M 30 20 L 30 30 L 38 30" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
         '''
     
     def generate_html_report(self, test_results, output_file='security_report.html'):
@@ -377,7 +384,7 @@ class SecurityReportGenerator:
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                {self.dali_logo_svg}
+                {self.dali_logo_html}
             </div>
             <h1>Security Testing Report</h1>
             <div class="subtitle">Comprehensive Web Application Security Assessment</div>
