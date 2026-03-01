@@ -47,39 +47,61 @@ class SecurityReportGenerator:
         }}
         
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #2d3748;
-            background: #f7fafc;
+            color: #1a202c;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8edf2 100%);
+            min-height: 100vh;
         }}
         
         .container {{
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
         }}
         
         .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #5b21b6 100%);
             color: white;
-            padding: 40px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 35px 45px;
+            border-radius: 16px;
+            margin-bottom: 35px;
+            box-shadow: 0 20px 60px rgba(30, 58, 138, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }}
+        
+        .header-left {{
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex: 1;
         }}
         
         .logo {{
-            margin-bottom: 20px;
+            flex-shrink: 0;
+        }}
+        
+        .header-title {{
+            flex: 1;
         }}
         
         .header h1 {{
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }}
         
         .header .subtitle {{
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-size: 1em;
+            opacity: 0.85;
+            margin-top: 5px;
+            font-weight: 300;
         }}
         
         .meta-info {{
@@ -91,37 +113,51 @@ class SecurityReportGenerator:
         
         .meta-card {{
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }}
+        
+        .meta-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         }}
         
         .meta-card .label {{
-            font-size: 0.9em;
-            color: #718096;
-            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: #64748b;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }}
         
         .meta-card .value {{
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #2d3748;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.5px;
         }}
         
         .section {{
             background: white;
-            padding: 30px;
-            border-radius: 10px;
+            padding: 40px;
+            border-radius: 16px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.05);
         }}
         
         .section h2 {{
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            color: #2d3748;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
+            font-size: 1.75em;
+            margin-bottom: 25px;
+            color: #1e293b;
+            border-bottom: 3px solid #3730a3;
+            padding-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }}
         
         .severity-critical {{
@@ -152,35 +188,42 @@ class SecurityReportGenerator:
         }}
         
         .stat-card {{
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid;
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 5px solid;
+            transition: transform 0.2s;
+        }}
+        
+        .stat-card:hover {{
+            transform: translateY(-3px);
         }}
         
         .stat-card.blocked {{
-            background: #f0fff4;
-            border-color: #38a169;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #16a34a;
         }}
         
         .stat-card.bypassed {{
-            background: #fff5f5;
-            border-color: #e53e3e;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #dc2626;
         }}
         
         .stat-card.total {{
-            background: #ebf8ff;
-            border-color: #3182ce;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #2563eb;
         }}
         
         .stat-card .number {{
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 3em;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
         }}
         
         .stat-card .label {{
-            font-size: 1.1em;
-            color: #718096;
+            font-size: 1em;
+            color: #475569;
+            font-weight: 500;
         }}
         
         .vulnerability-list {{
@@ -281,22 +324,25 @@ class SecurityReportGenerator:
         }}
         
         .progress-bar {{
-            height: 30px;
+            height: 40px;
             background: #e2e8f0;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            margin: 10px 0;
+            margin: 15px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }}
         
         .progress-fill {{
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #1e3a8a 0%, #3730a3 50%, #5b21b6 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-weight: bold;
+            font-weight: 700;
             transition: width 0.3s ease;
+            font-size: 1.1em;
+            letter-spacing: 0.5px;
         }}
         
         .footer {{
@@ -372,11 +418,15 @@ class SecurityReportGenerator:
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="logo">
-                {self.dali_logo_html}
+            <div class="header-left">
+                <div class="logo">
+                    {self.dali_logo_html}
+                </div>
+                <div class="header-title">
+                    <h1>Security Testing Report</h1>
+                    <div class="subtitle">Comprehensive Web Application Security Assessment</div>
+                </div>
             </div>
-            <h1>Security Testing Report</h1>
-            <div class="subtitle">Comprehensive Web Application Security Assessment</div>
         </div>
         
         <!-- Meta Information -->
