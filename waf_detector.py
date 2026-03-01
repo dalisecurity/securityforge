@@ -45,13 +45,14 @@ class WAFDetector:
                 'bot_manager': True
             },
             'AWS WAF': {
-                'headers': ['x-amzn-requestid', 'x-amz-cf-id', 'x-amzn-trace-id', 'x-amz-apigw-id', 'x-amz-id', 'x-amz-request-id', 'x-amzn-waf-action'],
-                'cookies': ['awsalb', 'awsalbcors', 'awsalbapp', 'awsalbtg'],
+                'headers': ['x-amzn-waf-action', 'x-amzn-waf-', 'x-amzn-requestid', 'x-amz-cf-id', 'x-amzn-trace-id', 'x-amz-apigw-id'],
+                'cookies': ['awsalb', 'awsalbcors', 'awsalbapp', 'awsalbtg', 'awsalbtgcors'],
                 'response_codes': [403],
-                'response_text': ['aws', 'forbidden', 'access denied', 'aws waf', 'request blocked'],
+                'response_text': ['aws waf', 'request blocked by aws', 'x-amzn-waf', 'aws', 'forbidden', 'access denied'],
                 'server': ['awselb', 'awselb/2.0', 'amazon', 'cloudfront'],
-                'error_patterns': [r'Request ID: [a-zA-Z0-9\-]+'],
-                'waf_specific_headers': ['x-amzn-waf-action']
+                'error_patterns': [r'Request ID: [a-zA-Z0-9\-]+', r'x-amzn-waf-'],
+                'waf_specific_headers': ['x-amzn-waf-action', 'x-amzn-waf-'],
+                'header_prefix': 'x-amzn-waf-'
             },
             'Imperva (Incapsula)': {
                 'headers': ['x-cdn', 'x-iinfo', 'x-true-client-ip'],
@@ -99,11 +100,13 @@ class WAFDetector:
                 'server': []
             },
             'Microsoft Azure WAF': {
-                'headers': ['x-azure-ref', 'x-msedge-ref', 'x-azure-requestid', 'x-ms-', 'x-azure-', 'x-msedge-', 'azure-'],
-                'cookies': ['arr_affinity', 'arraffinity', 'arraffinitysamessite', 'ai_session', 'ai_user'],
+                'headers': ['x-azure-fdid', 'x-azure-ref', 'x-fd-healthprobe', 'x-azure-requestchain', 'x-azure-socketip', 'x-azure-clientip', 'x-azure-ja4-fingerprint', 'x-msedge-ref', 'x-azure-requestid'],
+                'cookies': ['arr_affinity', 'arraffinity', 'arraffinitysamesite', 'ai_session', 'ai_user', 'x-azure-ref-originshield'],
                 'response_codes': [403],
-                'response_text': ['azure', 'microsoft', 'access denied', 'azure front door'],
-                'server': ['microsoft-iis', 'azure', 'kestrel', 'microsoft-httpapi']
+                'response_text': ['azure web application firewall', 'azure front door', 'x-azure-fdid', 'azure waf', 'azure', 'microsoft'],
+                'server': ['microsoft-iis', 'azure', 'kestrel', 'microsoft-httpapi'],
+                'error_patterns': [r'X-Azure-Ref: [a-zA-Z0-9]+', r'X-Azure-FDID: [a-f0-9\-]+'],
+                'front_door_headers': ['x-azure-fdid', 'x-fd-healthprobe', 'x-azure-requestchain']
             },
             'Google Cloud Armor': {
                 'headers': ['x-goog-', 'x-cloud-trace-context', 'x-gfe-'],
@@ -296,6 +299,24 @@ class WAFDetector:
                             confidence += 25  # Generic headers
                         found_signatures.append(f"Header: {resp_header}")
                         signature_count += 1
+            
+            # Special handling for AWS WAF prefix matching (x-amzn-waf-*)
+            if 'header_prefix' in signatures:
+                prefix = signatures['header_prefix']
+                for resp_header in results['headers'].keys():
+                    if resp_header.lower().startswith(prefix.lower()):
+                        confidence += 50  # Very strong indicator of AWS WAF
+                        found_signatures.append(f"WAF-specific header: {resp_header}")
+                        signature_count += 1
+            
+            # Special handling for Azure Front Door headers
+            if 'front_door_headers' in signatures:
+                fd_header_count = sum(1 for h in signatures['front_door_headers'] 
+                                     if any(h.lower() in rh.lower() for rh in results['headers'].keys()))
+                if fd_header_count >= 2:
+                    confidence += 40  # Multiple Front Door headers = strong indicator
+                    found_signatures.append(f"Azure Front Door: {fd_header_count} headers")
+                    signature_count += 1
             
             # Check cookies (high confidence for vendor-specific cookies)
             for cookie in signatures['cookies']:
