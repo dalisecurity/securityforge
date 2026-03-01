@@ -47,12 +47,17 @@ class WAFDetector:
             'AWS WAF': {
                 'headers': ['x-amzn-waf-action', 'x-amzn-waf-', 'x-amzn-requestid', 'x-amz-cf-id', 'x-amzn-trace-id', 'x-amz-apigw-id'],
                 'cookies': ['awsalb', 'awsalbcors', 'awsalbapp', 'awsalbtg', 'awsalbtgcors'],
-                'response_codes': [403],
-                'response_text': ['aws waf', 'request blocked by aws', 'x-amzn-waf', 'aws', 'forbidden', 'access denied'],
+                'response_codes': [403, 429],
+                'response_text': ['aws waf', 'request blocked by aws', 'x-amzn-waf', 'security policy', 'blocked by waf', 'aws', 'forbidden', 'access denied'],
                 'server': ['awselb', 'awselb/2.0', 'amazon', 'cloudfront'],
-                'error_patterns': [r'Request ID: [a-zA-Z0-9\-]+', r'x-amzn-waf-'],
+                'error_patterns': [r'Request ID: [a-zA-Z0-9\-]+', r'x-amzn-waf-', r'security policy', r'blocked by waf'],
                 'waf_specific_headers': ['x-amzn-waf-action', 'x-amzn-waf-'],
-                'header_prefix': 'x-amzn-waf-'
+                'header_prefix': 'x-amzn-waf-',
+                'header_combinations': [
+                    ['x-amzn-requestid', 'x-amzn-trace-id', 'x-amz-cf-id'],
+                    ['x-amzn-requestid', 'x-amz-cf-id']
+                ],
+                'response_body_patterns': ['request blocked by security policy', 'security violation', 'blocked by waf']
             },
             'Imperva (Incapsula)': {
                 'headers': ['x-cdn', 'x-iinfo', 'x-true-client-ip'],
@@ -103,17 +108,27 @@ class WAFDetector:
                 'headers': ['x-azure-fdid', 'x-azure-ref', 'x-fd-healthprobe', 'x-azure-requestchain', 'x-azure-socketip', 'x-azure-clientip', 'x-azure-ja4-fingerprint', 'x-msedge-ref', 'x-azure-requestid'],
                 'cookies': ['arr_affinity', 'arraffinity', 'arraffinitysamesite', 'ai_session', 'ai_user', 'x-azure-ref-originshield'],
                 'response_codes': [403],
-                'response_text': ['azure web application firewall', 'azure front door', 'x-azure-fdid', 'azure waf', 'azure', 'microsoft'],
+                'response_text': ['azure web application firewall', 'azure front door', 'x-azure-fdid', 'azure waf', 'request blocked by azure', 'access denied by waf', 'azure', 'microsoft'],
                 'server': ['microsoft-iis', 'azure', 'kestrel', 'microsoft-httpapi'],
-                'error_patterns': [r'X-Azure-Ref: [a-zA-Z0-9]+', r'X-Azure-FDID: [a-f0-9\-]+'],
-                'front_door_headers': ['x-azure-fdid', 'x-fd-healthprobe', 'x-azure-requestchain']
+                'error_patterns': [r'X-Azure-Ref: [a-zA-Z0-9]+', r'X-Azure-FDID: [a-f0-9\-]+', r'blocked by azure', r'azure waf'],
+                'front_door_headers': ['x-azure-fdid', 'x-fd-healthprobe', 'x-azure-requestchain'],
+                'header_combinations': [
+                    ['x-azure-fdid', 'x-azure-ref'],
+                    ['x-azure-ref', 'x-fd-healthprobe']
+                ],
+                'response_body_patterns': ['azure web application firewall', 'request blocked by azure', 'access denied by waf'],
+                'cache_patterns': ['TCP_DENIED', 'TCP_MISS']
             },
             'Google Cloud Armor': {
                 'headers': ['x-goog-', 'x-cloud-trace-context', 'x-gfe-'],
                 'cookies': [],
                 'response_codes': [403],
-                'response_text': ['google', 'cloud armor', 'gcp'],
-                'server': ['gws', 'gfe']
+                'response_text': ['google', 'cloud armor', 'gcp', 'your client does not have permission', 'google cloud platform'],
+                'server': ['gws', 'gfe', 'Google Frontend'],
+                'error_patterns': [r'cloud armor', r'does not have permission'],
+                'gcp_headers': ['x-cloud-trace-context', 'x-goog-', 'x-gfe-'],
+                'response_body_patterns': ['cloud armor', 'google cloud platform', 'your client does not have permission'],
+                'recaptcha_indicators': ['recaptcha', 'g-recaptcha', 'google.com/recaptcha']
             },
             'Qualys WAF': {
                 'headers': ['x-qualys'],
@@ -375,6 +390,47 @@ class WAFDetector:
                         found_signatures.append(f"WAF-specific header: {waf_header}")
                         signature_count += 1
             
+            # Check response body patterns (advanced cloud WAF detection)
+            if results['response_snippet'] and 'response_body_patterns' in signatures:
+                for body_pattern in signatures['response_body_patterns']:
+                    if body_pattern.lower() in results['response_snippet'].lower():
+                        confidence += 15  # Response body pattern is strong indicator
+                        found_signatures.append(f"Body pattern: {body_pattern}")
+                        signature_count += 1
+            
+            # Check header combinations (multi-factor cloud WAF detection)
+            if 'header_combinations' in signatures:
+                for combo in signatures['header_combinations']:
+                    matches = sum(1 for h in combo if h.lower() in [x.lower() for x in results['headers'].keys()])
+                    if matches == len(combo):
+                        # All headers in combination present
+                        confidence += 20
+                        found_signatures.append(f"Header combo: {len(combo)} headers")
+                        signature_count += 1
+                    elif matches >= len(combo) * 0.7:
+                        # Most headers present (70%+)
+                        confidence += 10
+                        found_signatures.append(f"Partial combo: {matches}/{len(combo)}")
+                        signature_count += 1
+            
+            # Check GCP-specific headers (Google Cloud Armor)
+            if 'gcp_headers' in signatures:
+                gcp_header_count = sum(1 for h in signatures['gcp_headers'] 
+                                      if any(h.lower() in rh.lower() for rh in results['headers'].keys()))
+                if gcp_header_count >= 2:
+                    confidence += 30  # Multiple GCP headers = strong indicator
+                    found_signatures.append(f"GCP headers: {gcp_header_count}")
+                    signature_count += 1
+            
+            # Check cache patterns (Azure Front Door)
+            if 'cache_patterns' in signatures and 'x-cache' in results['headers']:
+                cache_value = results['headers']['x-cache']
+                for cache_pattern in signatures['cache_patterns']:
+                    if cache_pattern in cache_value:
+                        confidence += 10
+                        found_signatures.append(f"Cache pattern: {cache_pattern}")
+                        signature_count += 1
+            
             # Check status code (low weight, many WAFs use same codes)
             if results['status_code'] in signatures['response_codes']:
                 # Give more weight to unique status codes
@@ -382,6 +438,8 @@ class WAFDetector:
                     confidence += 15  # Cloudflare-specific codes
                 elif results['status_code'] == 406:
                     confidence += 10  # Signal Sciences specific
+                elif results['status_code'] == 429:
+                    confidence += 10  # Rate limiting (WAF-specific)
                 else:
                     confidence += 5  # Common codes
             
