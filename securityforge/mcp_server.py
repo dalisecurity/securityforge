@@ -101,9 +101,8 @@ def create_server() -> "FastMCP":
 
     mcp = FastMCP(
         "securityforge",
-        version="3.0.0",
-        description="SecurityForge — open-source WAF security testing toolkit. "
-                    "4,025+ payloads, 25 WAF fingerprints, structured for AI workflows.",
+        instructions="SecurityForge v3.1.0 — open-source WAF security testing toolkit. "
+                     "4,025+ payloads, 25 WAF fingerprints, structured for AI workflows.",
     )
 
     # ── Tool: list_categories ──────────────────────────────────────────

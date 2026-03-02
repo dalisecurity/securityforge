@@ -1,7 +1,7 @@
 {
   "category": "other",
   "subcategory": "general",
-  "count": 359,
+  "count": 357,
   "payloads": [
     {
       "id": "other-0011",
@@ -459,20 +459,6 @@
       "description": "A",
       "technique": "direct_injection",
       "source_file": "waf_round30_largebody.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "other-0127",
-      "category": "other",
-      "subcategory": "general",
-      "payload": "<input type=\"text\"')\n            inp = body[idx:idx+500] if idx >= 0 else \"\"\n            print(f\"  {name:60s} HTTP {r.status_code} PASS\")\n            if div_c:\n                print(f\"    DIV: {div_c[:200]}\")\n            if inp and 'value=\"\"' not in inp[:50]:\n                print(f\"    INP: {inp[:200]}\")\n            return True, div_c, inp\n        return False, \"",
-      "description": "\"\n    except:\n        return False, \"\", \"\"\n\n\ndef blocked(name, params, method=\"GET",
-      "technique": "direct_injection",
-      "source_file": "waf_round23_chain.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -1590,7 +1576,7 @@
       "category": "other",
       "subcategory": "general",
       "payload": "body",
-      "description": "').lower()\n        payload_lower = payload.lower()\n        \n        # Look for partial reflections\n        if '<script' in payload_lower and '<script' in body_lower:\n            print(\"\\n\u26a0\ufe0f  REFLECTION DETECTED: <script tag reflected",
+      "description": "').lower()\n        payload_lower = payload.lower()\n        \n        # Look for partial reflections\n        if '<script' in payload_lower and '<script' in body_lower:\n            print(\"\\n⚠️  REFLECTION DETECTED: <script tag reflected",
       "technique": "direct_injection",
       "source_file": "waf_analyze_response.py",
       "tested_against": [
@@ -1691,20 +1677,6 @@
       "description": " on= on', 1) if ' on' in p else p\n    get(p2, label=\"rare-tag-on",
       "technique": "direct_injection",
       "source_file": "waf_round93_research3.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "other-0348",
-      "category": "other",
-      "subcategory": "general",
-      "payload": "<input type=\"text\"')\n            inp = body[idx:idx+500] if idx >= 0 else \"\"\n            combined = (div_c + inp).lower()\n            print(f\"  {name:65s} PASS\")\n            passes.append((name, div_c[:100], inp[:100]))\n            return True, div_c, inp\n        else:\n            return False, \"",
-      "description": "\"\n    except:\n        return False, \"\", \"\"\n\n\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nprint(\"\\n\" + \"=\" * 75)\nprint(\"26A: Colon Position in Event Handler Name",
-      "technique": "direct_injection",
-      "source_file": "waf_round26_colon.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -2121,7 +2093,7 @@
       "id": "other-0417",
       "category": "other",
       "subcategory": "general",
-      "payload": "\\u0433'],  # Cyrillic \u0433\n    'i': ['\\u0456",
+      "payload": "\\u0433'],  # Cyrillic г\n    'i': ['\\u0456",
       "description": "\\u00ec', '\\u00ed",
       "technique": "direct_injection",
       "source_file": "waf_round74_oss3.py",

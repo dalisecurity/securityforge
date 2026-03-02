@@ -365,6 +365,180 @@ class TestIoTRCEPayloads:
                     f"{f.name} contains real-looking IP: {ip}"
 
 
+# ── MCP Server ─────────────────────────────────────────────────────────
+
+class TestMCPServer:
+    """Test MCP server tool functions directly (no network, no stdio)."""
+
+    def test_mcp_helpers_importable(self):
+        from securityforge.mcp_server import (
+            _list_categories, _load_payloads, _get_waf_signatures
+        )
+        assert callable(_list_categories)
+        assert callable(_load_payloads)
+        assert callable(_get_waf_signatures)
+
+    def test_list_categories(self):
+        from securityforge.mcp_server import _list_categories
+        cats = _list_categories()
+        assert len(cats) >= 20
+        names = [c["name"] for c in cats]
+        assert "xss" in names
+        assert "iot_rce" in names
+        for c in cats:
+            assert "total_files" in c
+            assert c["total_files"] >= 1
+
+    def test_load_payloads_valid_category(self):
+        from securityforge.mcp_server import _load_payloads
+        payloads = _load_payloads("xss", max_payloads=5)
+        assert len(payloads) == 5
+        assert all(isinstance(p, dict) for p in payloads)
+        assert all("payload" in p for p in payloads)
+
+    def test_load_payloads_bad_category(self):
+        from securityforge.mcp_server import _load_payloads
+        assert _load_payloads("nonexistent_xyz") == []
+
+    def test_load_payloads_respects_max(self):
+        from securityforge.mcp_server import _load_payloads
+        p3 = _load_payloads("xss", max_payloads=3)
+        p10 = _load_payloads("xss", max_payloads=10)
+        assert len(p3) == 3
+        assert len(p10) == 10
+
+    def test_get_waf_signatures(self):
+        from securityforge.mcp_server import _get_waf_signatures
+        sigs = _get_waf_signatures()
+        assert len(sigs) >= 25
+        assert "Cloudflare" in sigs
+        cf = sigs["Cloudflare"]
+        assert "headers" in cf
+        assert "cookies" in cf
+        assert "cf-ray" in cf["headers"]
+
+    def test_create_server_registers_6_tools(self):
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            tools = server._tool_manager._tools
+            assert len(tools) == 6
+            expected = {"list_payload_categories", "get_payloads",
+                        "search_payloads", "get_waf_signatures",
+                        "get_cve_details", "suggest_payloads_for_waf"}
+            assert set(tools.keys()) == expected
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_list_categories_returns_string(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["list_payload_categories"].fn
+            result = asyncio.run(fn())
+            assert isinstance(result, str)
+            assert "xss" in result
+            assert "iot_rce" in result
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_get_payloads_xss(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["get_payloads"].fn
+            result = asyncio.run(fn(category="xss", max_results=3))
+            assert isinstance(result, str)
+            assert "xss" in result.lower()
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_get_payloads_bad_category(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["get_payloads"].fn
+            result = asyncio.run(fn(category="nonexistent", max_results=5))
+            assert "not found" in result.lower()
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_search_payloads(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["search_payloads"].fn
+            result = asyncio.run(fn(query="reverse shell", max_results=3))
+            assert "reverse shell" in result.lower() or "matches" in result.lower()
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_get_cve_details(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["get_cve_details"].fn
+            result = asyncio.run(fn(cve_id="CVE-2026-27509"))
+            assert "CVE-2026-27509" in result
+            assert "Unitree" in result
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_get_cve_details_not_found(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["get_cve_details"].fn
+            result = asyncio.run(fn(cve_id="CVE-9999-99999"))
+            assert "no payloads" in result.lower()
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+    def test_tool_get_waf_signatures_filtered(self):
+        import asyncio
+        try:
+            from securityforge.mcp_server import create_server
+            server = create_server()
+            fn = server._tool_manager._tools["get_waf_signatures"].fn
+            result = asyncio.run(fn(vendor="Cloudflare"))
+            assert "Cloudflare" in result
+            assert "cf-ray" in result
+        except ImportError:
+            pytest.skip("MCP SDK not installed")
+
+
+# ── Payload data quality ───────────────────────────────────────────────
+
+class TestPayloadDataQuality:
+    """Regression test: ensure no Python source code fragments in payloads."""
+
+    def test_no_python_code_in_payloads(self):
+        suspect_patterns = ["def ", "import ", 'print(f"', ".append(", "class ", "except"]
+        corrupt = []
+        for json_file in PAYLOADS.rglob("*.json"):
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+            plist = data.get("payloads", data) if isinstance(data, dict) else data
+            if not isinstance(plist, list):
+                continue
+            for p in plist:
+                if not isinstance(p, dict):
+                    continue
+                payload = p.get("payload", "")
+                hits = sum(1 for pat in suspect_patterns if pat in payload)
+                if hits >= 2:
+                    corrupt.append(f"{json_file.name}:{p.get('id','?')}")
+        assert not corrupt, (
+            f"Found {len(corrupt)} payloads with Python code fragments "
+            f"(data corruption): {corrupt[:10]}"
+        )
+
+
 # ── CLI ────────────────────────────────────────────────────────────────
 
 class TestCLI:
