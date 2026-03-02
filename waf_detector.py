@@ -192,6 +192,46 @@ class WAFDetector:
                 'response_codes': [403],
                 'response_text': ['rohde', 'schwarz'],
                 'server': []
+            },
+            'Sucuri': {
+                'headers': ['x-sucuri-id', 'x-sucuri-cache'],
+                'cookies': ['sucuri_cloudproxy_uuid'],
+                'response_codes': [403],
+                'response_text': ['sucuri', 'cloudproxy', 'access denied - sucuri website firewall'],
+                'server': ['sucuri/cloudproxy'],
+                'error_patterns': [r'Sucuri WebSite Firewall', r'CloudProxy']
+            },
+            'Fortinet FortiWeb': {
+                'headers': ['x-fortiweb'],
+                'cookies': ['fortiwafsid', 'cookiesession1'],
+                'response_codes': [403, 406],
+                'response_text': ['fortiweb', 'fortigate', 'fortinet', '.fwb'],
+                'server': ['fortiweb'],
+                'error_patterns': [r'FortiWeb', r'The page cannot be displayed']
+            },
+            'Wallarm': {
+                'headers': ['x-wallarm-waf-check'],
+                'cookies': [],
+                'response_codes': [403],
+                'response_text': ['wallarm', 'ngx_wallarm'],
+                'server': ['nginx-wallarm'],
+                'error_patterns': [r'wallarm', r'ngx_wallarm']
+            },
+            'Reblaze': {
+                'headers': ['x-reblaze-protection'],
+                'cookies': ['rbzid', 'rbzsessionid'],
+                'response_codes': [403],
+                'response_text': ['reblaze', 'access denied'],
+                'server': ['reblaze'],
+                'error_patterns': [r'Reblaze', r'rbzid']
+            },
+            'Vercel': {
+                'headers': ['x-vercel-id', 'x-vercel-cache'],
+                'cookies': [],
+                'response_codes': [403],
+                'response_text': ['vercel', 'vercel firewall'],
+                'server': ['vercel'],
+                'error_patterns': [r'Vercel', r'x-vercel-id']
             }
         }
     

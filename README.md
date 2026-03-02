@@ -55,6 +55,40 @@
 - 🎯 **WordPress Security** - 3 critical CVEs with 450+ specialized payloads
 - 🌐 **Multi-Platform** - Web, Mobile, API, and AI/LLM security testing
 
+### 🛡️ WAF Vendor Detection — 25 Vendors Supported
+
+SecurityForge detects and fingerprints **25 major WAF vendors** using header analysis, cookie inspection, response patterns, and error signatures.
+
+| # | WAF Vendor | Detection Method | Key Signatures |
+|---|-----------|-----------------|----------------|
+| 1 | **Cloudflare** | Headers, Cookies, Error Page | `cf-ray`, `__cfduid`, Ray ID pattern |
+| 2 | **Akamai** | Headers, Cookies, Bot Manager | `akamai-grn`, `ak_bmsc`, Reference # |
+| 3 | **AWS WAF** | Headers, Cookies, Response Body | `x-amzn-waf-action`, `awsalb`, CloudFront |
+| 4 | **Imperva (Incapsula)** | Headers, Cookies, Challenge | `x-iinfo`, `incap_ses`, Incident ID |
+| 5 | **F5 BIG-IP** | Headers, Cookies, Error Page | `x-wa-info`, `bigipserver`, Support ID |
+| 6 | **Fastly (Signal Sciences)** | Headers, Cookies, Server | `x-sigsci-requestid`, `x-served-by` |
+| 7 | **Microsoft Azure WAF** | Headers, Cookies, Front Door | `x-azure-fdid`, `x-azure-ref`, `arr_affinity` |
+| 8 | **Google Cloud Armor** | Headers, Server, reCAPTCHA | `x-cloud-trace-context`, `gfe`, Cloud Armor |
+| 9 | **Barracuda** | Headers, Cookies, Server | `x-barracuda-url`, `barra_counter_session` |
+| 10 | **Citrix NetScaler** | Headers, Cookies, Server | `citrix-transactionid`, `nsc_`, NetScaler |
+| 11 | **Radware** | Headers, Response Text | `x-protected-by`, AppWall |
+| 12 | **Palo Alto (Prisma Cloud)** | Headers, Response Text | `x-pan-`, `x-prisma` |
+| 13 | **Check Point** | Headers, Response Text | `x-checkpoint`, Check Point |
+| 14 | **Trustwave (ModSecurity)** | Headers, Server, Response | `x-mod-security`, ModSecurity |
+| 15 | **Qualys WAF** | Headers, Response Text | `x-qualys` |
+| 16 | **Penta Security (WAPPLES)** | Headers, Cookies | `x-wapples`, `wapples` |
+| 17 | **StackPath** | Headers, Server | `x-stackpath-shield`, StackPath |
+| 18 | **Sophos** | Headers, Response Text | `x-sophos`, UTM |
+| 19 | **Scutum** | Headers, Response Text | `x-scutum` |
+| 20 | **Rohde & Schwarz** | Headers, Response Text | `x-rs-` |
+| 21 | **Sucuri** | Headers, Cookies, Server | `x-sucuri-id`, `sucuri_cloudproxy_uuid` |
+| 22 | **Fortinet FortiWeb** | Headers, Cookies, Server | `x-fortiweb`, `fortiwafsid` |
+| 23 | **Wallarm** | Headers, Server | `x-wallarm-waf-check`, `nginx-wallarm` |
+| 24 | **Reblaze** | Headers, Cookies, Server | `x-reblaze-protection`, `rbzid` |
+| 25 | **Vercel** | Headers, Server | `x-vercel-id`, `x-vercel-cache` |
+
+> **How it works:** SecurityForge sends a test request with a suspicious payload to trigger WAF responses, then analyzes HTTP headers, cookies, server banners, status codes, and response body patterns to fingerprint the vendor with a confidence score.
+
 ---
 
 ## ⚡ Quick Start
@@ -1127,14 +1161,7 @@ Check [CHANGELOG.md](CHANGELOG.md) for update history.
 
 ### What WAFs does this work against?
 
-Tested primarily against **Cloudflare WAF**, but payloads are applicable to:
-- AWS WAF
-- Azure WAF
-- Akamai
-- Imperva
-- F5 Advanced WAF
-- ModSecurity
-- Custom WAF implementations
+SecurityForge detects and tests against **25 major WAF vendors** including Cloudflare, AWS WAF, Azure WAF, Akamai, Imperva, F5 BIG-IP, Fastly, Google Cloud Armor, Sucuri, Fortinet FortiWeb, Wallarm, and more. See the full [WAF Vendor Detection table](#️-waf-vendor-detection--25-vendors-supported) for the complete list with detection signatures.
 
 Results may vary by WAF vendor and configuration.
 
