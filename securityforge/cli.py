@@ -102,6 +102,17 @@ def cmd_version(args):
     print(f"SecurityForge v{__version__}")
 
 
+def cmd_mcp(args):
+    """Start MCP server for AI assistant integration"""
+    try:
+        from securityforge.mcp_server import main as mcp_main
+        mcp_main()
+    except ImportError:
+        print("Error: MCP SDK not installed. Install with:")
+        print("  pip install 'mcp[cli]'")
+        sys.exit(1)
+
+
 def list_categories():
     """Get sorted list of payload category names"""
     return sorted([
@@ -159,6 +170,10 @@ Documentation: https://github.com/dalisecurity/securityforge
     # version
     p_version = subparsers.add_parser("version", help="Show version")
     p_version.set_defaults(func=cmd_version)
+
+    # mcp
+    p_mcp = subparsers.add_parser("mcp", help="Start MCP server for AI assistant integration")
+    p_mcp.set_defaults(func=cmd_mcp)
 
     args = parser.parse_args()
 

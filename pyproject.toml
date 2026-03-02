@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "securityforge"
 version = "3.0.0"
-description = "AI-Powered WAF Security Testing Platform — 4,025+ attack payloads, 25 WAF fingerprints, zero dependencies"
+description = "Open-source WAF Security Testing Platform — 4,025+ attack payloads, 25 WAF fingerprints, zero dependencies"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
@@ -35,6 +35,9 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Software Development :: Testing",
 ]
+
+[project.optional-dependencies]
+mcp = ["mcp[cli]>=1.2.0"]
 
 [project.urls]
 Homepage = "https://github.com/dalisecurity/securityforge"
