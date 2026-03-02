@@ -188,6 +188,21 @@ python -m pytest tests/test_package.py -v
 
 ---
 
+## 📄 Sample Report
+
+SecurityForge generates professional HTML security reports with executive summary, category breakdown, and block rate analysis:
+
+![SecurityForge Sample Report](docs/sample-report.png)
+
+Generate your own:
+```bash
+securityforge test https://your-target.com -c xss -o results.json
+# or generate a sample report
+python -c "from securityforge.reporter import generate_sample_report; generate_sample_report()"
+```
+
+---
+
 ## 🤖 MCP Server — AI Assistant Integration
 
 SecurityForge includes an **MCP (Model Context Protocol) server** that exposes payload data, WAF signatures, and CVE lookups as tools that AI assistants can call directly — no copy-paste needed.
