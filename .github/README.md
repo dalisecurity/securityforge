@@ -1,13 +1,13 @@
 # SecurityForge
 
-### ⚔️ *Open-source WAF security testing — 4,000+ payloads, 25 WAF detections, structured for AI workflows*
+### ⚔️ *Open-source WAF security testing toolkit — 5,500+ payloads, 25 WAF detections, MCP server for AI workflows*
 
-**The open-source offensive security toolkit** • 4,025+ Payloads • 25 WAF Fingerprints • Zero-Config • AI-Compatible
+**The open-source offensive security toolkit** • 5,500+ Payloads • 25 WAF Fingerprints • Zero Dependencies • 61 Tests
 
-[![Total Payloads](https://img.shields.io/badge/Total_Payloads-4025+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/securityforge)
+[![Total Payloads](https://img.shields.io/badge/Total_Payloads-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/securityforge)
 [![OWASP Coverage](https://img.shields.io/badge/OWASP_Coverage-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/securityforge)
 [![WAF Detection](https://img.shields.io/badge/WAF_Vendors-25+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/securityforge)
-[![AI Powered](https://img.shields.io/badge/AI_Powered-Claude_+_ChatGPT-purple.svg?style=for-the-badge&logo=openai)](https://github.com/dalisecurity/securityforge)
+[![Tests](https://img.shields.io/badge/Tests-61_Passing-success.svg?style=for-the-badge)](https://github.com/dalisecurity/securityforge/actions)
 
 [![PyPI](https://img.shields.io/pypi/v/securityforge.svg)](https://pypi.org/project/securityforge/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -113,7 +113,11 @@ Real tests that run in CI on every push (Python 3.9–3.13):
 | Package + loading + reports | 9 |
 | Data quality | 2 (no code fragments, no fabricated results) |
 
-## �📚 Documentation
+## 📄 Sample Report
+
+![SecurityForge Sample Report](https://raw.githubusercontent.com/dalisecurity/securityforge/main/docs/sample-report.png)
+
+## 📚 Documentation
 
 - [Quick Start Guide](docs/quickstart.md)
 - [Full Documentation](README.md)
