@@ -1,4 +1,6 @@
-# Fray
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dalisecurity/Fray/hugo/.github/banner.png" alt="Fray — Open-source WAF security testing toolkit" width="100%">
+</p>
 
 ### ⚔️ *Open-source WAF security testing toolkit — 5,500+ payloads, 25 WAF detections, MCP server for AI workflows*
 
