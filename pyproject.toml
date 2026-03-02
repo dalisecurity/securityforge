@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "securityforge"
+version = "3.0.0"
+description = "Open-source WAF Security Testing Platform — 4,025+ attack payloads, 25 WAF fingerprints, zero dependencies"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "DALI Security", email = "soc@dalisec.io"}
+]
+keywords = [
+    "security", "waf", "penetration-testing", "owasp", "xss", "sqli",
+    "web-security", "payload", "firewall", "cybersecurity", "offensive-security",
+    "vulnerability", "waf-bypass", "securityforge"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Testing",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp[cli]>=1.2.0"]
+
+[project.urls]
+Homepage = "https://github.com/dalisecurity/securityforge"
+Documentation = "https://github.com/dalisecurity/securityforge/tree/hugo/docs"
+Repository = "https://github.com/dalisecurity/securityforge"
+Issues = "https://github.com/dalisecurity/securityforge/issues"
+Blog = "https://dalisec.io/research/blog-securityforge-launch.html"
+
+[project.scripts]
+securityforge = "securityforge.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["securityforge*"]
+
+[tool.setuptools.package-data]
+securityforge = ["payloads/**/*.json", "payloads/**/*.txt", "payloads/**/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true

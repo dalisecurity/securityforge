@@ -1,0 +1,21 @@
+{
+  "category": "open-redirect",
+  "subcategory": "general",
+  "count": 1,
+  "payloads": [
+    {
+      "id": "open-redirect-0001",
+      "category": "open-redirect",
+      "subcategory": "general",
+      "payload": "\n\" + \"=\" * 75)\nprint(\"23C: Test Allowed Tags with javascript: Protocol\")\nprint(\"=\" * 75 + \"\n\")\n\nfor tag in allowed_tags:\n    for attr in [\"href",
+      "description": "src\", \"action\", \"formaction\", \"data\", \"xlink:href",
+      "technique": "direct_injection",
+      "source_file": "waf_round23_chain.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

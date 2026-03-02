@@ -1,0 +1,707 @@
+{
+  "category": "open-redirect",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "open_redirect-11000",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://evil.com",
+      "description": "Redirect http://evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11001",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://evil.com/callback",
+      "description": "Redirect http://evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11002",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11003",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11004",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "https://evil.com",
+      "description": "Redirect https://evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11005",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "https://evil.com/callback",
+      "description": "Redirect https://evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11006",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11007",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11008",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "//evil.com",
+      "description": "Redirect //evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11009",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "//evil.com/callback",
+      "description": "Redirect //evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11010",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11011",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11012",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "///evil.com",
+      "description": "Redirect ///evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11013",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "///evil.com/callback",
+      "description": "Redirect ///evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11014",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11015",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11016",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "javascript:evil.com",
+      "description": "Redirect javascript:evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11017",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "javascript:evil.com/callback",
+      "description": "Redirect javascript:evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11018",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11019",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11020",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "data:evil.com",
+      "description": "Redirect data:evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11021",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "data:evil.com/callback",
+      "description": "Redirect data:evil.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11022",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@evil.com",
+      "description": "Redirect @ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11023",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@evil.com",
+      "description": "Redirect example@ evil.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11024",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://attacker.com",
+      "description": "Redirect http://attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11025",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://attacker.com/callback",
+      "description": "Redirect http://attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11026",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11027",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11028",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "https://attacker.com",
+      "description": "Redirect https://attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11029",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "https://attacker.com/callback",
+      "description": "Redirect https://attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11030",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11031",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11032",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "//attacker.com",
+      "description": "Redirect //attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11033",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "//attacker.com/callback",
+      "description": "Redirect //attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11034",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11035",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11036",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "///attacker.com",
+      "description": "Redirect ///attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11037",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "///attacker.com/callback",
+      "description": "Redirect ///attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11038",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11039",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11040",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "javascript:attacker.com",
+      "description": "Redirect javascript:attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11041",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "javascript:attacker.com/callback",
+      "description": "Redirect javascript:attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11042",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11043",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11044",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "data:attacker.com",
+      "description": "Redirect data:attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11045",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "data:attacker.com/callback",
+      "description": "Redirect data:attacker.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11046",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "@attacker.com",
+      "description": "Redirect @ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11047",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "example.com@attacker.com",
+      "description": "Redirect example@ attacker.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11048",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://phishing.com",
+      "description": "Redirect http://phishing.com",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "open_redirect-11049",
+      "category": "open-redirect",
+      "subcategory": "comprehensive",
+      "payload": "http://phishing.com/callback",
+      "description": "Redirect http://phishing.com callback",
+      "technique": "open_redirect",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

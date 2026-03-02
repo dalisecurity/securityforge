@@ -1,0 +1,658 @@
+{
+  "category": "logging_failures",
+  "subcategory": "log_injection",
+  "description": "A09:2025 - Security Logging and Alerting Failures - Log injection, tampering, and evasion",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "log-001",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_1",
+      "description": "CRLF log injection variant 1",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-002",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_2",
+      "description": "Newline log injection variant 2",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-003",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_3",
+      "description": "URL-encoded CRLF variant 3",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-004",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_4",
+      "description": "Null byte injection variant 4",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-005",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_5",
+      "description": "Path traversal to logs variant 5",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-006",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_6",
+      "description": "CRLF log injection variant 6",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-007",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_7",
+      "description": "Newline log injection variant 7",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-008",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_8",
+      "description": "URL-encoded CRLF variant 8",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-009",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_9",
+      "description": "Null byte injection variant 9",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-010",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_10",
+      "description": "Path traversal to logs variant 10",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-011",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_11",
+      "description": "CRLF log injection variant 11",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-012",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_12",
+      "description": "Newline log injection variant 12",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-013",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_13",
+      "description": "URL-encoded CRLF variant 13",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-014",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_14",
+      "description": "Null byte injection variant 14",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-015",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_15",
+      "description": "Path traversal to logs variant 15",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-016",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_16",
+      "description": "CRLF log injection variant 16",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-017",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_17",
+      "description": "Newline log injection variant 17",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-018",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_18",
+      "description": "URL-encoded CRLF variant 18",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-019",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_19",
+      "description": "Null byte injection variant 19",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-020",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_20",
+      "description": "Path traversal to logs variant 20",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-021",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_21",
+      "description": "CRLF log injection variant 21",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-022",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_22",
+      "description": "Newline log injection variant 22",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-023",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_23",
+      "description": "URL-encoded CRLF variant 23",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-024",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_24",
+      "description": "Null byte injection variant 24",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-025",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_25",
+      "description": "Path traversal to logs variant 25",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-026",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_26",
+      "description": "CRLF log injection variant 26",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-027",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_27",
+      "description": "Newline log injection variant 27",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-028",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_28",
+      "description": "URL-encoded CRLF variant 28",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-029",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_29",
+      "description": "Null byte injection variant 29",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-030",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_30",
+      "description": "Path traversal to logs variant 30",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-031",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_31",
+      "description": "CRLF log injection variant 31",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-032",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_32",
+      "description": "Newline log injection variant 32",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-033",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_33",
+      "description": "URL-encoded CRLF variant 33",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-034",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_34",
+      "description": "Null byte injection variant 34",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-035",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_35",
+      "description": "Path traversal to logs variant 35",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-036",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_36",
+      "description": "CRLF log injection variant 36",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-037",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_37",
+      "description": "Newline log injection variant 37",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-038",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_38",
+      "description": "URL-encoded CRLF variant 38",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-039",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_39",
+      "description": "Null byte injection variant 39",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-040",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_40",
+      "description": "Path traversal to logs variant 40",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-041",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_41",
+      "description": "CRLF log injection variant 41",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-042",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_42",
+      "description": "Newline log injection variant 42",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-043",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_43",
+      "description": "URL-encoded CRLF variant 43",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-044",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_44",
+      "description": "Null byte injection variant 44",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-045",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_45",
+      "description": "Path traversal to logs variant 45",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-046",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\r\n[INFO] Successful login from 127.0.0.1_46",
+      "description": "CRLF log injection variant 46",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-047",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "user\n2026-03-01 [SUCCESS] Admin login_47",
+      "description": "Newline log injection variant 47",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-048",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "test%0d%0a[CRITICAL] System compromised_48",
+      "description": "URL-encoded CRLF variant 48",
+      "technique": "log_forgery",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-049",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "admin\u0000[INFO] Audit cleared_49",
+      "description": "Null byte injection variant 49",
+      "technique": "log_truncation",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "log-050",
+      "category": "logging_failures",
+      "subcategory": "log_manipulation",
+      "payload": "../../../var/log/app.log_50",
+      "description": "Path traversal to logs variant 50",
+      "technique": "log_file_access",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

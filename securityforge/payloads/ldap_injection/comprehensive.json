@@ -1,0 +1,707 @@
+{
+  "category": "ldap_injection",
+  "subcategory": "comprehensive",
+  "count": 50,
+  "payloads": [
+    {
+      "id": "ldap_injection-8000",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin*",
+      "description": "LDAP admin with *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8001",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(*",
+      "description": "LDAP admin paren *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8002",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(|(*",
+      "description": "LDAP admin OR *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8003",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin*)(uid=*",
+      "description": "LDAP admin with *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8004",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(*)(uid=*",
+      "description": "LDAP admin paren *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8005",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(|(*)(uid=*",
+      "description": "LDAP admin OR *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8006",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin*)(|(uid=*",
+      "description": "LDAP admin with *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8007",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(*)(|(uid=*",
+      "description": "LDAP admin paren *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8008",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(|(*)(|(uid=*",
+      "description": "LDAP admin OR *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8009",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin*)(objectClass=*",
+      "description": "LDAP admin with *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8010",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(*)(objectClass=*",
+      "description": "LDAP admin paren *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8011",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(|(*)(objectClass=*",
+      "description": "LDAP admin OR *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8012",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin*)(!(&(objectClass=*",
+      "description": "LDAP admin with *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8013",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(*)(!(&(objectClass=*",
+      "description": "LDAP admin paren *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8014",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "admin)(|(*)(!(&(objectClass=*",
+      "description": "LDAP admin OR *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8015",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator*",
+      "description": "LDAP administrator with *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8016",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(*",
+      "description": "LDAP administrator paren *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8017",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(|(*",
+      "description": "LDAP administrator OR *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8018",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator*)(uid=*",
+      "description": "LDAP administrator with *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8019",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(*)(uid=*",
+      "description": "LDAP administrator paren *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8020",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(|(*)(uid=*",
+      "description": "LDAP administrator OR *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8021",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator*)(|(uid=*",
+      "description": "LDAP administrator with *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8022",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(*)(|(uid=*",
+      "description": "LDAP administrator paren *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8023",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(|(*)(|(uid=*",
+      "description": "LDAP administrator OR *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8024",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator*)(objectClass=*",
+      "description": "LDAP administrator with *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8025",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(*)(objectClass=*",
+      "description": "LDAP administrator paren *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8026",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(|(*)(objectClass=*",
+      "description": "LDAP administrator OR *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8027",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator*)(!(&(objectClass=*",
+      "description": "LDAP administrator with *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8028",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(*)(!(&(objectClass=*",
+      "description": "LDAP administrator paren *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8029",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "administrator)(|(*)(!(&(objectClass=*",
+      "description": "LDAP administrator OR *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8030",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root*",
+      "description": "LDAP root with *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8031",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(*",
+      "description": "LDAP root paren *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8032",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(|(*",
+      "description": "LDAP root OR *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8033",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root*)(uid=*",
+      "description": "LDAP root with *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8034",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(*)(uid=*",
+      "description": "LDAP root paren *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8035",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(|(*)(uid=*",
+      "description": "LDAP root OR *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8036",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root*)(|(uid=*",
+      "description": "LDAP root with *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8037",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(*)(|(uid=*",
+      "description": "LDAP root paren *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8038",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(|(*)(|(uid=*",
+      "description": "LDAP root OR *)(|(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8039",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root*)(objectClass=*",
+      "description": "LDAP root with *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8040",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(*)(objectClass=*",
+      "description": "LDAP root paren *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8041",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(|(*)(objectClass=*",
+      "description": "LDAP root OR *)(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8042",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root*)(!(&(objectClass=*",
+      "description": "LDAP root with *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8043",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(*)(!(&(objectClass=*",
+      "description": "LDAP root paren *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8044",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "root)(|(*)(!(&(objectClass=*",
+      "description": "LDAP root OR *)(!(&(objectClass=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8045",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "user*",
+      "description": "LDAP user with *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8046",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "user)(*",
+      "description": "LDAP user paren *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8047",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "user)(|(*",
+      "description": "LDAP user OR *",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8048",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "user*)(uid=*",
+      "description": "LDAP user with *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "ldap_injection-8049",
+      "category": "ldap_injection",
+      "subcategory": "comprehensive",
+      "payload": "user)(*)(uid=*",
+      "description": "LDAP user paren *)(uid=*",
+      "technique": "ldap_injection",
+      "source": "generated_massive",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}

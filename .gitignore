@@ -43,13 +43,20 @@ htmlcov/
 # Logs
 *.log
 
-# Results
+# Results & generated reports
 results/
 reports/
-*.html
+*_report.html
+*_results*.json
+*_output.txt
 *.csv
+
+# Package build
+dist/
+*.egg-info/
 
 # Sensitive
 config.ini
 secrets.json
 .env
+targets.txt

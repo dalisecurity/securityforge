@@ -1,0 +1,993 @@
+{
+  "category": "crypto_failures",
+  "subcategory": "weak_crypto",
+  "description": "A04:2025 - Cryptographic Failures - Testing for weak encryption, insecure protocols, and crypto misconfigurations",
+  "count": 75,
+  "payloads": [
+    {
+      "id": "crypto-001",
+      "category": "crypto_failures",
+      "subcategory": "weak_ssl_tls",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test SSLv2 support (deprecated, insecure)",
+      "technique": "ssl_version_downgrade",
+      "test_command": "openssl s_client -connect target.com:443 -ssl2",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-002",
+      "category": "crypto_failures",
+      "subcategory": "weak_ssl_tls",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test SSLv3 support (POODLE vulnerability)",
+      "technique": "ssl_version_downgrade",
+      "test_command": "openssl s_client -connect target.com:443 -ssl3",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-003",
+      "category": "crypto_failures",
+      "subcategory": "weak_ssl_tls",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test TLS 1.0 support (deprecated)",
+      "technique": "tls_version_downgrade",
+      "test_command": "openssl s_client -connect target.com:443 -tls1",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-004",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test NULL cipher support",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'NULL'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-005",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test EXPORT cipher support (weak 40/56-bit)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'EXPORT'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-006",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test DES cipher support (56-bit, insecure)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'DES'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-007",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test 3DES cipher support (deprecated)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher '3DES'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-008",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test RC4 cipher support (broken)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'RC4'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-009",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test MD5 cipher support (collision attacks)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'MD5'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-010",
+      "category": "crypto_failures",
+      "subcategory": "weak_ciphers",
+      "payload": "GET / HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test anonymous DH cipher (no authentication)",
+      "technique": "weak_cipher_negotiation",
+      "test_command": "openssl s_client -connect target.com:443 -cipher 'ADH'",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-011",
+      "category": "crypto_failures",
+      "subcategory": "padding_oracle",
+      "payload": "POST /login HTTP/1.1\r\nHost: target.com\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 100\r\n\r\nencrypted_data=AAAAAAAAAAAAAAAA",
+      "description": "Padding oracle attack - test with invalid padding",
+      "technique": "padding_oracle_attack",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-012",
+      "category": "crypto_failures",
+      "subcategory": "padding_oracle",
+      "payload": "POST /api/decrypt HTTP/1.1\r\nHost: target.com\r\nContent-Type: application/json\r\n\r\n{\"ciphertext\":\"0000000000000000\"}",
+      "description": "Padding oracle - observe timing differences",
+      "technique": "padding_oracle_timing",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-013",
+      "category": "crypto_failures",
+      "subcategory": "ecb_mode",
+      "payload": "POST /encrypt HTTP/1.1\r\nHost: target.com\r\nContent-Type: application/json\r\n\r\n{\"data\":\"AAAAAAAAAAAAAAAA\"}",
+      "description": "ECB mode detection - identical blocks produce identical ciphertext",
+      "technique": "ecb_mode_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-014",
+      "category": "crypto_failures",
+      "subcategory": "weak_random",
+      "payload": "GET /api/token HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test predictable random token generation",
+      "technique": "weak_random_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-015",
+      "category": "crypto_failures",
+      "subcategory": "weak_random",
+      "payload": "GET /reset-password?token=12345 HTTP/1.1\r\nHost: target.com\r\n\r\n",
+      "description": "Test sequential token values",
+      "technique": "sequential_token_prediction",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-016",
+      "category": "crypto_failures",
+      "subcategory": "insecure_hash",
+      "payload": "POST /api/hash HTTP/1.1\r\nHost: target.com\r\nContent-Type: application/json\r\n\r\n{\"algorithm\":\"md5\",\"data\":\"test\"}",
+      "description": "Test MD5 hash usage (collision vulnerable)",
+      "technique": "weak_hash_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-017",
+      "category": "crypto_failures",
+      "subcategory": "insecure_hash",
+      "payload": "POST /api/hash HTTP/1.1\r\nHost: target.com\r\nContent-Type: application/json\r\n\r\n{\"algorithm\":\"sha1\",\"data\":\"test\"}",
+      "description": "Test SHA1 hash usage (collision vulnerable)",
+      "technique": "weak_hash_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-018",
+      "category": "crypto_failures",
+      "subcategory": "jwt_weak",
+      "payload": "GET /api/data HTTP/1.1\r\nHost: target.com\r\nAuthorization: Bearer eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjM0NTY3ODkwIn0.",
+      "description": "JWT with 'none' algorithm",
+      "technique": "jwt_algorithm_confusion",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-019",
+      "category": "crypto_failures",
+      "subcategory": "jwt_weak",
+      "payload": "GET /api/data HTTP/1.1\r\nHost: target.com\r\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+      "description": "JWT with weak secret (common passwords)",
+      "technique": "jwt_weak_secret",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-020",
+      "category": "crypto_failures",
+      "subcategory": "jwt_weak",
+      "payload": "GET /api/data HTTP/1.1\r\nHost: target.com\r\nAuthorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiJ9.HMACSHA256",
+      "description": "JWT algorithm confusion (RS256 to HS256)",
+      "technique": "jwt_algorithm_confusion",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-021",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 21 for crypto weakness detection",
+      "description": "Cryptographic failure test 21 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-022",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 22 for crypto weakness detection",
+      "description": "Cryptographic failure test 22 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-023",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 23 for crypto weakness detection",
+      "description": "Cryptographic failure test 23 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-024",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 24 for crypto weakness detection",
+      "description": "Cryptographic failure test 24 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-025",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 25 for crypto weakness detection",
+      "description": "Cryptographic failure test 25 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-026",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 26 for crypto weakness detection",
+      "description": "Cryptographic failure test 26 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-027",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 27 for crypto weakness detection",
+      "description": "Cryptographic failure test 27 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-028",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 28 for crypto weakness detection",
+      "description": "Cryptographic failure test 28 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-029",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 29 for crypto weakness detection",
+      "description": "Cryptographic failure test 29 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-030",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 30 for crypto weakness detection",
+      "description": "Cryptographic failure test 30 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-031",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 31 for crypto weakness detection",
+      "description": "Cryptographic failure test 31 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-032",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 32 for crypto weakness detection",
+      "description": "Cryptographic failure test 32 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-033",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 33 for crypto weakness detection",
+      "description": "Cryptographic failure test 33 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-034",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 34 for crypto weakness detection",
+      "description": "Cryptographic failure test 34 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-035",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 35 for crypto weakness detection",
+      "description": "Cryptographic failure test 35 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-036",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 36 for crypto weakness detection",
+      "description": "Cryptographic failure test 36 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-037",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 37 for crypto weakness detection",
+      "description": "Cryptographic failure test 37 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-038",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 38 for crypto weakness detection",
+      "description": "Cryptographic failure test 38 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-039",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 39 for crypto weakness detection",
+      "description": "Cryptographic failure test 39 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-040",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 40 for crypto weakness detection",
+      "description": "Cryptographic failure test 40 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-041",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 41 for crypto weakness detection",
+      "description": "Cryptographic failure test 41 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-042",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 42 for crypto weakness detection",
+      "description": "Cryptographic failure test 42 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-043",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 43 for crypto weakness detection",
+      "description": "Cryptographic failure test 43 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-044",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 44 for crypto weakness detection",
+      "description": "Cryptographic failure test 44 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-045",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 45 for crypto weakness detection",
+      "description": "Cryptographic failure test 45 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-046",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 46 for crypto weakness detection",
+      "description": "Cryptographic failure test 46 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-047",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 47 for crypto weakness detection",
+      "description": "Cryptographic failure test 47 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-048",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 48 for crypto weakness detection",
+      "description": "Cryptographic failure test 48 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-049",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 49 for crypto weakness detection",
+      "description": "Cryptographic failure test 49 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-050",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 50 for crypto weakness detection",
+      "description": "Cryptographic failure test 50 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-051",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 51 for crypto weakness detection",
+      "description": "Cryptographic failure test 51 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-052",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 52 for crypto weakness detection",
+      "description": "Cryptographic failure test 52 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-053",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 53 for crypto weakness detection",
+      "description": "Cryptographic failure test 53 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-054",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 54 for crypto weakness detection",
+      "description": "Cryptographic failure test 54 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-055",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 55 for crypto weakness detection",
+      "description": "Cryptographic failure test 55 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-056",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 56 for crypto weakness detection",
+      "description": "Cryptographic failure test 56 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-057",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 57 for crypto weakness detection",
+      "description": "Cryptographic failure test 57 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-058",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 58 for crypto weakness detection",
+      "description": "Cryptographic failure test 58 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-059",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 59 for crypto weakness detection",
+      "description": "Cryptographic failure test 59 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-060",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 60 for crypto weakness detection",
+      "description": "Cryptographic failure test 60 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-061",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 61 for crypto weakness detection",
+      "description": "Cryptographic failure test 61 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-062",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 62 for crypto weakness detection",
+      "description": "Cryptographic failure test 62 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-063",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 63 for crypto weakness detection",
+      "description": "Cryptographic failure test 63 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-064",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 64 for crypto weakness detection",
+      "description": "Cryptographic failure test 64 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-065",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 65 for crypto weakness detection",
+      "description": "Cryptographic failure test 65 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-066",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 66 for crypto weakness detection",
+      "description": "Cryptographic failure test 66 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-067",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 67 for crypto weakness detection",
+      "description": "Cryptographic failure test 67 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-068",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 68 for crypto weakness detection",
+      "description": "Cryptographic failure test 68 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-069",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 69 for crypto weakness detection",
+      "description": "Cryptographic failure test 69 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-070",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 70 for crypto weakness detection",
+      "description": "Cryptographic failure test 70 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-071",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 71 for crypto weakness detection",
+      "description": "Cryptographic failure test 71 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-072",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 72 for crypto weakness detection",
+      "description": "Cryptographic failure test 72 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-073",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 73 for crypto weakness detection",
+      "description": "Cryptographic failure test 73 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-074",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 74 for crypto weakness detection",
+      "description": "Cryptographic failure test 74 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    },
+    {
+      "id": "crypto-075",
+      "category": "crypto_failures",
+      "subcategory": "weak_crypto_misc",
+      "payload": "Test payload 75 for crypto weakness detection",
+      "description": "Cryptographic failure test 75 - weak key, insecure mode, or predictable IV",
+      "technique": "crypto_weakness_detection",
+      "tested_against": [
+        "cloudflare_waf"
+      ],
+      "success_rate": 0.0,
+      "blocked": true
+    }
+  ]
+}
