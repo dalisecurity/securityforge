@@ -1,8 +1,8 @@
 # SecurityForge
 
-### �️ *Complete OWASP Security Testing Platform with AI-Powered WAF Intelligence*
+### ⚔️ *Forge your attack payloads with AI — 4,000+ exploits, 25 WAF detections, works with Claude & ChatGPT*
 
-**Forge Your Security Defense** • 100% OWASP Coverage • 3,085+ Payloads • 25+ WAF Detection • AI-Powered Testing
+**The open-source offensive security toolkit built for the AI era** • 4,025+ Payloads • 25 WAF Fingerprints • Zero-Config • AI-Native
 
 [![Total Payloads](https://img.shields.io/badge/Total_Payloads-4025+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/securityforge)
 [![OWASP Coverage](https://img.shields.io/badge/OWASP_Coverage-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/securityforge)
@@ -29,11 +29,17 @@
 > ⚠️ **FOR EDUCATIONAL AND AUTHORIZED SECURITY RESEARCH ONLY**  
 > This tool is designed for security professionals, researchers, and students to learn about security testing techniques and test systems they own or have explicit permission to test. Unauthorized testing is illegal.
 
-## 🎯 Complete OWASP Security Testing Platform
+## ⚡ Why SecurityForge?
 
-**SecurityForge** is the most comprehensive security testing platform with **100% coverage across all major OWASP frameworks**. With **4,025+ attack payloads**, intelligent **WAF detection for 25+ vendors**, and **AI-powered testing workflows**, SecurityForge provides everything security professionals need for modern application security testing.
+Most payload collections are just static text files. **SecurityForge is different** — it's an AI-native toolkit that lets you **generate, test, and report** in seconds:
 
-### 📊 Complete OWASP Coverage
+- 🤖 **Ask AI to build payloads** — works with Claude Code & ChatGPT out of the box
+- 🔍 **Auto-detect which WAF** you're facing — 25 vendors fingerprinted instantly
+- 📊 **One-command reports** — professional HTML output with vuln analysis
+- 🎯 **4,025+ battle-tested payloads** — XSS, SQLi, SSRF, SSTI, LLM jailbreaks, and more
+- ⚡ **Zero config** — `python3 waf_tester.py -i` and you're testing
+
+### 📊 Full OWASP Coverage (100%)
 
 | Framework | Payloads | Coverage | Categories |
 |-----------|----------|----------|------------|
@@ -45,15 +51,13 @@
 | **Additional Payloads** | 490+ | ✅ 100% | XSS, SQLi, XXE, SSTI, etc. |
 | **Total** | **4,025+** | **✅ 100%** | **40+ Categories** |
 
-### 🛡️ Key Features
+### � Built For
 
-- ✅ **100% OWASP Coverage** - All 4 major OWASP frameworks fully covered
-- 🔍 **Intelligent WAF Detection** - Detect and identify 25+ WAF vendors with confidence scoring
-- 🤖 **AI-Powered Testing** - Seamless integration with Claude Code and ChatGPT
-- 📊 **Professional Reports** - Generate comprehensive HTML security reports
-- 💡 **Smart Recommendations** - Automated WAF deployment suggestions and security guidance
-- 🎯 **WordPress Security** - 3 critical CVEs with 450+ specialized payloads
-- 🌐 **Multi-Platform** - Web, Mobile, API, and AI/LLM security testing
+- **Bug bounty hunters** — ready-made payloads from real-world disclosures + 120 CVEs
+- **Red teamers & pentesters** — WAF detection → payload selection → report, all in one tool
+- **Security researchers** — AI-assisted payload generation and bypass research
+- **Blue teams** — validate your WAF config against 4,000+ real attack patterns
+- **Students** — learn offensive security with guided AI workflows
 
 ### 🛡️ WAF Vendor Detection — 25 Vendors Supported
 

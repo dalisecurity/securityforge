@@ -1,15 +1,15 @@
-# 🛡️ SecurityForge: Complete OWASP Security Testing Platform
+# ⚔️ SecurityForge: Forge Your Attack Payloads with AI
 
 <p align="center">
   <img src="assets/icons/securityforge-logo.svg" alt="SecurityForge Logo" width="200"/>
 </p>
 
 <p align="center">
-  <strong>Complete OWASP Security Testing Platform with AI-Powered WAF Intelligence</strong>
+  <strong>Forge your attack payloads with AI — 4,000+ exploits, 25 WAF detections, works with Claude & ChatGPT</strong>
 </p>
 
 <p align="center">
-  <strong>Forge Your Security Defense</strong> • 100% OWASP Coverage • 4,025+ Payloads • 25+ WAF Detection • AI-Powered Testing
+  <strong>The open-source offensive security toolkit built for the AI era</strong> • 4,025+ Payloads • 25 WAF Fingerprints • Zero-Config • AI-Native
 </p>
 
 <p align="center">
@@ -30,13 +30,23 @@
 
 ---
 
-## Overview
+## ⚡ Why SecurityForge?
 
-**SecurityForge** is the most comprehensive security testing platform with **100% coverage across all major OWASP frameworks**. With **4,025+ attack payloads**, intelligent **WAF detection for 25+ vendors**, and **AI-powered testing workflows**, SecurityForge provides everything security professionals need for modern application security testing.
+Most payload collections are just static text files. **SecurityForge is different** — it's an AI-native toolkit that lets you **generate, test, and report** in seconds:
 
-### 🎯 What Makes SecurityForge Complete
+- 🤖 **Ask AI to build payloads** — works with Claude Code & ChatGPT out of the box
+- 🔍 **Auto-detect which WAF** you're facing — 25 vendors fingerprinted instantly
+- 📊 **One-command reports** — professional HTML output with vuln analysis
+- 🎯 **4,025+ battle-tested payloads** — XSS, SQLi, SSRF, SSTI, LLM jailbreaks, and more
+- ⚡ **Zero config** — `python3 waf_tester.py -i` and you're testing
 
-SecurityForge combines **intelligent WAF detection**, **automated security recommendations**, and **comprehensive OWASP coverage** to help security professionals quickly identify protection gaps, test for vulnerabilities, and deploy appropriate security controls.
+### 🔥 Built For
+
+- **Bug bounty hunters** — ready-made payloads from real-world disclosures + 120 CVEs
+- **Red teamers & pentesters** — WAF detection → payload selection → report, all in one tool
+- **Security researchers** — AI-assisted payload generation and bypass research
+- **Blue teams** — validate your WAF config against 4,000+ real attack patterns
+- **Students** — learn offensive security with guided AI workflows
 
 ### 🎯 Complete Attack Coverage
 
