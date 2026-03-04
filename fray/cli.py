@@ -84,6 +84,31 @@ def cmd_test(args):
             all_payloads.extend(tester.load_payloads(str(pf)))
     elif args.payload_file:
         all_payloads.extend(tester.load_payloads(args.payload_file))
+    elif args.smart:
+        # Smart mode: run recon to fingerprint target, then load prioritized categories
+        from fray.recon import run_recon
+        print(f"\n🔍 Running reconnaissance on {args.target}...")
+        recon = run_recon(args.target, timeout=args.timeout)
+        recommended = recon.get("recommended_categories", [])
+        fp = recon.get("fingerprint", {})
+        techs = fp.get("technologies", {})
+        if techs:
+            tech_list = ", ".join(f"{t} ({c:.0%})" for t, c in techs.items())
+            print(f"   Detected: {tech_list}")
+        if recommended:
+            print(f"   Priority categories: {', '.join(recommended)}")
+            for cat in recommended:
+                cat_dir = PAYLOADS_DIR / cat
+                if cat_dir.is_dir():
+                    for pf in sorted(cat_dir.glob("*.json")):
+                        all_payloads.extend(tester.load_payloads(str(pf)))
+        if not all_payloads:
+            # Fallback: load all categories
+            print(f"   No specific recommendations, loading all categories")
+            for cat_dir in sorted(PAYLOADS_DIR.iterdir()):
+                if cat_dir.is_dir():
+                    for pf in sorted(cat_dir.glob("*.json")):
+                        all_payloads.extend(tester.load_payloads(str(pf)))
     else:
         # Load all payloads
         for cat_dir in sorted(PAYLOADS_DIR.iterdir()):
@@ -282,6 +307,22 @@ def cmd_ci(args):
     )
 
 
+def cmd_recon(args):
+    """Run target reconnaissance and fingerprinting"""
+    from fray.recon import run_recon, print_recon
+    result = run_recon(args.target, timeout=getattr(args, 'timeout', 8))
+    if getattr(args, 'json', False):
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        print_recon(result)
+    # Save output if requested
+    if getattr(args, 'output', None):
+        _validate_output_path(args.output)
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+        print(f"  Recon saved to {args.output}")
+
+
 def cmd_learn(args):
     """Start interactive CTF-style security tutorial"""
     from fray.learn import run_learn
@@ -380,6 +421,7 @@ Examples:
   fray validate https://example.com --waf cloudflare -v
   fray bounty --platform hackerone --program github
   fray bounty --urls targets.txt --categories xss,sqli
+  fray recon https://example.com
   fray payloads
   fray report --output report.html
 
@@ -388,6 +430,14 @@ Documentation: https://github.com/dalisecurity/fray
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # recon
+    p_recon = subparsers.add_parser("recon", help="Reconnaissance: HTTP, TLS, headers, app fingerprinting")
+    p_recon.add_argument("target", help="Target URL (e.g. https://example.com)")
+    p_recon.add_argument("-t", "--timeout", type=int, default=8, help="Request timeout (default: 8)")
+    p_recon.add_argument("--json", action="store_true", help="Output raw JSON instead of pretty-print")
+    p_recon.add_argument("-o", "--output", default=None, help="Save recon JSON to file")
+    p_recon.set_defaults(func=cmd_recon)
 
     # detect
     p_detect = subparsers.add_parser("detect", help="Detect WAF vendor on target URL")
