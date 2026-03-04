@@ -44,7 +44,7 @@ Homepage = "https://github.com/dalisecurity/fray"
 Documentation = "https://github.com/dalisecurity/fray/tree/hugo/docs"
 Repository = "https://github.com/dalisecurity/fray"
 Issues = "https://github.com/dalisecurity/fray/issues"
-Blog = "https://dalisec.io/research/blog-securityforge-launch.html"
+Blog = "https://dalisec.io/research/blog-fray-launch.html"
 
 [project.scripts]
 fray = "fray.cli:main"
