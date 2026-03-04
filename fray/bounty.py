@@ -615,13 +615,24 @@ def scan_target(url: str, categories: List[str], max_payloads: int = 10,
 
         bypassed = [
             {
-                "payload": r.get("payload", "")[:80],
+                "payload": r.get("payload", ""),
                 "status": r.get("status", 0),
                 "final_url": r.get("final_url", ""),
                 "redirects": r.get("redirects", 0),
+                "reflected": r.get("reflected", False),
+                "reflection_context": r.get("reflection_context", ""),
+                "response_length": r.get("response_length", 0),
+                "security_headers": r.get("security_headers", {}),
             }
             for r in results if not r.get("blocked")
         ]
+
+        # Collect security headers from first non-blocked response
+        cat_sec_headers = {}
+        for r in results:
+            if not r.get("blocked") and r.get("security_headers"):
+                cat_sec_headers = r["security_headers"]
+                break
 
         result["categories"][cat] = {
             "total": len(results),
@@ -629,6 +640,7 @@ def scan_target(url: str, categories: List[str], max_payloads: int = 10,
             "passed": passed,
             "block_rate": round(rate, 1),
             "bypassed": bypassed,
+            "security_headers": cat_sec_headers,
         }
         result["total_tested"] += len(results)
         result["total_blocked"] += blocked
@@ -673,44 +685,220 @@ def print_bounty_report(targets: List[Dict], program: str, platform: str):
         if passed > 0:
             interesting_targets.append(t)
 
-    # Bypass details
+    # Bypass details with reflection status
     if interesting_targets:
         print(f"\n  {Colors.RED}{Colors.BOLD}Potential Findings{Colors.END}")
         for t in interesting_targets:
-            print(f"\n  {Colors.CYAN}{t['url']}{Colors.END} — {t.get('waf', 'Unknown')} WAF")
+            print(f"\n  {Colors.CYAN}{t['url']}{Colors.END} — {t.get('waf', 'Unknown') or 'No'} WAF")
             for cat, cr in t.get("categories", {}).items():
                 if cr.get("passed", 0) > 0:
-                    print(f"    {Colors.RED}{cat}:{Colors.END} {cr['passed']} bypass(es)")
+                    reflected_count = sum(1 for bp in cr.get("bypassed", []) if bp.get("reflected"))
+                    print(f"    {Colors.RED}{cat}:{Colors.END} {cr['passed']} unblocked, "
+                          f"{Colors.RED}{reflected_count} reflected{Colors.END}" if reflected_count
+                          else f"    {Colors.RED}{cat}:{Colors.END} {cr['passed']} unblocked, "
+                          f"{Colors.DIM}0 reflected{Colors.END}")
                     for bp in cr.get("bypassed", [])[:3]:
-                        redir = f" (→{bp.get('final_url', '')})" if bp.get("redirects", 0) > 0 else ""
-                        print(f"      Status {bp.get('status', '?')}: {bp.get('payload', '')[:55]}{redir}")
+                        ref_tag = f" {Colors.RED}REFLECTED{Colors.END}" if bp.get("reflected") else ""
+                        print(f"      HTTP {bp.get('status', '?')}: {bp.get('payload', '')[:55]}{ref_tag}")
 
     # Summary
     total_tested = sum(t.get("total_tested", 0) for t in targets)
     total_blocked = sum(t.get("total_blocked", 0) for t in targets)
     overall_rate = (total_blocked / total_tested * 100) if total_tested > 0 else 0
+    total_reflected = sum(
+        sum(1 for bp in cr.get("bypassed", []) if bp.get("reflected"))
+        for t in targets for cr in t.get("categories", {}).values()
+    )
 
     print(f"\n  {Colors.DIM}{'─' * 65}{Colors.END}")
     print(f"  {Colors.BOLD}Summary{Colors.END}")
     print(f"  Targets scanned:  {len(targets)}")
     print(f"  Payloads tested:  {total_tested}")
     print(f"  Overall block:    {overall_rate:.1f}%")
-    print(f"  Total bypasses:   {Colors.RED if total_bypassed > 0 else Colors.GREEN}"
+    print(f"  Total unblocked:  {Colors.RED if total_bypassed > 0 else Colors.GREEN}"
           f"{total_bypassed}{Colors.END}")
+    print(f"  Reflected (PoC):  {Colors.RED if total_reflected > 0 else Colors.GREEN}"
+          f"{total_reflected}{Colors.END}")
     print(f"\n{Colors.DIM}{'━' * 65}{Colors.END}")
 
-    # HackerOne-style report for findings
+    # Security-researcher-quality report for findings
     if interesting_targets:
         print(f"\n{'=' * 72}")
-        print(f"  {Colors.BOLD}HackerOne Report Format — Copy/Paste Below{Colors.END}")
+        print(f"  {Colors.BOLD}Vulnerability Report — Ready to Submit{Colors.END}")
         print(f"{'=' * 72}")
         for idx, t in enumerate(interesting_targets, 1):
             _print_h1_finding(t, idx, program, platform)
         print(f"{'=' * 72}\n")
 
 
+# ── Category metadata for professional reports ──────────────────────────────
+
+_VULN_META = {
+    "xss": {
+        "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation",
+        "owasp": "A03:2021 — Injection",
+        "cvss_base": "6.1",
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+        "severity": "Medium",
+        "title_verb": "Cross-Site Scripting (Reflected)",
+        "impact": [
+            "Session hijacking via stolen cookies (`document.cookie` exfiltration)",
+            "Account takeover by injecting credential-harvesting forms into the trusted domain",
+            "Phishing attacks hosted on the legitimate domain, bypassing user suspicion",
+            "Client-side keylogging and form data interception",
+            "Defacement of the application for targeted users",
+        ],
+        "attack_scenario": (
+            "An attacker crafts a URL containing a malicious {cat} payload in the `input` "
+            "parameter and sends it to a victim (e.g., via email or social media). When the "
+            "victim clicks the link, the payload executes in their browser session within "
+            "the trusted `{url}` origin. This allows the attacker to steal the victim's "
+            "session token, redirect them to a phishing page, or perform actions on their behalf."
+        ),
+        "remediation": [
+            "Implement context-aware output encoding (HTML entity, JavaScript, URL encoding depending on the injection point)",
+            "Deploy a strict Content-Security-Policy (CSP) header — at minimum: `script-src 'self'` — to prevent inline script execution",
+            "Set `HttpOnly` and `Secure` flags on session cookies to limit the impact of XSS",
+            "Use a templating engine that auto-escapes output by default (e.g., Jinja2 with autoescape, React JSX)",
+            "Review and harden WAF rules to detect common XSS patterns including obfuscated variants",
+        ],
+    },
+    "sqli": {
+        "cwe": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command",
+        "owasp": "A03:2021 — Injection",
+        "cvss_base": "8.6",
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N",
+        "severity": "High",
+        "title_verb": "SQL Injection",
+        "impact": [
+            "Full database extraction including user credentials, PII, and payment data",
+            "Authentication bypass via crafted `OR 1=1` or `UNION`-based queries",
+            "Privilege escalation from regular user to database administrator",
+            "Data manipulation or deletion through `UPDATE`/`DELETE` injection",
+            "In some configurations, remote code execution via `xp_cmdshell` or `LOAD_FILE()`",
+        ],
+        "attack_scenario": (
+            "An attacker submits a crafted SQL payload through the `input` parameter on `{url}`. "
+            "Because the WAF does not filter the payload and the server-side query likely "
+            "concatenates user input directly, the attacker can exfiltrate sensitive data "
+            "using `UNION SELECT` or blind techniques (time-based, boolean-based). "
+            "In the worst case, this provides full read access to the database."
+        ),
+        "remediation": [
+            "Use parameterized queries (prepared statements) for ALL database interactions — this is the primary fix",
+            "Implement an allowlist for expected input formats where possible",
+            "Apply the principle of least privilege to database accounts (no admin privileges for web app users)",
+            "Update WAF rules to detect SQLi patterns including inline comments, encoding bypasses, and second-order injection",
+            "Enable database query logging and set up alerts for suspicious query patterns",
+        ],
+    },
+    "ssti": {
+        "cwe": "CWE-1336: Improper Neutralization of Special Elements Used in a Template Engine",
+        "owasp": "A03:2021 — Injection",
+        "cvss_base": "9.8",
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "severity": "Critical",
+        "title_verb": "Server-Side Template Injection",
+        "impact": [
+            "Remote Code Execution (RCE) on the application server",
+            "Full server compromise including file system read/write access",
+            "Lateral movement to internal infrastructure",
+            "Data exfiltration from the server environment including secrets and API keys",
+        ],
+        "attack_scenario": (
+            "An attacker injects a template expression (e.g., `{{7*7}}`) through user input on `{url}`. "
+            "If the server evaluates this and returns `49`, SSTI is confirmed. The attacker can "
+            "then escalate to RCE using engine-specific payloads (e.g., Jinja2 `__class__.__mro__` chains)."
+        ),
+        "remediation": [
+            "Never pass user input directly into template rendering functions",
+            "Use a sandboxed template engine or restrict the template context",
+            "Implement strict input validation with allowlisted characters",
+            "Update WAF rules to block template expression patterns (`{{`, `${`, `<%`)",
+        ],
+    },
+    "cmdi": {
+        "cwe": "CWE-78: Improper Neutralization of Special Elements used in an OS Command",
+        "owasp": "A03:2021 — Injection",
+        "cvss_base": "9.8",
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "severity": "Critical",
+        "title_verb": "OS Command Injection",
+        "impact": [
+            "Full remote code execution on the server",
+            "Complete server compromise — read/write/delete any file",
+            "Pivoting to internal network services",
+            "Installation of backdoors or cryptocurrency miners",
+        ],
+        "attack_scenario": (
+            "An attacker injects shell metacharacters (`;`, `|`, `$()`) through user input on `{url}`. "
+            "The application passes this unsanitized input to a system command, allowing the attacker "
+            "to execute arbitrary OS commands with the web server's privileges."
+        ),
+        "remediation": [
+            "Avoid calling OS commands from user input entirely — use language-native libraries instead",
+            "If OS commands are unavoidable, use strict allowlisting of expected values",
+            "Never use shell=True or string concatenation for command construction",
+            "Run the application with minimal OS privileges (non-root, restricted filesystem)",
+        ],
+    },
+    "ssrf": {
+        "cwe": "CWE-918: Server-Side Request Forgery",
+        "owasp": "A10:2021 — Server-Side Request Forgery (SSRF)",
+        "cvss_base": "7.5",
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N",
+        "severity": "High",
+        "title_verb": "Server-Side Request Forgery",
+        "impact": [
+            "Access to internal services (databases, admin panels) not exposed to the internet",
+            "Cloud metadata endpoint access (e.g., `169.254.169.254`) to steal IAM credentials",
+            "Port scanning of internal infrastructure",
+            "Bypassing network-level access controls",
+        ],
+        "attack_scenario": (
+            "An attacker provides an internal URL (e.g., `http://169.254.169.254/latest/meta-data/`) "
+            "through a URL parameter on `{url}`. The server fetches this URL on behalf of the attacker, "
+            "potentially leaking cloud provider credentials or internal service data."
+        ),
+        "remediation": [
+            "Implement an allowlist of permitted destination hosts/URLs",
+            "Block requests to private IP ranges (10.x, 172.16.x, 192.168.x, 169.254.x)",
+            "Disable HTTP redirects in server-side HTTP clients",
+            "Use network-level segmentation to prevent the application from reaching sensitive internal services",
+        ],
+    },
+}
+
+# Default fallback for categories not in _VULN_META
+_VULN_META_DEFAULT = {
+    "cwe": "CWE-20: Improper Input Validation",
+    "owasp": "A03:2021 — Injection",
+    "cvss_base": "5.3",
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+    "severity": "Medium",
+    "title_verb": "Input Validation Bypass",
+    "impact": [
+        "Unfiltered payloads reach the application backend, increasing attack surface",
+        "Potential for exploitation depending on server-side handling of the input",
+    ],
+    "attack_scenario": (
+        "An attacker sends crafted payloads through user-controlled input on `{url}`. "
+        "The WAF fails to block these payloads, allowing them to reach the backend application."
+    ),
+    "remediation": [
+        "Implement server-side input validation with strict allowlisting",
+        "Review and update WAF rules for the relevant attack patterns",
+        "Apply defense-in-depth: do not rely solely on the WAF for input filtering",
+    ],
+}
+
+
 def _print_h1_finding(target: Dict, finding_num: int, program: str, platform: str):
-    """Print a single finding in HackerOne-style report format."""
+    """Print a single finding in security-researcher-quality report format.
+
+    Includes: verified reflection, security header analysis, CVSS scoring,
+    CWE/OWASP mapping, realistic attack scenario, and actionable remediation.
+    """
     url = target["url"]
     waf = target.get("waf", "None") or "None"
 
@@ -723,57 +911,153 @@ def _print_h1_finding(target: Dict, finding_num: int, program: str, platform: st
     if not all_bypasses:
         return
 
-    # Determine severity based on category
-    severity_map = {"xss": "Medium", "sqli": "High", "ssti": "High",
-                    "cmdi": "Critical", "ssrf": "High", "xxe": "High",
-                    "lfi": "High", "rce": "Critical"}
     top_cat = all_bypasses[0].get("category", "xss")
-    severity = severity_map.get(top_cat, "Medium")
+    meta = _VULN_META.get(top_cat, _VULN_META_DEFAULT)
 
+    # Analyze reflection evidence
+    reflected_payloads = [bp for bp in all_bypasses if bp.get("reflected")]
+    unreflected_payloads = [bp for bp in all_bypasses if not bp.get("reflected")]
+
+    # Determine verified severity
+    if reflected_payloads:
+        severity = meta["severity"]
+        verification_status = "Verified — Payload Reflected in Response"
+    else:
+        # Lower severity if no reflection
+        severity_downgrade = {"Critical": "High", "High": "Medium", "Medium": "Low"}
+        severity = severity_downgrade.get(meta["severity"], meta["severity"])
+        verification_status = "Unverified — Payload accepted but not reflected (manual verification recommended)"
+
+    # Collect security headers
+    sec_headers = {}
+    for cr in target.get("categories", {}).values():
+        if cr.get("security_headers"):
+            sec_headers = cr["security_headers"]
+            break
+
+    # ── Title ────────────────────────────────────────────────────────────
     print(f"""
-## Finding #{finding_num}: WAF Bypass — {top_cat.upper()} payloads not blocked on {url}
+{'─' * 72}
+## Finding #{finding_num}: {meta['title_verb']} — {url}
+{'─' * 72}
 
-**Title:** WAF bypass allows unfiltered {top_cat.upper()} payloads on {url}
+**Title:** {meta['title_verb']} via WAF bypass on {url}
+**Severity:** {severity} ({meta['cvss_base']} — {meta['cvss_vector']})
+**Weakness:** {meta['cwe']}
+**OWASP:** {meta['owasp']}
+**Asset:** `{url}`
+**Verification:** {verification_status}""")
 
-**Severity:** {severity}
-
-**Asset:** {url}
-**Program:** {program} ({platform})
-**WAF Detected:** {waf}
-
+    # ── Summary ──────────────────────────────────────────────────────────
+    print(f"""
 ### Summary
-The web application firewall (WAF) on `{url}` fails to block {len(all_bypasses)} out of {target.get('total_tested', 0)} tested {top_cat.upper()} payloads, resulting in a {100 - target.get('block_rate', 0):.1f}% bypass rate. An attacker could leverage these unfiltered payloads to exploit {top_cat.upper()} vulnerabilities on the target.
 
+During authorized security testing of the `{program}` program on {platform}, I identified that `{url}` does not adequately filter {top_cat.upper()} payloads. Out of {target.get('total_tested', 0)} payloads tested, {len(all_bypasses)} were accepted by the server without being blocked by the {"WAF (" + waf + ")" if waf != "None" else "application (no WAF detected)"}.""")
+
+    if reflected_payloads:
+        print(f"""
+**Critically, {len(reflected_payloads)} payload(s) were reflected in the HTTP response body**, confirming the application echoes unsanitized user input back to the client. This is a strong indicator of exploitable {meta['title_verb']}.""")
+    else:
+        print(f"""
+Note: While {len(all_bypasses)} payload(s) passed through without WAF blocking (HTTP {all_bypasses[0].get('status', '?')}), I did not observe direct reflection in the response body during this automated scan. Manual testing is recommended to:
+- Identify the specific injection points (query parameters, form fields, headers)
+- Confirm whether payloads are reflected in other response contexts (JavaScript, HTML attributes, JSON)
+- Check for stored/persistent injection""")
+
+    # ── Steps to Reproduce ───────────────────────────────────────────────
+    print(f"""
 ### Steps to Reproduce
-1. Navigate to `{url}`
-2. Inject the following payload in any user-controlled input parameter:""")
 
-    for i, bp in enumerate(all_bypasses[:5], 1):
-        print(f"   ```")
-        print(f"   {bp.get('payload', '')}")
-        print(f"   ```")
-        redir_note = f" (followed redirect → `{bp.get('final_url', '')}`)" if bp.get("redirects", 0) > 0 else ""
-        print(f"   **Response:** HTTP {bp.get('status', '?')}{redir_note} — payload was NOT blocked by WAF")
-        if i < min(len(all_bypasses), 5):
-            print()
+1. Open a browser or HTTP client (e.g., `curl`, Burp Suite)
+2. Send the following request to `{url}`""")
 
+    # Show reflected payloads first (strongest evidence), then unreflected
+    show_payloads = reflected_payloads[:3] if reflected_payloads else unreflected_payloads[:3]
+    for i, bp in enumerate(show_payloads, 1):
+        final_url_note = ""
+        if bp.get("redirects", 0) > 0:
+            final_url_note = f"\n   (Server redirected {bp['redirects']}x → final: `{bp.get('final_url', '')}`)"
+
+        print(f"""
+**Payload {i}:**
+```
+GET {url}?input={urllib.parse.quote(bp.get('payload', ''), safe='')} HTTP/1.1
+Host: {urllib.parse.urlparse(url).hostname}
+User-Agent: hackerone
+```{final_url_note}
+
+**Response:** HTTP {bp.get('status', '?')} — Payload was **not blocked** by the WAF""")
+
+        if bp.get("reflected"):
+            ctx = bp.get("reflection_context", "")
+            print(f"""
+**Evidence of Reflection** — the payload appears in the response body:
+```html
+{ctx}
+```
+This confirms the server echoes the unsanitized input back to the client.""")
+
+    # ── Security Header Analysis ─────────────────────────────────────────
+    print(f"""
+### Security Header Analysis
+
+| Header | Value | Assessment |
+|--------|-------|------------|""")
+
+    important_headers = {
+        "content-security-policy": ("CSP", "Limits which scripts can execute"),
+        "x-xss-protection": ("X-XSS-Protection", "Legacy browser XSS filter"),
+        "x-content-type-options": ("X-Content-Type-Options", "Prevents MIME sniffing"),
+        "x-frame-options": ("X-Frame-Options", "Prevents clickjacking"),
+        "strict-transport-security": ("HSTS", "Enforces HTTPS"),
+    }
+    missing_critical = []
+    for hdr_key, (display_name, desc) in important_headers.items():
+        val = sec_headers.get(hdr_key, "")
+        if val:
+            print(f"| `{display_name}` | `{val[:50]}` | Present |")
+        else:
+            print(f"| `{display_name}` | *Missing* | **Not set** — {desc} |")
+            missing_critical.append(display_name)
+
+    server_val = sec_headers.get("server", "")
+    if server_val:
+        print(f"| `Server` | `{server_val}` | Consider removing to reduce information leakage |")
+
+    if missing_critical:
+        print(f"\n**{len(missing_critical)} critical security header(s) missing:** {', '.join(missing_critical)}")
+
+    # ── Attack Scenario ──────────────────────────────────────────────────
+    scenario = meta["attack_scenario"].format(cat=top_cat.upper(), url=url)
+    print(f"""
+### Attack Scenario
+
+{scenario}""")
+
+    # ── Impact ───────────────────────────────────────────────────────────
     print(f"""
 ### Impact
-{"- Reflected XSS can steal session cookies, redirect users, or deface the page" if top_cat == "xss" else ""}{"- SQL Injection can leak database contents, bypass authentication, or modify data" if top_cat == "sqli" else ""}{"- Server-Side Template Injection can lead to Remote Code Execution" if top_cat == "ssti" else ""}{"- Command Injection can lead to full server compromise" if top_cat == "cmdi" else ""}{"- SSRF can access internal services or cloud metadata" if top_cat == "ssrf" else ""}
-- The WAF ({waf if waf != "None" else "no WAF detected"}) does not block these payloads
-- Block rate: {target.get('block_rate', 0):.1f}% — {len(all_bypasses)} payload(s) bypassed
+""")
+    for imp in meta["impact"]:
+        print(f"- {imp}")
 
-### Recommended Fix
-- Review and update WAF rules to block the above payload patterns
-- Implement server-side input validation and output encoding
-- Enable strict Content-Security-Policy headers
-- Consider adding rate limiting on user input endpoints
+    # ── Remediation ──────────────────────────────────────────────────────
+    print(f"""
+### Remediation
+""")
+    for i, fix in enumerate(meta["remediation"], 1):
+        print(f"{i}. {fix}")
 
-### Environment
-- **Tool:** Fray v{__version__}
-- **Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
-- **Categories tested:** {', '.join(target.get('categories', {}).keys())}
-- **Total payloads:** {target.get('total_tested', 0)}""")
+    # ── References ───────────────────────────────────────────────────────
+    print(f"""
+### Supporting Material / References
+
+- {meta['cwe']}: https://cwe.mitre.org/data/definitions/{meta['cwe'].split('-')[1].split(':')[0]}.html
+- {meta['owasp']}: https://owasp.org/Top10/
+- CVSS Calculator: https://www.first.org/cvss/calculator/3.1#{meta['cvss_vector']}
+- Testing methodology: Fray v{__version__} (https://github.com/dalisecurity/fray)
+- Scan date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
+- Payloads tested: {target.get('total_tested', 0)} across {', '.join(target.get('categories', {}).keys())}""")
 
 
 # ── Entry Point ──────────────────────────────────────────────────────────────

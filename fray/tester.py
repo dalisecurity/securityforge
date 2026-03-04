@@ -161,6 +161,40 @@ class WAFTester:
 
                 blocked = status in (403, 406, 503)
 
+                # Extract response body for reflection analysis
+                resp_body = ''
+                if '\r\n\r\n' in resp_str:
+                    resp_body = resp_str.split('\r\n\r\n', 1)[1]
+
+                # Check if payload is reflected in response
+                reflected = False
+                reflection_context = ''
+                if not blocked and resp_body:
+                    # Check for raw payload reflection
+                    if payload in resp_body:
+                        reflected = True
+                        idx = resp_body.index(payload)
+                        start = max(0, idx - 40)
+                        end = min(len(resp_body), idx + len(payload) + 40)
+                        reflection_context = resp_body[start:end]
+                    # Check for URL-decoded reflection
+                    elif urllib.parse.unquote(payload) in resp_body:
+                        reflected = True
+                        decoded = urllib.parse.unquote(payload)
+                        idx = resp_body.index(decoded)
+                        start = max(0, idx - 40)
+                        end = min(len(resp_body), idx + len(decoded) + 40)
+                        reflection_context = resp_body[start:end]
+
+                # Collect security headers
+                sec_headers = {}
+                for hdr_name in ('content-security-policy', 'x-xss-protection',
+                                 'x-content-type-options', 'x-frame-options',
+                                 'strict-transport-security', 'content-type',
+                                 'server'):
+                    if hdr_name in headers:
+                        sec_headers[hdr_name] = headers[hdr_name]
+
                 return {
                     'payload': payload,
                     'status': status,
@@ -168,6 +202,10 @@ class WAFTester:
                     'blocked': blocked,
                     'redirects': hop,
                     'final_url': f"{'https' if current_ssl else 'http'}://{current_host}{current_path}",
+                    'reflected': reflected,
+                    'reflection_context': reflection_context[:200],
+                    'response_length': len(resp_body),
+                    'security_headers': sec_headers,
                     'timestamp': datetime.now().isoformat()
                 }
 
