@@ -85,30 +85,106 @@ def cmd_test(args):
     elif args.payload_file:
         all_payloads.extend(tester.load_payloads(args.payload_file))
     elif args.smart:
-        # Smart mode: run recon to fingerprint target, then load prioritized categories
+        # Smart mode: run recon, show results, prompt user before testing
         from fray.recon import run_recon
         print(f"\n🔍 Running reconnaissance on {args.target}...")
         recon = run_recon(args.target, timeout=args.timeout)
-        recommended = recon.get("recommended_categories", [])
         fp = recon.get("fingerprint", {})
         techs = fp.get("technologies", {})
+        recommended = recon.get("recommended_categories", [])
+        hdr = recon.get("headers", {})
+        tls = recon.get("tls", {})
+
+        # Show recon summary
+        print(f"\n{'─' * 55}")
+        print(f"  Target:  {args.target}")
+        tls_ver = tls.get("tls_version") or "?"
+        print(f"  TLS:     {tls_ver}")
+        print(f"  Headers: {hdr.get('score', 0)}%")
         if techs:
             tech_list = ", ".join(f"{t} ({c:.0%})" for t, c in techs.items())
-            print(f"   Detected: {tech_list}")
+            print(f"  Stack:   {tech_list}")
+        else:
+            print(f"  Stack:   (not detected)")
+        print(f"{'─' * 55}")
+
+        # Build category list with payload counts
+        all_categories = sorted([
+            d.name for d in PAYLOADS_DIR.iterdir()
+            if d.is_dir() and not d.name.startswith(".")
+        ])
+
+        def _count_payloads_in_cat(cat_name):
+            cat_dir = PAYLOADS_DIR / cat_name
+            count = 0
+            for pf in cat_dir.glob("*.json"):
+                try:
+                    data = json.loads(pf.read_text(encoding="utf-8"))
+                    plist = data.get("payloads", data) if isinstance(data, dict) else data
+                    count += len(plist) if isinstance(plist, list) else 0
+                except Exception:
+                    pass
+            return count
+
+        auto_yes = getattr(args, 'yes', False)
+
         if recommended:
-            print(f"   Priority categories: {', '.join(recommended)}")
-            for cat in recommended:
-                cat_dir = PAYLOADS_DIR / cat
-                if cat_dir.is_dir():
-                    for pf in sorted(cat_dir.glob("*.json")):
-                        all_payloads.extend(tester.load_payloads(str(pf)))
-        if not all_payloads:
-            # Fallback: load all categories
-            print(f"   No specific recommendations, loading all categories")
-            for cat_dir in sorted(PAYLOADS_DIR.iterdir()):
-                if cat_dir.is_dir():
-                    for pf in sorted(cat_dir.glob("*.json")):
-                        all_payloads.extend(tester.load_payloads(str(pf)))
+            print(f"\n  Recommended categories (based on detected stack):\n")
+            for i, cat in enumerate(recommended, 1):
+                count = _count_payloads_in_cat(cat)
+                print(f"    {i}. {cat:<25} ({count} payloads)")
+            total_rec = sum(_count_payloads_in_cat(c) for c in recommended)
+            total_all = sum(_count_payloads_in_cat(c) for c in all_categories)
+            print(f"\n    Total: {total_rec} payloads (vs {total_all} if all categories)")
+            print()
+            if auto_yes:
+                choice = 'y'
+                print("  → Auto-accepting recommended categories (-y)")
+            else:
+                choice = input("  [Y] Run recommended  [A] Run all  [N] Cancel  [1,3,5] Pick: ").strip().lower()
+        else:
+            print(f"\n  No specific tech detected. All categories available:\n")
+            for i, cat in enumerate(all_categories, 1):
+                count = _count_payloads_in_cat(cat)
+                print(f"    {i}. {cat:<25} ({count} payloads)")
+            print()
+            if auto_yes:
+                choice = 'y'
+                print("  → Auto-accepting all categories (-y)")
+            else:
+                choice = input("  [Y] Run all  [N] Cancel  [1,3,5] Pick specific: ").strip().lower()
+            recommended = all_categories  # treat "y" as all for this path
+
+        if choice == 'n' or choice == '':
+            print("  Cancelled.")
+            sys.exit(0)
+
+        selected_cats = []
+        if choice == 'y':
+            selected_cats = recommended
+        elif choice == 'a':
+            selected_cats = all_categories
+        else:
+            # Parse comma-separated numbers
+            try:
+                indices = [int(x.strip()) for x in choice.split(",")]
+                source = recommended if recommended != all_categories else all_categories
+                for idx in indices:
+                    if 1 <= idx <= len(source):
+                        selected_cats.append(source[idx - 1])
+                if not selected_cats:
+                    print("  Invalid selection. Cancelled.")
+                    sys.exit(1)
+            except ValueError:
+                print("  Invalid input. Cancelled.")
+                sys.exit(1)
+
+        print(f"\n  Loading: {', '.join(selected_cats)}")
+        for cat in selected_cats:
+            cat_dir = PAYLOADS_DIR / cat
+            if cat_dir.is_dir():
+                for pf in sorted(cat_dir.glob("*.json")):
+                    all_payloads.extend(tester.load_payloads(str(pf)))
     else:
         # Load all payloads
         for cat_dir in sorted(PAYLOADS_DIR.iterdir()):
@@ -466,6 +542,8 @@ Documentation: https://github.com/dalisecurity/fray
     p_test.add_argument("--redirect-limit", type=int, default=5, help="Max redirects to follow (default: 5, 0 = none)")
     p_test.add_argument("--report-format", choices=["html", "markdown"], default=None,
                          help="Auto-generate report in this format after testing")
+    p_test.add_argument("-y", "--yes", action="store_true",
+                         help="Skip interactive prompt in --smart mode (auto-accept recommendations)")
     p_test.set_defaults(func=cmd_test)
 
     # report
