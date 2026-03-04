@@ -222,6 +222,23 @@ Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_deskt
 
 Ask Claude: *"What XSS payloads bypass Cloudflare?"* → it calls the MCP tools directly.
 
+### Example: CVE Lookup
+
+```
+You:    "Does Fray cover React2Shell?"
+Claude:  → calls get_cve_details("react2shell")
+         → "Yes — 5 payloads in xss/cve_2025_real_world.json
+            including React Server Components RCE (CVSS 10.0, CISA KEV)"
+
+You:    "Show me Log4Shell payloads"
+Claude:  → calls search_payloads("log4shell")
+         → returns 15 payloads with JNDI injection variants
+
+You:    "What payloads work against AWS WAF?"
+Claude:  → calls suggest_payloads_for_waf("aws")
+         → returns prioritized bypass payloads for AWS WAF
+```
+
 [Claude Code guide →](docs/claude-code-guide.md) · [ChatGPT guide →](docs/chatgpt-guide.md)
 
 ---
@@ -255,7 +272,7 @@ fray payloads  # List all categories
 | AI/LLM Prompt Injection | 370 | Web Shells | 160+ |
 | OWASP Mobile | 575+ | CVE Exploits | 220 |
 
-Includes **120 real-world CVEs** (2020–2026): Log4Shell, Spring4Shell, ProxyShell, and more.
+Includes **120 real-world CVEs** (2020–2026): Log4Shell, Spring4Shell, ProxyShell, React2Shell, and more.
 
 [Full payload database →](docs/payload-database-coverage.md) · [CVE coverage →](docs/cve-real-world-bypasses.md) · [AI security →](docs/ai-security-guide.md) · [Mobile security →](docs/owasp-mobile-top10.md) · [API security →](docs/owasp-api-security.md)
 

@@ -210,6 +210,23 @@ Claude Desktop設定（`~/Library/Application Support/Claude/claude_desktop_conf
 
 Claudeに質問：*「CloudflareをバイパスするXSSペイロードは？」* → MCPツールが直接呼び出されます。
 
+### 例：CVE検索
+
+```
+You:    「FrayはReact2Shellをカバーしてる？」
+Claude:  → get_cve_details("react2shell") を呼び出し
+         → 「はい — xss/cve_2025_real_world.json に5件のペイロード
+            React Server Components RCE（CVSS 10.0、CISA KEV）を含む」
+
+You:    「Log4Shellのペイロードを見せて」
+Claude:  → search_payloads("log4shell") を呼び出し
+         → JNDIインジェクションのバリエーション15件を返却
+
+You:    「AWS WAFに効くペイロードは？」
+Claude:  → suggest_payloads_for_waf("aws") を呼び出し
+         → AWS WAF向けの優先バイパスペイロードを返却
+```
+
 [Claude Codeガイド →](docs/claude-code-guide.md) · [ChatGPTガイド →](docs/chatgpt-guide.md)
 
 ---
@@ -243,7 +260,7 @@ fray payloads  # 全カテゴリを一覧表示
 | AI/LLMプロンプトインジェクション | 370 | Webシェル | 160+ |
 | OWASPモバイル | 575+ | CVEエクスプロイト | 220 |
 
-**120件の実際のCVE**（2020–2026年）を含む：Log4Shell、Spring4Shell、ProxyShell等。
+**120件の実際のCVE**（2020–2026年）を含む：Log4Shell、Spring4Shell、ProxyShell、React2Shell等。
 
 [全ペイロードデータベース →](docs/payload-database-coverage.md) · [CVEカバレッジ →](docs/cve-real-world-bypasses.md) · [AIセキュリティ →](docs/ai-security-guide.md) · [モバイルセキュリティ →](docs/owasp-mobile-top10.md) · [APIセキュリティ →](docs/owasp-api-security.md)
 
