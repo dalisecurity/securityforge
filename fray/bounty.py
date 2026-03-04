@@ -25,6 +25,7 @@ import json
 import re
 import ssl
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -1097,6 +1098,7 @@ def run_bounty(
     scope_only: bool = False,
     force: bool = False,
     smart: bool = True,
+    workers: int = 1,
 ):
     """Main entry point for fray bounty."""
     print(f"\n{Colors.BOLD}Fray Bounty v{__version__}{Colors.END}")
@@ -1247,20 +1249,14 @@ def run_bounty(
         return
 
     mode_label = f"{Colors.CYAN}Adaptive{Colors.END}" if smart else "Brute-force"
+    effective_workers = min(workers, len(urls))
+    parallel_label = f" | {Colors.CYAN}{effective_workers} workers{Colors.END}" if effective_workers > 1 else ""
     print(f"\n  {Colors.BOLD}Testing {len(urls)} target(s) × {len(test_categories)} categories × {max_payloads} payloads{Colors.END}")
     print(f"  {Colors.DIM}Categories: {', '.join(test_categories)}{Colors.END}")
-    print(f"  Mode: {mode_label}\n")
+    print(f"  Mode: {mode_label}{parallel_label}\n")
 
     # ── Run tests ────────────────────────────────────────────────────────
-    all_results = []
-    for i, url in enumerate(urls, 1):
-        print(f"  {Colors.DIM}[{i}/{len(urls)}]{Colors.END} {Colors.CYAN}{url}{Colors.END}")
-        result = scan_target(url, test_categories, max_payloads=max_payloads,
-                             timeout=timeout, delay=delay,
-                             custom_headers=scope_headers or None,
-                             smart=smart)
-        all_results.append(result)
-
+    def _print_result(i, url, result):
         waf = result.get("waf", "None") or "None"
         rate = result.get("block_rate", 0.0)
         rc = Colors.GREEN if rate >= 95 else (Colors.YELLOW if rate >= 80 else Colors.RED)
@@ -1269,7 +1265,37 @@ def run_bounty(
         if es:
             evolve_info = (f" | {Colors.DIM}Adaptive: {es.get('efficiency_gain', 0)}% fewer requests, "
                           f"WAF={es.get('waf_strictness', '?')}{Colors.END}")
+        print(f"  {Colors.DIM}[{i}/{len(urls)}]{Colors.END} {Colors.CYAN}{url}{Colors.END}")
         print(f"    WAF: {waf} | Block rate: {rc}{rate:.1f}%{Colors.END}{evolve_info}")
+
+    all_results = []
+    if effective_workers > 1:
+        # Parallel execution
+        futures = {}
+        with ThreadPoolExecutor(max_workers=effective_workers) as pool:
+            for i, url in enumerate(urls, 1):
+                fut = pool.submit(scan_target, url, test_categories,
+                                  max_payloads=max_payloads, timeout=timeout,
+                                  delay=delay, custom_headers=scope_headers or None,
+                                  smart=smart)
+                futures[fut] = (i, url)
+            for fut in as_completed(futures):
+                i, url = futures[fut]
+                result = fut.result()
+                all_results.append((i, result))
+                _print_result(i, url, result)
+        # Sort by original order
+        all_results.sort(key=lambda x: x[0])
+        all_results = [r for _, r in all_results]
+    else:
+        # Sequential execution (original behavior)
+        for i, url in enumerate(urls, 1):
+            result = scan_target(url, test_categories, max_payloads=max_payloads,
+                                 timeout=timeout, delay=delay,
+                                 custom_headers=scope_headers or None,
+                                 smart=smart)
+            all_results.append(result)
+            _print_result(i, url, result)
 
     # ── Report ───────────────────────────────────────────────────────────
     print_bounty_report(all_results, program, platform)

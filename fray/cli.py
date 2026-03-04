@@ -236,6 +236,7 @@ def cmd_bounty(args):
         scope_only=args.scope_only,
         force=args.force,
         smart=not args.no_smart,
+        workers=getattr(args, 'workers', 1) or 1,
     )
 
 
@@ -276,6 +277,47 @@ def cmd_mcp(args):
         print("Error: MCP SDK not installed. Install with:")
         print("  pip install 'mcp[cli]'")
         sys.exit(1)
+
+
+def cmd_update(args):
+    """Update payloads from GitHub"""
+    from fray.update import run_update
+    run_update(check_only=getattr(args, 'check', False))
+
+
+def cmd_init_config(args):
+    """Create a sample .fray.toml in the current directory"""
+    target = Path.cwd() / ".fray.toml"
+    if target.exists():
+        print(f".fray.toml already exists at {target}")
+        sys.exit(1)
+    sample = '''\
+# Fray configuration file
+# CLI arguments always override these defaults.
+
+[test]
+timeout = 8
+delay = 0.5
+# category = "xss"
+# insecure = false
+# verbose = false
+redirect_limit = 5
+
+[test.auth]
+# cookie = "session=abc123"
+# bearer = "eyJ..."
+
+[bounty]
+max = 10
+workers = 1
+delay = 0.5
+
+[webhook]
+# url = "https://hooks.slack.com/services/..."
+'''
+    target.write_text(sample, encoding="utf-8")
+    print(f"Created {target}")
+    print("Edit the file to set your defaults, then run fray commands as usual.")
 
 
 def list_categories():
@@ -409,6 +451,8 @@ Documentation: https://github.com/dalisecurity/fray
     p_bounty.add_argument("--force", action="store_true", help="Test ALL URLs including shared platforms (dangerous)")
     p_bounty.add_argument("--no-smart", action="store_true",
                           help="Disable adaptive payload evolution (use brute-force instead)")
+    p_bounty.add_argument("-w", "--workers", type=int, default=1,
+                          help="Parallel workers for multi-target scanning (default: 1)")
     p_bounty.set_defaults(func=cmd_bounty)
 
     # ci
@@ -437,11 +481,26 @@ Documentation: https://github.com/dalisecurity/fray
     p_mcp = subparsers.add_parser("mcp", help="Start MCP server for AI assistant integration")
     p_mcp.set_defaults(func=cmd_mcp)
 
+    # update
+    p_update = subparsers.add_parser("update", help="Update payloads from GitHub without reinstalling")
+    p_update.add_argument("--check", action="store_true", help="Check for updates without applying")
+    p_update.set_defaults(func=cmd_update)
+
+    # init-config
+    p_init_config = subparsers.add_parser("init-config", help="Create a sample .fray.toml config file in the current directory")
+    p_init_config.set_defaults(func=cmd_init_config)
+
     args = parser.parse_args()
 
     if not args.command:
         parser.print_help()
         sys.exit(0)
+
+    # Load .fray.toml and apply defaults for the active subcommand
+    from fray.config import load_config, apply_config_defaults
+    config = load_config()
+    if config:
+        apply_config_defaults(args, config, args.command)
 
     args.func(args)
 
