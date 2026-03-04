@@ -201,6 +201,7 @@ def cmd_bounty(args):
         output=args.output,
         scope_only=args.scope_only,
         force=args.force,
+        smart=not args.no_smart,
     )
 
 
@@ -365,6 +366,8 @@ Documentation: https://github.com/dalisecurity/fray
     p_bounty.add_argument("-o", "--output", default=None, help="Save report JSON to file")
     p_bounty.add_argument("--scope-only", action="store_true", help="Show scope URLs only, don't run tests")
     p_bounty.add_argument("--force", action="store_true", help="Test ALL URLs including shared platforms (dangerous)")
+    p_bounty.add_argument("--no-smart", action="store_true",
+                          help="Disable adaptive payload evolution (use brute-force instead)")
     p_bounty.set_defaults(func=cmd_bounty)
 
     # ci

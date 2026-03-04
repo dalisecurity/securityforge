@@ -569,8 +569,14 @@ def extract_custom_headers(scopes: List[Dict]) -> Dict[str, str]:
 
 def scan_target(url: str, categories: List[str], max_payloads: int = 10,
                 timeout: int = 8, delay: float = 0.5,
-                custom_headers: Optional[Dict[str, str]] = None) -> Dict:
-    """Run WAF detection and payload tests on a single target."""
+                custom_headers: Optional[Dict[str, str]] = None,
+                smart: bool = True) -> Dict:
+    """Run WAF detection and payload tests on a single target.
+
+    Args:
+        smart: Use adaptive payload evolution (default True for bounty).
+               Probes WAF first, scores payloads, skips redundant ones.
+    """
     result = {
         "url": url,
         "waf": None,
@@ -580,6 +586,7 @@ def scan_target(url: str, categories: List[str], max_payloads: int = 10,
         "total_blocked": 0,
         "total_passed": 0,
         "block_rate": 0.0,
+        "evolve_stats": None,
     }
 
     # WAF detection
@@ -608,10 +615,29 @@ def scan_target(url: str, categories: List[str], max_payloads: int = 10,
         if not all_payloads:
             continue
 
-        results = tester.test_payloads(all_payloads, max_payloads=max_payloads)
-        blocked = sum(1 for r in results if r.get("blocked"))
-        passed = len(results) - blocked
-        rate = (blocked / len(results) * 100) if results else 0.0
+        # Adaptive mode: probe → score → test → mutate
+        if smart:
+            from fray.evolve import adaptive_test
+            test_results, evolve_stats, profile = adaptive_test(
+                tester, all_payloads, max_payloads=max_payloads, verbose=False
+            )
+            result["evolve_stats"] = {
+                "probes_sent": evolve_stats.probes_sent,
+                "payloads_skipped": evolve_stats.payloads_skipped,
+                "payloads_tested": evolve_stats.payloads_tested,
+                "mutations_tested": evolve_stats.mutations_tested,
+                "mutations_bypassed": evolve_stats.mutations_bypassed,
+                "efficiency_gain": evolve_stats.efficiency_gain,
+                "waf_strictness": profile.strictness,
+                "blocked_tags": sorted(profile.blocked_tags),
+                "allowed_tags": sorted(profile.allowed_tags),
+            }
+        else:
+            test_results = tester.test_payloads(all_payloads, max_payloads=max_payloads)
+
+        blocked = sum(1 for r in test_results if r.get("blocked"))
+        passed = len(test_results) - blocked
+        rate = (blocked / len(test_results) * 100) if test_results else 0.0
 
         bypassed = [
             {
@@ -624,25 +650,25 @@ def scan_target(url: str, categories: List[str], max_payloads: int = 10,
                 "response_length": r.get("response_length", 0),
                 "security_headers": r.get("security_headers", {}),
             }
-            for r in results if not r.get("blocked")
+            for r in test_results if not r.get("blocked")
         ]
 
         # Collect security headers from first non-blocked response
         cat_sec_headers = {}
-        for r in results:
+        for r in test_results:
             if not r.get("blocked") and r.get("security_headers"):
                 cat_sec_headers = r["security_headers"]
                 break
 
         result["categories"][cat] = {
-            "total": len(results),
+            "total": len(test_results),
             "blocked": blocked,
             "passed": passed,
             "block_rate": round(rate, 1),
             "bypassed": bypassed,
             "security_headers": cat_sec_headers,
         }
-        result["total_tested"] += len(results)
+        result["total_tested"] += len(test_results)
         result["total_blocked"] += blocked
         result["total_passed"] += passed
 
@@ -1073,6 +1099,7 @@ def run_bounty(
     output: Optional[str] = None,
     scope_only: bool = False,
     force: bool = False,
+    smart: bool = True,
 ):
     """Main entry point for fray bounty."""
     print(f"\n{Colors.BOLD}Fray Bounty v{__version__}{Colors.END}")
@@ -1227,8 +1254,10 @@ def run_bounty(
         print(f"\n  {Colors.DIM}Remove --scope-only to run payload tests on these targets.{Colors.END}\n")
         return
 
+    mode_label = f"{Colors.CYAN}Adaptive{Colors.END}" if smart else "Brute-force"
     print(f"\n  {Colors.BOLD}Testing {len(urls)} target(s) × {len(test_categories)} categories × {max_payloads} payloads{Colors.END}")
-    print(f"  {Colors.DIM}Categories: {', '.join(test_categories)}{Colors.END}\n")
+    print(f"  {Colors.DIM}Categories: {', '.join(test_categories)}{Colors.END}")
+    print(f"  Mode: {mode_label}\n")
 
     # ── Run tests ────────────────────────────────────────────────────────
     all_results = []
@@ -1236,13 +1265,19 @@ def run_bounty(
         print(f"  {Colors.DIM}[{i}/{len(urls)}]{Colors.END} {Colors.CYAN}{url}{Colors.END}")
         result = scan_target(url, test_categories, max_payloads=max_payloads,
                              timeout=timeout, delay=delay,
-                             custom_headers=scope_headers or None)
+                             custom_headers=scope_headers or None,
+                             smart=smart)
         all_results.append(result)
 
         waf = result.get("waf", "None") or "None"
         rate = result.get("block_rate", 0.0)
         rc = Colors.GREEN if rate >= 95 else (Colors.YELLOW if rate >= 80 else Colors.RED)
-        print(f"    WAF: {waf} | Block rate: {rc}{rate:.1f}%{Colors.END}")
+        es = result.get("evolve_stats")
+        evolve_info = ""
+        if es:
+            evolve_info = (f" | {Colors.DIM}Adaptive: {es.get('efficiency_gain', 0)}% fewer requests, "
+                          f"WAF={es.get('waf_strictness', '?')}{Colors.END}")
+        print(f"    WAF: {waf} | Block rate: {rc}{rate:.1f}%{Colors.END}{evolve_info}")
 
     # ── Report ───────────────────────────────────────────────────────────
     print_bounty_report(all_results, program, platform)
