@@ -8,16 +8,14 @@ Usage:
     fray bounty --urls urls.txt
     fray bounty --program <handle> --categories xss,sqli --max 20
 
-Integrates with HackerOne and Bugcrowd APIs to:
-    1. Fetch program scope (in-scope URLs/domains)
+Integrates with HackerOne and Bugcrowd to:
+    1. Fetch public program scope (in-scope URLs/domains) — NO API KEY NEEDED
     2. Auto-detect WAF on each target
     3. Run payload tests across scope
     4. Generate consolidated bounty report
 
-API Keys (set via environment variables):
-    HACKERONE_API_TOKEN   — HackerOne API token
-    HACKERONE_API_USER    — HackerOne API username
-    BUGCROWD_API_TOKEN    — Bugcrowd API token
+HackerOne: Uses public GraphQL API (no auth for public programs)
+Bugcrowd: Uses public program page API (no auth for public programs)
 
 Zero external dependencies — stdlib only.
 """
@@ -50,23 +48,38 @@ class Colors:
 
 # ── API Clients (stdlib only) ────────────────────────────────────────────────
 
-class HackerOneAPI:
-    """HackerOne API v1 client using stdlib."""
-
-    API_HOST = "api.hackerone.com"
-
-    def __init__(self, username: str, token: str):
-        self.auth = base64.b64encode(f"{username}:{token}".encode()).decode()
-        self.headers = {
-            "Authorization": f"Basic {self.auth}",
-            "Accept": "application/json",
-            "User-Agent": f"Fray/{__version__}",
+# GraphQL query for HackerOne public program scope
+_H1_SCOPE_QUERY = """query PolicySearchStructuredScopesQuery($handle: String!) {
+  team(handle: $handle) {
+    id
+    name
+    structured_scopes(first: 100, archived: false) {
+      edges {
+        node {
+          asset_type
+          asset_identifier
+          eligible_for_submission
+          eligible_for_bounty
+          instruction
         }
+      }
+    }
+  }
+}"""
 
-    def _request(self, method: str, path: str) -> Tuple[int, Dict]:
+
+class HackerOnePublic:
+    """Fetch public HackerOne program scope via GraphQL — NO API KEY NEEDED."""
+
+    HOST = "hackerone.com"
+
+    def _request(self, body: bytes) -> Tuple[int, Dict]:
         ctx = ssl.create_default_context()
-        conn = http.client.HTTPSConnection(self.API_HOST, 443, context=ctx, timeout=30)
-        conn.request(method, path, headers=self.headers)
+        conn = http.client.HTTPSConnection(self.HOST, 443, context=ctx, timeout=30)
+        conn.request("POST", "/graphql", body=body, headers={
+            "Content-Type": "application/json",
+            "User-Agent": f"Fray/{__version__}",
+        })
         resp = conn.getresponse()
         data = resp.read().decode("utf-8", errors="replace")
         conn.close()
@@ -76,84 +89,111 @@ class HackerOneAPI:
             return resp.status, {"raw": data[:500]}
 
     def get_program_scope(self, handle: str) -> Tuple[bool, List[Dict]]:
-        """Fetch in-scope assets for a program."""
-        path = f"/v1/hackers/programs/{handle}"
-        status, data = self._request("GET", path)
+        """Fetch in-scope assets for a public HackerOne program."""
+        body = json.dumps({
+            "operationName": "PolicySearchStructuredScopesQuery",
+            "variables": {"handle": handle},
+            "query": _H1_SCOPE_QUERY,
+        }).encode("utf-8")
 
-        if status != 200:
-            msg = data.get("errors", [{}])[0].get("title", "") if isinstance(data.get("errors"), list) else ""
-            return False, [{"error": msg or f"HTTP {status}"}]
-
-        scopes = []
-        relationships = data.get("data", {}).get("relationships", {})
-        structured_scopes = relationships.get("structured_scopes", {}).get("data", [])
-
-        for scope in structured_scopes:
-            attrs = scope.get("attributes", {})
-            if attrs.get("eligible_for_submission", True):
-                asset_type = attrs.get("asset_type", "")
-                identifier = attrs.get("asset_identifier", "")
-                instruction = attrs.get("instruction", "")
-                if asset_type in ("URL", "DOMAIN", "WILDCARD"):
-                    scopes.append({
-                        "type": asset_type,
-                        "identifier": identifier,
-                        "instruction": instruction[:100] if instruction else "",
-                        "eligible": True,
-                    })
-
-        return True, scopes
-
-
-class BugcrowdAPI:
-    """Bugcrowd API client using stdlib."""
-
-    API_HOST = "api.bugcrowd.com"
-
-    def __init__(self, token: str):
-        self.headers = {
-            "Authorization": f"Token {token}",
-            "Accept": "application/vnd.bugcrowd+json",
-            "User-Agent": f"Fray/{__version__}",
-        }
-
-    def _request(self, method: str, path: str) -> Tuple[int, Dict]:
-        ctx = ssl.create_default_context()
-        conn = http.client.HTTPSConnection(self.API_HOST, 443, context=ctx, timeout=30)
-        conn.request(method, path, headers=self.headers)
-        resp = conn.getresponse()
-        data = resp.read().decode("utf-8", errors="replace")
-        conn.close()
-        try:
-            return resp.status, json.loads(data)
-        except json.JSONDecodeError:
-            return resp.status, {"raw": data[:500]}
-
-    def get_program_scope(self, handle: str) -> Tuple[bool, List[Dict]]:
-        """Fetch in-scope targets for a program."""
-        path = f"/programs/{handle}/target_groups"
-        status, data = self._request("GET", path)
+        status, data = self._request(body)
 
         if status != 200:
             return False, [{"error": f"HTTP {status}"}]
 
+        team = data.get("data", {}).get("team")
+        if not team:
+            errors = data.get("errors", [])
+            msg = errors[0].get("message", "Program not found") if errors else "Program not found"
+            return False, [{"error": msg}]
+
         scopes = []
-        for group in data.get("data", []):
-            targets = group.get("relationships", {}).get("targets", {}).get("data", [])
+        edges = team.get("structured_scopes", {}).get("edges", [])
+
+        for edge in edges:
+            node = edge.get("node", {})
+            if not node.get("eligible_for_submission", False):
+                continue
+            asset_type = node.get("asset_type", "")
+            identifier = node.get("asset_identifier", "")
+            instruction = node.get("instruction", "")
+            bounty = node.get("eligible_for_bounty", False)
+            # Only include web-testable assets
+            if asset_type in ("URL", "DOMAIN", "WILDCARD"):
+                scopes.append({
+                    "type": asset_type,
+                    "identifier": identifier,
+                    "bounty": bounty,
+                    "instruction": (instruction or "")[:100],
+                    "eligible": True,
+                })
+
+        return True, scopes
+
+
+class BugcrowdPublic:
+    """Fetch public Bugcrowd program scope — NO API KEY NEEDED."""
+
+    HOST = "bugcrowd.com"
+
+    def _request(self, path: str) -> Tuple[int, Dict]:
+        ctx = ssl.create_default_context()
+        conn = http.client.HTTPSConnection(self.HOST, 443, context=ctx, timeout=30)
+        conn.request("GET", path, headers={
+            "Accept": "application/json",
+            "User-Agent": f"Fray/{__version__}",
+        })
+        resp = conn.getresponse()
+        data = resp.read().decode("utf-8", errors="replace")
+        conn.close()
+        try:
+            return resp.status, json.loads(data)
+        except json.JSONDecodeError:
+            return resp.status, {"raw": data[:500]}
+
+    def get_program_scope(self, handle: str) -> Tuple[bool, List[Dict]]:
+        """Fetch in-scope targets for a public Bugcrowd program."""
+        path = f"/{handle}.json"
+        status, data = self._request(path)
+
+        if status != 200:
+            return False, [{"error": f"Program '{handle}' not found (HTTP {status})"}]
+
+        scopes = []
+        target_groups = data.get("target_groups", [])
+        if not target_groups:
+            # Try alternate structure
+            targets = data.get("targets", data.get("scope", []))
+            if isinstance(targets, list):
+                for t in targets:
+                    name = t.get("name", t.get("uri", ""))
+                    category = t.get("category", t.get("type", ""))
+                    if name:
+                        scopes.append({
+                            "type": category.upper() if category else "URL",
+                            "identifier": name,
+                            "bounty": True,
+                            "instruction": "",
+                            "eligible": True,
+                        })
+            return bool(scopes), scopes
+
+        for group in target_groups:
+            targets = group.get("targets", [])
             for target in targets:
-                attrs = target.get("attributes", {})
-                name = attrs.get("name", "")
-                uri = attrs.get("uri", "")
-                category = attrs.get("category", "")
-                if category in ("website", "api", "domain"):
+                name = target.get("name", "")
+                uri = target.get("uri", "")
+                category = target.get("category", "")
+                if category.lower() in ("website", "api", "domain", "url", ""):
                     scopes.append({
-                        "type": category.upper(),
+                        "type": category.upper() or "URL",
                         "identifier": uri or name,
+                        "bounty": True,
                         "instruction": "",
                         "eligible": True,
                     })
 
-        return True, scopes
+        return bool(scopes), scopes
 
 
 # ── URL Extraction & Normalization ───────────────────────────────────────────
@@ -355,7 +395,7 @@ def run_bounty(
 
     urls: List[str] = []
 
-    # ── Fetch scope from platform API ────────────────────────────────────
+    # ── Fetch scope from platform ────────────────────────────────────────
     if urls_file:
         print(f"  Loading URLs from: {urls_file}")
         urls = load_urls_from_file(urls_file)
@@ -364,53 +404,46 @@ def run_bounty(
 
     elif platform and program:
         platform = platform.lower()
+        # Normalize platform aliases
+        if platform in ("h1", "hackerone", "hacker-one"):
+            platform = "hackerone"
+        elif platform in ("bc", "bugcrowd", "bug-crowd"):
+            platform = "bugcrowd"
+
         print(f"  Platform: {platform}")
         print(f"  Program:  {program}")
 
         if platform == "hackerone":
-            username = os.environ.get("HACKERONE_API_USER", "")
-            token = os.environ.get("HACKERONE_API_TOKEN", "")
-            if not username or not token:
-                print(f"\n  {Colors.RED}Error: HackerOne credentials not set.{Colors.END}")
-                print(f"  {Colors.DIM}Set environment variables:{Colors.END}")
-                print(f"    export HACKERONE_API_USER=your_username")
-                print(f"    export HACKERONE_API_TOKEN=your_api_token")
-                print(f"  {Colors.DIM}Get your token at: https://hackerone.com/settings/api_token/edit{Colors.END}\n")
-                return
-
-            print(f"{Colors.DIM}  Fetching scope from HackerOne...{Colors.END}")
-            api = HackerOneAPI(username, token)
+            print(f"{Colors.DIM}  Fetching public scope from HackerOne...{Colors.END}")
+            api = HackerOnePublic()
             ok, scopes = api.get_program_scope(program)
             if not ok:
                 err = scopes[0].get("error", "Unknown error") if scopes else "Unknown error"
                 print(f"  {Colors.RED}Failed to fetch scope: {err}{Colors.END}")
+                print(f"  {Colors.DIM}Make sure '{program}' is a valid public program handle.{Colors.END}")
+                print(f"  {Colors.DIM}Find programs at: https://hackerone.com/directory{Colors.END}\n")
                 return
 
             urls = normalize_scope_to_urls(scopes)
             print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
 
             if scopes:
+                bounty_icon = lambda s: f"{Colors.GREEN}$${Colors.END}" if s.get('bounty') else f"{Colors.DIM}--{Colors.END}"
                 print(f"\n  {Colors.BOLD}In-Scope Assets:{Colors.END}")
-                for s in scopes[:15]:
-                    print(f"    {s['type']:<10} {s['identifier']}")
-                if len(scopes) > 15:
-                    print(f"    ... and {len(scopes) - 15} more")
+                for s in scopes[:20]:
+                    print(f"    {bounty_icon(s)} {s['type']:<10} {s['identifier']}")
+                if len(scopes) > 20:
+                    print(f"    ... and {len(scopes) - 20} more")
 
         elif platform == "bugcrowd":
-            token = os.environ.get("BUGCROWD_API_TOKEN", "")
-            if not token:
-                print(f"\n  {Colors.RED}Error: Bugcrowd API token not set.{Colors.END}")
-                print(f"  {Colors.DIM}Set environment variable:{Colors.END}")
-                print(f"    export BUGCROWD_API_TOKEN=your_api_token")
-                print(f"  {Colors.DIM}Get your token at: https://bugcrowd.com/settings/api{Colors.END}\n")
-                return
-
-            print(f"{Colors.DIM}  Fetching scope from Bugcrowd...{Colors.END}")
-            api = BugcrowdAPI(token)
+            print(f"{Colors.DIM}  Fetching public scope from Bugcrowd...{Colors.END}")
+            api = BugcrowdPublic()
             ok, scopes = api.get_program_scope(program)
             if not ok:
                 err = scopes[0].get("error", "Unknown error") if scopes else "Unknown error"
                 print(f"  {Colors.RED}Failed to fetch scope: {err}{Colors.END}")
+                print(f"  {Colors.DIM}Make sure '{program}' is a valid public program handle.{Colors.END}")
+                print(f"  {Colors.DIM}Find programs at: https://bugcrowd.com/programs{Colors.END}\n")
                 return
 
             urls = normalize_scope_to_urls(scopes)
@@ -418,13 +451,43 @@ def run_bounty(
 
         else:
             print(f"  {Colors.RED}Unknown platform: {platform}{Colors.END}")
-            print(f"  {Colors.DIM}Supported: hackerone, bugcrowd{Colors.END}")
+            print(f"  {Colors.DIM}Supported: hackerone (h1), bugcrowd (bc){Colors.END}")
             return
+
+    elif program:
+        # Auto-detect: try HackerOne first, then Bugcrowd
+        print(f"  Program: {program}")
+        print(f"{Colors.DIM}  Auto-detecting platform...{Colors.END}")
+
+        api = HackerOnePublic()
+        ok, scopes = api.get_program_scope(program)
+        if ok and scopes:
+            platform = "hackerone"
+            print(f"  {Colors.GREEN}Found on HackerOne!{Colors.END}")
+            urls = normalize_scope_to_urls(scopes)
+            print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
+            if scopes:
+                print(f"\n  {Colors.BOLD}In-Scope Assets:{Colors.END}")
+                for s in scopes[:15]:
+                    bounty_tag = f"{Colors.GREEN}$$" if s.get('bounty') else f"{Colors.DIM}--"
+                    print(f"    {bounty_tag}{Colors.END} {s['type']:<10} {s['identifier']}")
+        else:
+            api_bc = BugcrowdPublic()
+            ok, scopes = api_bc.get_program_scope(program)
+            if ok and scopes:
+                platform = "bugcrowd"
+                print(f"  {Colors.GREEN}Found on Bugcrowd!{Colors.END}")
+                urls = normalize_scope_to_urls(scopes)
+                print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
+            else:
+                print(f"  {Colors.RED}Program '{program}' not found on HackerOne or Bugcrowd.{Colors.END}")
+                print(f"  {Colors.DIM}Try: fray bounty --platform hackerone --program <handle>{Colors.END}\n")
+                return
     else:
-        print(f"  {Colors.RED}Provide --platform + --program, or --urls file{Colors.END}")
+        print(f"  {Colors.RED}Provide --program <handle>, or --urls file{Colors.END}")
         print(f"  {Colors.DIM}Examples:{Colors.END}")
+        print(f"    fray bounty --program github")
         print(f"    fray bounty --platform hackerone --program github")
-        print(f"    fray bounty --platform bugcrowd --program tesla")
         print(f"    fray bounty --urls targets.txt")
         return
 

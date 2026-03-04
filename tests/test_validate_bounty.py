@@ -23,8 +23,8 @@ from fray.validate import (
     run_validate,
 )
 from fray.bounty import (
-    HackerOneAPI,
-    BugcrowdAPI,
+    HackerOnePublic,
+    BugcrowdPublic,
     normalize_scope_to_urls,
     load_urls_from_file,
     scan_target,
@@ -272,7 +272,7 @@ class TestLoadUrlsFromFile(unittest.TestCase):
         self.assertEqual(urls, [])
 
 
-class TestHackerOneAPI(unittest.TestCase):
+class TestHackerOnePublic(unittest.TestCase):
 
     @patch("fray.bounty.http.client.HTTPSConnection")
     def test_get_scope_success(self, mock_conn_cls):
@@ -281,22 +281,26 @@ class TestHackerOneAPI(unittest.TestCase):
         mock_resp.status = 200
         mock_resp.read.return_value = json.dumps({
             "data": {
-                "relationships": {
+                "team": {
+                    "id": "abc123",
+                    "name": "Example",
                     "structured_scopes": {
-                        "data": [
+                        "edges": [
                             {
-                                "attributes": {
+                                "node": {
                                     "asset_type": "URL",
-                                    "asset_identifier": "https://api.example.com",
+                                    "asset_identifier": "api.example.com",
                                     "eligible_for_submission": True,
+                                    "eligible_for_bounty": True,
                                     "instruction": "Main API",
                                 }
                             },
                             {
-                                "attributes": {
-                                    "asset_type": "DOMAIN",
+                                "node": {
+                                    "asset_type": "URL",
                                     "asset_identifier": "*.example.com",
                                     "eligible_for_submission": True,
+                                    "eligible_for_bounty": False,
                                     "instruction": "",
                                 }
                             },
@@ -308,29 +312,64 @@ class TestHackerOneAPI(unittest.TestCase):
         mock_conn.getresponse.return_value = mock_resp
         mock_conn_cls.return_value = mock_conn
 
-        api = HackerOneAPI("user", "token")
+        api = HackerOnePublic()
         ok, scopes = api.get_program_scope("example")
         self.assertTrue(ok)
         self.assertEqual(len(scopes), 2)
-        self.assertEqual(scopes[0]["identifier"], "https://api.example.com")
+        self.assertEqual(scopes[0]["identifier"], "api.example.com")
+        self.assertTrue(scopes[0]["bounty"])
+        self.assertFalse(scopes[1]["bounty"])
 
     @patch("fray.bounty.http.client.HTTPSConnection")
-    def test_get_scope_failure(self, mock_conn_cls):
+    def test_get_scope_not_found(self, mock_conn_cls):
         mock_conn = MagicMock()
         mock_resp = MagicMock()
-        mock_resp.status = 404
+        mock_resp.status = 200
         mock_resp.read.return_value = json.dumps({
-            "errors": [{"title": "Not found"}]
+            "data": {"team": None},
+            "errors": [{"message": "Team not found"}]
         }).encode()
         mock_conn.getresponse.return_value = mock_resp
         mock_conn_cls.return_value = mock_conn
 
-        api = HackerOneAPI("user", "token")
+        api = HackerOnePublic()
         ok, scopes = api.get_program_scope("nonexistent")
         self.assertFalse(ok)
 
+    @patch("fray.bounty.http.client.HTTPSConnection")
+    def test_filters_non_web_assets(self, mock_conn_cls):
+        mock_conn = MagicMock()
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.read.return_value = json.dumps({
+            "data": {
+                "team": {
+                    "id": "abc",
+                    "name": "Test",
+                    "structured_scopes": {
+                        "edges": [
+                            {"node": {"asset_type": "URL", "asset_identifier": "web.com",
+                                      "eligible_for_submission": True, "eligible_for_bounty": True, "instruction": ""}},
+                            {"node": {"asset_type": "OTHER", "asset_identifier": "Mobile App",
+                                      "eligible_for_submission": True, "eligible_for_bounty": True, "instruction": ""}},
+                            {"node": {"asset_type": "HARDWARE", "asset_identifier": "Device",
+                                      "eligible_for_submission": True, "eligible_for_bounty": True, "instruction": ""}},
+                        ]
+                    }
+                }
+            }
+        }).encode()
+        mock_conn.getresponse.return_value = mock_resp
+        mock_conn_cls.return_value = mock_conn
 
-class TestBugcrowdAPI(unittest.TestCase):
+        api = HackerOnePublic()
+        ok, scopes = api.get_program_scope("test")
+        self.assertTrue(ok)
+        self.assertEqual(len(scopes), 1)
+        self.assertEqual(scopes[0]["identifier"], "web.com")
+
+
+class TestBugcrowdPublic(unittest.TestCase):
 
     @patch("fray.bounty.http.client.HTTPSConnection")
     def test_get_scope_success(self, mock_conn_cls):
@@ -338,63 +377,60 @@ class TestBugcrowdAPI(unittest.TestCase):
         mock_resp = MagicMock()
         mock_resp.status = 200
         mock_resp.read.return_value = json.dumps({
-            "data": [
+            "target_groups": [
                 {
-                    "relationships": {
-                        "targets": {
-                            "data": [
-                                {
-                                    "attributes": {
-                                        "name": "Main App",
-                                        "uri": "https://app.example.com",
-                                        "category": "website",
-                                    }
-                                }
-                            ]
-                        }
-                    }
+                    "targets": [
+                        {"name": "Main App", "uri": "https://app.example.com", "category": "website"}
+                    ]
                 }
             ]
         }).encode()
         mock_conn.getresponse.return_value = mock_resp
         mock_conn_cls.return_value = mock_conn
 
-        api = BugcrowdAPI("token")
+        api = BugcrowdPublic()
         ok, scopes = api.get_program_scope("example")
         self.assertTrue(ok)
         self.assertEqual(len(scopes), 1)
 
+    @patch("fray.bounty.http.client.HTTPSConnection")
+    def test_get_scope_not_found(self, mock_conn_cls):
+        mock_conn = MagicMock()
+        mock_resp = MagicMock()
+        mock_resp.status = 404
+        mock_resp.read.return_value = b'{"error": "not found"}'
+        mock_conn.getresponse.return_value = mock_resp
+        mock_conn_cls.return_value = mock_conn
 
-class TestBountyNoCredentials(unittest.TestCase):
+        api = BugcrowdPublic()
+        ok, scopes = api.get_program_scope("nonexistent")
+        self.assertFalse(ok)
 
-    def test_hackerone_no_creds(self):
-        """Should print error when credentials missing."""
-        import io
-        captured = io.StringIO()
-        env = os.environ.copy()
-        env.pop("HACKERONE_API_USER", None)
-        env.pop("HACKERONE_API_TOKEN", None)
-        with patch.dict(os.environ, env, clear=True):
-            with patch("sys.stdout", captured):
-                run_bounty(platform="hackerone", program="test")
-        self.assertIn("Error", captured.getvalue())
 
-    def test_bugcrowd_no_creds(self):
-        import io
-        captured = io.StringIO()
-        env = os.environ.copy()
-        env.pop("BUGCROWD_API_TOKEN", None)
-        with patch.dict(os.environ, env, clear=True):
-            with patch("sys.stdout", captured):
-                run_bounty(platform="bugcrowd", program="test")
-        self.assertIn("Error", captured.getvalue())
+class TestBountyNoArgs(unittest.TestCase):
 
-    def test_no_args(self):
+    def test_no_args_shows_help(self):
         import io
         captured = io.StringIO()
         with patch("sys.stdout", captured):
             run_bounty()
-        self.assertIn("--platform", captured.getvalue())
+        self.assertIn("--program", captured.getvalue())
+
+    def test_unknown_platform(self):
+        import io
+        captured = io.StringIO()
+        with patch("sys.stdout", captured):
+            run_bounty(platform="unknown", program="test")
+        self.assertIn("Unknown", captured.getvalue())
+
+    def test_platform_aliases(self):
+        """Verify h1/bc aliases are accepted (mocked to avoid network)."""
+        with patch.object(HackerOnePublic, 'get_program_scope', return_value=(True, [])):
+            import io
+            captured = io.StringIO()
+            with patch("sys.stdout", captured):
+                run_bounty(platform="h1", program="test")
+            self.assertIn("hackerone", captured.getvalue().lower())
 
 
 class TestCLIBounty(unittest.TestCase):
