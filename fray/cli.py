@@ -11,6 +11,8 @@ Usage:
     fray payloads               List available payload categories
     fray doctor                 Check environment + auto-fix issues
     fray submit-payload          Submit payload to community (auto GitHub PR)
+    fray ci init                 Generate GitHub Actions WAF test workflow
+    fray learn xss               Interactive CTF-style security tutorial
     fray version                Show version
 """
 
@@ -157,6 +159,34 @@ def cmd_submit_payload(args):
     )
 
 
+def cmd_ci(args):
+    """Generate GitHub Actions workflow for automated WAF testing"""
+    from fray.ci import run_ci
+    categories = [c.strip() for c in args.categories.split(",")] if args.categories else None
+    run_ci(
+        action=args.action,
+        target=args.target,
+        categories=categories,
+        max_payloads=args.max,
+        webhook=args.webhook,
+        fail_on_bypass=args.fail_on_bypass,
+        no_comment=args.no_comment,
+        minimal=args.minimal,
+        output_dir=args.output_dir,
+    )
+
+
+def cmd_learn(args):
+    """Start interactive CTF-style security tutorial"""
+    from fray.learn import run_learn
+    run_learn(
+        topic=args.topic,
+        level=args.level,
+        list_all=args.list,
+        reset=args.reset,
+    )
+
+
 def cmd_mcp(args):
     """Start MCP server for AI assistant integration"""
     try:
@@ -192,6 +222,12 @@ Examples:
   fray submit-payload
   fray submit-payload --payload '<svg/onload=alert(1)>' --category xss
   fray submit-payload --file my_payloads.json
+  fray ci init
+  fray ci init --target https://example.com
+  fray ci show --minimal
+  fray learn
+  fray learn xss
+  fray learn sqli --level 3
   fray payloads
   fray report --output report.html
 
@@ -252,6 +288,28 @@ Documentation: https://github.com/dalisecurity/fray
     p_submit.add_argument("--file", default=None, help="JSON file with payloads for bulk submission")
     p_submit.add_argument("--dry-run", action="store_true", help="Preview without creating PR")
     p_submit.set_defaults(func=cmd_submit_payload)
+
+    # ci
+    p_ci = subparsers.add_parser("ci", help="Generate GitHub Actions workflow for WAF testing on PRs")
+    p_ci.add_argument("action", nargs="?", default="init", choices=["init", "show"],
+                      help="Action: init (write file) or show (print to stdout)")
+    p_ci.add_argument("--target", default=None, help="Default target URL for WAF tests")
+    p_ci.add_argument("--categories", default=None, help="Comma-separated payload categories (e.g. xss,sqli)")
+    p_ci.add_argument("-m", "--max", type=int, default=50, help="Max payloads per run (default: 50)")
+    p_ci.add_argument("--webhook", default=None, help="Webhook URL for notifications")
+    p_ci.add_argument("--fail-on-bypass", action="store_true", help="Fail CI if any payload bypasses WAF")
+    p_ci.add_argument("--no-comment", action="store_true", help="Disable PR comment with results")
+    p_ci.add_argument("--minimal", action="store_true", help="Generate minimal workflow")
+    p_ci.add_argument("--output-dir", default=None, help="Output directory (default: current dir)")
+    p_ci.set_defaults(func=cmd_ci)
+
+    # learn
+    p_learn = subparsers.add_parser("learn", help="Interactive CTF-style security tutorial")
+    p_learn.add_argument("topic", nargs="?", default=None, help="Topic to learn (xss, sqli, ssrf, cmdi)")
+    p_learn.add_argument("--level", type=int, default=None, help="Jump to specific level")
+    p_learn.add_argument("--list", action="store_true", help="List all topics and progress")
+    p_learn.add_argument("--reset", action="store_true", help="Reset all progress")
+    p_learn.set_defaults(func=cmd_learn)
 
     # mcp
     p_mcp = subparsers.add_parser("mcp", help="Start MCP server for AI assistant integration")
