@@ -26,10 +26,12 @@ from fray.bounty import (
     HackerOnePublic,
     BugcrowdPublic,
     SHARED_PLATFORMS,
+    _ASSET_CAPABILITY,
     normalize_scope_to_urls,
     load_urls_from_file,
     is_safe_target,
     filter_safe_targets,
+    analyze_scope,
     scan_target,
     run_bounty,
 )
@@ -368,8 +370,12 @@ class TestHackerOnePublic(unittest.TestCase):
         api = HackerOnePublic()
         ok, scopes = api.get_program_scope("test")
         self.assertTrue(ok)
-        self.assertEqual(len(scopes), 1)
-        self.assertEqual(scopes[0]["identifier"], "web.com")
+        # Now returns ALL asset types (URL, OTHER, HARDWARE)
+        self.assertEqual(len(scopes), 3)
+        # But normalize_scope_to_urls filters to web-only
+        urls = normalize_scope_to_urls(scopes)
+        self.assertEqual(len(urls), 1)
+        self.assertEqual(urls[0], "https://web.com")
 
 
 class TestBugcrowdPublic(unittest.TestCase):
@@ -508,6 +514,95 @@ class TestSharedPlatformsList(unittest.TestCase):
 
     def test_is_set(self):
         self.assertIsInstance(SHARED_PLATFORMS, set)
+
+
+class TestAnalyzeScope(unittest.TestCase):
+
+    def test_classifies_full(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://example.com", "bounty": True, "instruction": ""},
+            {"type": "DOMAIN", "identifier": "api.example.com", "bounty": True, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertEqual(len(analysis["full"]), 2)
+        self.assertEqual(len(analysis["partial"]), 0)
+        self.assertEqual(len(analysis["none"]), 0)
+
+    def test_classifies_partial(self):
+        scopes = [
+            {"type": "WILDCARD", "identifier": "*.example.com", "bounty": True, "instruction": ""},
+            {"type": "CIDR", "identifier": "10.0.0.0/24", "bounty": True, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertEqual(len(analysis["partial"]), 2)
+
+    def test_classifies_none(self):
+        scopes = [
+            {"type": "GOOGLE_PLAY_APP_ID", "identifier": "com.test.app", "bounty": True, "instruction": ""},
+            {"type": "APPLE_STORE_APP_ID", "identifier": "12345", "bounty": True, "instruction": ""},
+            {"type": "SOURCE_CODE", "identifier": "https://github.com/org/repo", "bounty": True, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertEqual(len(analysis["none"]), 3)
+
+    def test_mixed_scope(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://app.com", "bounty": True, "instruction": ""},
+            {"type": "WILDCARD", "identifier": "*.app.com", "bounty": True, "instruction": ""},
+            {"type": "GOOGLE_PLAY_APP_ID", "identifier": "com.app", "bounty": True, "instruction": ""},
+            {"type": "HARDWARE", "identifier": "Server", "bounty": False, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertEqual(len(analysis["full"]), 1)
+        self.assertEqual(len(analysis["partial"]), 1)
+        self.assertEqual(len(analysis["none"]), 2)
+        self.assertEqual(analysis["total"], 4)
+        self.assertEqual(analysis["testable_count"], 2)
+
+    def test_detects_vpn_note(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://app.ro", "bounty": True, "instruction": "Use Romanian VPN"},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertIn("VPN required", analysis["full"][0]["notes"])
+
+    def test_detects_user_agent_note(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://app.com", "bounty": True,
+             "instruction": "Add User-Agent: hackerone header"},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertIn("Custom User-Agent required", analysis["full"][0]["notes"])
+
+    def test_detects_credentials_note(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://app.com", "bounty": True,
+             "instruction": "Use test account: user1 password123"},
+        ]
+        analysis = analyze_scope(scopes)
+        self.assertIn("Test credentials provided", analysis["full"][0]["notes"])
+
+    def test_shared_platform_flagged(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://github.com", "bounty": True, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes, program_handle="random_company")
+        self.assertFalse(analysis["full"][0]["safe"])
+
+    def test_program_owned_not_flagged(self):
+        scopes = [
+            {"type": "URL", "identifier": "https://github.com", "bounty": True, "instruction": ""},
+        ]
+        analysis = analyze_scope(scopes, program_handle="github")
+        self.assertTrue(analysis["full"][0]["safe"])
+
+    def test_asset_capability_map_complete(self):
+        expected_types = {"URL", "DOMAIN", "WILDCARD", "CIDR", "OTHER",
+                          "SMART_CONTRACT", "APPLE_STORE_APP_ID",
+                          "GOOGLE_PLAY_APP_ID", "DOWNLOADABLE_EXECUTABLES",
+                          "SOURCE_CODE", "HARDWARE", "WINDOWS_APP_STORE_APP_ID"}
+        for t in expected_types:
+            self.assertIn(t, _ASSET_CAPABILITY)
 
 
 class TestBountyNoArgs(unittest.TestCase):

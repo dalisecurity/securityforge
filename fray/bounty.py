@@ -118,15 +118,13 @@ class HackerOnePublic:
             identifier = node.get("asset_identifier", "")
             instruction = node.get("instruction", "")
             bounty = node.get("eligible_for_bounty", False)
-            # Only include web-testable assets
-            if asset_type in ("URL", "DOMAIN", "WILDCARD"):
-                scopes.append({
-                    "type": asset_type,
-                    "identifier": identifier,
-                    "bounty": bounty,
-                    "instruction": (instruction or "")[:100],
-                    "eligible": True,
-                })
+            scopes.append({
+                "type": asset_type,
+                "identifier": identifier,
+                "bounty": bounty,
+                "instruction": (instruction or "")[:200],
+                "eligible": True,
+            })
 
         return True, scopes
 
@@ -194,6 +192,198 @@ class BugcrowdPublic:
                     })
 
         return bool(scopes), scopes
+
+
+# ── Scope Analysis ────────────────────────────────────────────────────────────
+
+# What Fray can do per asset type
+_ASSET_CAPABILITY = {
+    # FULL: Fray can WAF-detect + payload-test
+    "URL": {
+        "level": "full",
+        "label": "Web URL",
+        "help": "WAF detection + payload testing (XSS, SQLi, SSTI, etc.)",
+    },
+    "DOMAIN": {
+        "level": "full",
+        "label": "Domain",
+        "help": "WAF detection + payload testing",
+    },
+    "WILDCARD": {
+        "level": "partial",
+        "label": "Wildcard Domain",
+        "help": "WAF detection + payload testing on root domain. Subdomain enum not included — use tools like subfinder/amass first",
+    },
+    # PARTIAL: Fray can help with some aspects
+    "CIDR": {
+        "level": "partial",
+        "label": "IP Range (CIDR)",
+        "help": "Fray can test individual IPs if they serve HTTP. Use nmap/masscan to find web services first",
+    },
+    "OTHER": {
+        "level": "partial",
+        "label": "Other Asset",
+        "help": "May contain web URLs — check instructions. Fray can test any HTTP endpoint",
+    },
+    "SMART_CONTRACT": {
+        "level": "partial",
+        "label": "Smart Contract",
+        "help": "If the contract has a web frontend, Fray can test WAF on it. Contract audit requires Slither/Mythril",
+    },
+    # NONE: Fray cannot help
+    "APPLE_STORE_APP_ID": {
+        "level": "none",
+        "label": "iOS App",
+        "help": "Mobile app testing — use Burp Suite/Frida for API interception, then feed endpoints to Fray",
+    },
+    "GOOGLE_PLAY_APP_ID": {
+        "level": "none",
+        "label": "Android App",
+        "help": "Mobile app testing — use Burp Suite/Frida for API interception, then feed endpoints to Fray",
+    },
+    "DOWNLOADABLE_EXECUTABLES": {
+        "level": "none",
+        "label": "Desktop App",
+        "help": "Binary analysis — use Ghidra/IDA for reverse engineering, intercept HTTP traffic with mitmproxy",
+    },
+    "SOURCE_CODE": {
+        "level": "none",
+        "label": "Source Code",
+        "help": "Code review — use Semgrep/CodeQL for SAST. If repo has a web app, deploy locally and test with Fray",
+    },
+    "HARDWARE": {
+        "level": "none",
+        "label": "Hardware/Appliance",
+        "help": "Requires physical/network access. If it has a web admin panel, Fray can test that endpoint",
+    },
+    "WINDOWS_APP_STORE_APP_ID": {
+        "level": "none",
+        "label": "Windows Store App",
+        "help": "Desktop app testing — intercept HTTP traffic with Burp/mitmproxy, then feed endpoints to Fray",
+    },
+}
+
+
+def analyze_scope(scopes: List[Dict], program_handle: str = "") -> Dict:
+    """Analyze scope entries and classify by Fray capability.
+
+    Returns a dict with 'full', 'partial', 'none' lists and summary stats.
+    """
+    analysis = {
+        "full": [],      # Fray can fully test
+        "partial": [],   # Fray can partially help
+        "none": [],      # Outside Fray's capabilities
+        "total": len(scopes),
+        "testable_count": 0,
+    }
+
+    for scope in scopes:
+        asset_type = scope.get("type", "OTHER")
+        identifier = scope.get("identifier", "")
+        bounty = scope.get("bounty", False)
+        instruction = scope.get("instruction", "")
+
+        cap = _ASSET_CAPABILITY.get(asset_type, _ASSET_CAPABILITY["OTHER"])
+        level = cap["level"]
+
+        # For web-testable types, check domain safety
+        safe = True
+        safety_note = ""
+        if level in ("full", "partial") and asset_type in ("URL", "DOMAIN", "WILDCARD"):
+            # Normalize to URL for safety check
+            test_id = identifier
+            if test_id.startswith("*."):
+                test_id = test_id[2:]
+            if not test_id.startswith(("http://", "https://")):
+                test_id = f"https://{test_id}"
+            safe, reason = is_safe_target(test_id, program_handle)
+            if not safe:
+                safety_note = f" [SHARED: {reason}]"
+
+        # Check for special instructions
+        notes = []
+        if instruction:
+            inst_lower = instruction.lower()
+            if "vpn" in inst_lower:
+                notes.append("VPN required")
+            if "user-agent" in inst_lower:
+                notes.append("Custom User-Agent required")
+            if any(w in inst_lower for w in ("test account", "credentials", "password")):
+                notes.append("Test credentials provided")
+            if any(w in inst_lower for w in ("fake id", "cnp", "rijksregister")):
+                notes.append("Fake ID/registration needed")
+
+        entry = {
+            "type": asset_type,
+            "identifier": identifier,
+            "bounty": bounty,
+            "level": level,
+            "label": cap["label"],
+            "help": cap["help"],
+            "safe": safe,
+            "safety_note": safety_note,
+            "notes": notes,
+            "instruction": instruction,
+        }
+
+        analysis[level].append(entry)
+
+    analysis["testable_count"] = len(analysis["full"]) + len(analysis["partial"])
+    return analysis
+
+
+def print_scope_analysis(analysis: Dict, program: str):
+    """Print formatted scope analysis report."""
+    total = analysis["total"]
+    full = analysis["full"]
+    partial = analysis["partial"]
+    none_list = analysis["none"]
+
+    print(f"\n  {Colors.BOLD}Scope Analysis for {program}{Colors.END}")
+    print(f"  {Colors.DIM}{'─' * 60}{Colors.END}")
+    print(f"  Total scope entries: {total}")
+    print(f"  {Colors.GREEN}Full support:    {len(full):>3}{Colors.END}  (WAF detect + payload test)")
+    print(f"  {Colors.YELLOW}Partial support: {len(partial):>3}{Colors.END}  (Fray can help with parts)")
+    print(f"  {Colors.DIM}Not supported:   {len(none_list):>3}{Colors.END}  (outside Fray's scope)")
+
+    # Full support
+    if full:
+        print(f"\n  {Colors.GREEN}{Colors.BOLD}✓ Full Fray Support{Colors.END}")
+        for e in full:
+            bounty_tag = f"{Colors.GREEN}$$" if e["bounty"] else f"{Colors.DIM}--"
+            safe_tag = "" if e["safe"] else f" {Colors.RED}⚠ SHARED{Colors.END}"
+            notes_str = f" {Colors.DIM}({', '.join(e['notes'])}){Colors.END}" if e["notes"] else ""
+            print(f"    {bounty_tag}{Colors.END} {e['type']:<10} {e['identifier']}{safe_tag}{notes_str}")
+
+    # Partial support
+    if partial:
+        print(f"\n  {Colors.YELLOW}{Colors.BOLD}◐ Partial Fray Support{Colors.END}")
+        for e in partial:
+            bounty_tag = f"{Colors.GREEN}$$" if e["bounty"] else f"{Colors.DIM}--"
+            safe_tag = "" if e["safe"] else f" {Colors.RED}⚠ SHARED{Colors.END}"
+            notes_str = f" {Colors.DIM}({', '.join(e['notes'])}){Colors.END}" if e["notes"] else ""
+            print(f"    {bounty_tag}{Colors.END} {e['label']:<20} {e['identifier']}")
+            print(f"       {Colors.DIM}→ {e['help']}{Colors.END}{safe_tag}{notes_str}")
+
+    # Not supported
+    if none_list:
+        print(f"\n  {Colors.DIM}{Colors.BOLD}✗ Outside Fray's Scope{Colors.END}")
+        for e in none_list:
+            bounty_tag = f"{Colors.GREEN}$$" if e["bounty"] else f"{Colors.DIM}--"
+            print(f"    {bounty_tag}{Colors.END} {e['label']:<20} {e['identifier']}")
+            print(f"       {Colors.DIM}→ {e['help']}{Colors.END}")
+
+    # Actionable summary
+    safe_full = [e for e in full if e["safe"]]
+    safe_partial = [e for e in partial if e["safe"] and e["type"] in ("WILDCARD", "OTHER")]
+    testable = len(safe_full) + len(safe_partial)
+
+    print(f"\n  {Colors.DIM}{'─' * 60}{Colors.END}")
+    print(f"  {Colors.BOLD}Ready to test: {testable} target(s){Colors.END}")
+    if none_list:
+        print(f"  {Colors.DIM}Tip: For mobile apps, intercept API traffic with Burp Suite,")
+        print(f"  then feed the API endpoints to: fray bounty --urls api_endpoints.txt{Colors.END}")
+    print()
 
 
 # ── Domain Safety & Ownership Validation ─────────────────────────────────────
@@ -295,8 +485,13 @@ def filter_safe_targets(urls: List[str], program_handle: str = "") -> Tuple[List
 
 def normalize_scope_to_urls(scopes: List[Dict]) -> List[str]:
     """Convert scope entries to testable URLs."""
+    _WEB_TYPES = {"URL", "DOMAIN", "WILDCARD"}
     urls = []
     for scope in scopes:
+        # Skip non-web asset types
+        if scope.get("type", "") not in _WEB_TYPES:
+            continue
+
         identifier = scope.get("identifier", "").strip()
         if not identifier:
             continue
@@ -521,16 +716,12 @@ def run_bounty(
                 print(f"  {Colors.DIM}Find programs at: https://hackerone.com/directory{Colors.END}\n")
                 return
 
-            urls = normalize_scope_to_urls(scopes)
-            print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
+            # Analyze full scope first
+            analysis = analyze_scope(scopes, program)
+            print_scope_analysis(analysis, program)
 
-            if scopes:
-                bounty_icon = lambda s: f"{Colors.GREEN}$${Colors.END}" if s.get('bounty') else f"{Colors.DIM}--{Colors.END}"
-                print(f"\n  {Colors.BOLD}In-Scope Assets:{Colors.END}")
-                for s in scopes[:20]:
-                    print(f"    {bounty_icon(s)} {s['type']:<10} {s['identifier']}")
-                if len(scopes) > 20:
-                    print(f"    ... and {len(scopes) - 20} more")
+            urls = normalize_scope_to_urls(scopes)
+            print(f"  {Colors.GREEN}{len(urls)} testable web URL(s) extracted{Colors.END}")
 
         elif platform == "bugcrowd":
             print(f"{Colors.DIM}  Fetching public scope from Bugcrowd...{Colors.END}")
@@ -543,8 +734,11 @@ def run_bounty(
                 print(f"  {Colors.DIM}Find programs at: https://bugcrowd.com/programs{Colors.END}\n")
                 return
 
+            analysis = analyze_scope(scopes, program)
+            print_scope_analysis(analysis, program)
+
             urls = normalize_scope_to_urls(scopes)
-            print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
+            print(f"  {Colors.GREEN}{len(urls)} testable web URL(s) extracted{Colors.END}")
 
         else:
             print(f"  {Colors.RED}Unknown platform: {platform}{Colors.END}")
@@ -561,21 +755,24 @@ def run_bounty(
         if ok and scopes:
             platform = "hackerone"
             print(f"  {Colors.GREEN}Found on HackerOne!{Colors.END}")
+
+            analysis = analyze_scope(scopes, program)
+            print_scope_analysis(analysis, program)
+
             urls = normalize_scope_to_urls(scopes)
-            print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
-            if scopes:
-                print(f"\n  {Colors.BOLD}In-Scope Assets:{Colors.END}")
-                for s in scopes[:15]:
-                    bounty_tag = f"{Colors.GREEN}$$" if s.get('bounty') else f"{Colors.DIM}--"
-                    print(f"    {bounty_tag}{Colors.END} {s['type']:<10} {s['identifier']}")
+            print(f"  {Colors.GREEN}{len(urls)} testable web URL(s) extracted{Colors.END}")
         else:
             api_bc = BugcrowdPublic()
             ok, scopes = api_bc.get_program_scope(program)
             if ok and scopes:
                 platform = "bugcrowd"
                 print(f"  {Colors.GREEN}Found on Bugcrowd!{Colors.END}")
+
+                analysis = analyze_scope(scopes, program)
+                print_scope_analysis(analysis, program)
+
                 urls = normalize_scope_to_urls(scopes)
-                print(f"  {Colors.GREEN}Found {len(scopes)} scope entries → {len(urls)} testable URL(s){Colors.END}")
+                print(f"  {Colors.GREEN}{len(urls)} testable web URL(s) extracted{Colors.END}")
             else:
                 print(f"  {Colors.RED}Program '{program}' not found on HackerOne or Bugcrowd.{Colors.END}")
                 print(f"  {Colors.DIM}Try: fray bounty --platform hackerone --program <handle>{Colors.END}\n")
@@ -613,10 +810,10 @@ def run_bounty(
 
     # ── Scope-only mode ──────────────────────────────────────────────────
     if scope_only:
-        print(f"\n  {Colors.BOLD}Safe Targets ({len(urls)}):{Colors.END}")
+        print(f"\n  {Colors.BOLD}Safe Testable URLs ({len(urls)}):{Colors.END}")
         for u in urls:
             print(f"    {Colors.CYAN}{u}{Colors.END}")
-        print(f"\n  {Colors.DIM}Use without --scope-only to run tests.{Colors.END}\n")
+        print(f"\n  {Colors.DIM}Remove --scope-only to run payload tests on these targets.{Colors.END}\n")
         return
 
     print(f"\n  {Colors.BOLD}Testing {len(urls)} target(s) × {len(test_categories)} categories × {max_payloads} payloads{Colors.END}")
