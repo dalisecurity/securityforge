@@ -40,6 +40,102 @@ def _validate_output_path(output: str) -> None:
         sys.exit(1)
 
 
+def build_auth_headers(args) -> dict:
+    """Build auth headers from CLI flags: --cookie, --bearer, --header, --login-flow"""
+    headers = {}
+    if getattr(args, 'cookie', None):
+        headers['Cookie'] = args.cookie
+    if getattr(args, 'bearer', None):
+        headers['Authorization'] = f'Bearer {args.bearer}'
+    for h in getattr(args, 'header', None) or []:
+        if ':' in h:
+            key, val = h.split(':', 1)
+            headers[key.strip()] = val.strip()
+    if getattr(args, 'login_flow', None):
+        session_cookie = _do_login_flow(args.login_flow)
+        if session_cookie:
+            # Merge with existing cookies
+            existing = headers.get('Cookie', '')
+            if existing:
+                headers['Cookie'] = f"{existing}; {session_cookie}"
+            else:
+                headers['Cookie'] = session_cookie
+    return headers
+
+
+def _do_login_flow(login_spec: str) -> str:
+    """Perform form-based login and return session cookies.
+
+    Format: URL,field=value,field=value
+    Example: https://example.com/login,username=admin,password=secret
+    """
+    import http.client
+    import urllib.parse
+
+    parts = login_spec.split(',')
+    if len(parts) < 2:
+        print("  ⚠️  --login-flow format: URL,field=value,field=value")
+        print("     Example: https://example.com/login,username=admin,password=secret")
+        return ""
+
+    login_url = parts[0].strip()
+    form_data = {}
+    for part in parts[1:]:
+        if '=' in part:
+            k, v = part.split('=', 1)
+            form_data[k.strip()] = v.strip()
+
+    parsed = urllib.parse.urlparse(login_url)
+    host = parsed.hostname
+    port = parsed.port or (443 if parsed.scheme == 'https' else 80)
+    path = parsed.path or '/login'
+    use_ssl = parsed.scheme == 'https'
+
+    body = urllib.parse.urlencode(form_data)
+    req_headers = {
+        'Host': host,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': str(len(body)),
+        'User-Agent': 'Fray Auth',
+    }
+
+    try:
+        if use_ssl:
+            import ssl
+            ctx = ssl.create_default_context()
+            conn = http.client.HTTPSConnection(host, port, context=ctx, timeout=10)
+        else:
+            conn = http.client.HTTPConnection(host, port, timeout=10)
+
+        conn.request('POST', path, body=body, headers=req_headers)
+        resp = conn.getresponse()
+        resp.read()  # consume body
+
+        # Extract Set-Cookie headers
+        cookies = []
+        for header_name, header_val in resp.getheaders():
+            if header_name.lower() == 'set-cookie':
+                # Extract cookie name=value (before ;)
+                cookie_part = header_val.split(';')[0].strip()
+                cookies.append(cookie_part)
+
+        conn.close()
+
+        if cookies:
+            cookie_str = '; '.join(cookies)
+            print(f"  🔑 Login successful — captured {len(cookies)} session cookie(s)")
+            return cookie_str
+        else:
+            status = resp.status
+            print(f"  ⚠️  Login returned HTTP {status} but no Set-Cookie headers")
+            print(f"     Try using --cookie directly if you have a session token")
+            return ""
+
+    except Exception as e:
+        print(f"  ❌ Login flow failed: {e}")
+        return ""
+
+
 def cmd_detect(args):
     """Detect WAF vendor on target"""
     from fray.detector import WAFDetector
@@ -68,11 +164,7 @@ def cmd_test(args):
 
     from fray.tester import WAFTester
     # Build custom headers from auth flags
-    custom_headers = {}
-    if getattr(args, 'cookie', None):
-        custom_headers['Cookie'] = args.cookie
-    if getattr(args, 'bearer', None):
-        custom_headers['Authorization'] = f'Bearer {args.bearer}'
+    custom_headers = build_auth_headers(args)
     # Redirect policy
     if getattr(args, 'no_follow_redirects', False):
         max_redirects = 0
@@ -104,7 +196,8 @@ def cmd_test(args):
         # Smart mode: run recon, show results, prompt user before testing
         from fray.recon import run_recon
         print(f"\n🔍 Running reconnaissance on {args.target}...")
-        recon = run_recon(args.target, timeout=args.timeout)
+        recon = run_recon(args.target, timeout=args.timeout,
+                          headers=custom_headers or None)
         fp = recon.get("fingerprint", {})
         techs = fp.get("technologies", {})
         recommended = recon.get("recommended_categories", [])
@@ -402,7 +495,9 @@ def cmd_ci(args):
 def cmd_recon(args):
     """Run target reconnaissance and fingerprinting"""
     from fray.recon import run_recon, print_recon
-    result = run_recon(args.target, timeout=getattr(args, 'timeout', 8))
+    auth_headers = build_auth_headers(args) or None
+    result = run_recon(args.target, timeout=getattr(args, 'timeout', 8),
+                       headers=auth_headers)
     if getattr(args, 'json', False):
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
@@ -690,12 +785,22 @@ Documentation: https://github.com/dalisecurity/fray
     p_recon.add_argument("-t", "--timeout", type=int, default=8, help="Request timeout (default: 8)")
     p_recon.add_argument("--json", action="store_true", help="Output raw JSON instead of pretty-print")
     p_recon.add_argument("-o", "--output", default=None, help="Save recon JSON to file")
+    p_recon.add_argument("--cookie", default=None, help="Cookie header for authenticated recon")
+    p_recon.add_argument("--bearer", default=None, help="Bearer token for Authorization header")
+    p_recon.add_argument("-H", "--header", action="append", help="Custom header (repeatable, format: 'Name: Value')")
+    p_recon.add_argument("--login-flow", default=None,
+                          help="Form login: 'URL,field=value,field=value' — captures session cookies")
     p_recon.set_defaults(func=cmd_recon)
 
     # detect
     p_detect = subparsers.add_parser("detect", help="Detect WAF vendor on target URL")
     p_detect.add_argument("target", help="Target URL (e.g. https://example.com)")
     p_detect.add_argument("--insecure", action="store_true", help="Disable TLS certificate verification")
+    p_detect.add_argument("--cookie", default=None, help="Cookie header for authenticated detection")
+    p_detect.add_argument("--bearer", default=None, help="Bearer token for Authorization header")
+    p_detect.add_argument("-H", "--header", action="append", help="Custom header (repeatable, format: 'Name: Value')")
+    p_detect.add_argument("--login-flow", default=None,
+                           help="Form login: 'URL,field=value,field=value' — captures session cookies")
     p_detect.set_defaults(func=cmd_detect)
 
     # test
@@ -714,6 +819,9 @@ Documentation: https://github.com/dalisecurity/fray
     p_test.add_argument("--insecure", action="store_true", help="Disable TLS certificate verification")
     p_test.add_argument("--cookie", default=None, help="Cookie header value for authenticated scanning")
     p_test.add_argument("--bearer", default=None, help="Bearer token for Authorization header")
+    p_test.add_argument("-H", "--header", action="append", help="Custom header (repeatable, format: 'Name: Value')")
+    p_test.add_argument("--login-flow", default=None,
+                         help="Form login: 'URL,field=value,field=value' — captures session cookies")
     p_test.add_argument("-v", "--verbose", action="store_true", help="Show raw HTTP request/response for debugging")
     p_test.add_argument("--no-follow-redirects", action="store_true", help="Do not follow HTTP redirects")
     p_test.add_argument("--redirect-limit", type=int, default=5, help="Max redirects to follow (default: 5, 0 = none)")

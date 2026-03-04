@@ -163,7 +163,40 @@ fray detect https://example.com
 
 ---
 
-## 🐛 バグバウンティ連携
+## � 認証付きスキャン
+
+本当の脆弱性はログイン後の画面に潜んでいます。Frayは全コマンドで認証付きスキャンに対応：
+
+```bash
+# Cookie認証
+fray recon https://app.example.com --cookie "session=abc123; csrf=xyz"
+fray test https://app.example.com -c xss --cookie "session=abc123"
+
+# Bearerトークン（JWT、APIキー）
+fray test https://api.example.com -c sqli --bearer "eyJhbGciOiJIUzI1NiJ9..."
+
+# カスタムヘッダー（-Hで複数指定可）
+fray recon https://app.example.com -H "X-API-Key: secret" -H "X-Tenant: acme"
+
+# フォームログイン — 認証情報をPOST、セッションを自動取得してスキャン
+fray test https://app.example.com -c xss \
+  --login-flow "https://app.example.com/login,username=admin,password=secret"
+
+# 組み合わせ：ログイン + スコープ + スマートモード
+fray test https://app.example.com --smart --scope scope.txt \
+  --login-flow "https://app.example.com/login,email=user@test.com,password=pass123"
+```
+
+| フラグ | 対応コマンド | 説明 |
+|------|-----------|------|
+| `--cookie` | recon, detect, test | セッションCookie文字列 |
+| `--bearer` | recon, detect, test | Bearer/JWTトークン |
+| `-H` / `--header` | recon, detect, test | 任意のカスタムヘッダー（複数指定可） |
+| `--login-flow` | recon, detect, test | フォームログイン → セッションCookie自動取得 |
+
+---
+
+## �🐛 バグバウンティ連携
 
 Frayはバグバウンティのワークフローに最適化されています — 情報収集からレポート提出まで：
 

@@ -163,7 +163,40 @@ Detects: **Cloudflare, AWS WAF, Akamai, Imperva, F5 BIG-IP, Fastly, Azure WAF, G
 
 ---
 
-## 🐛 Bug Bounty Integration
+## � Authenticated Scanning
+
+Most real bugs live behind login walls. Fray supports authenticated scanning across all commands:
+
+```bash
+# Cookie-based auth
+fray recon https://app.example.com --cookie "session=abc123; csrf=xyz"
+fray test https://app.example.com -c xss --cookie "session=abc123"
+
+# Bearer token (JWT, API keys)
+fray test https://api.example.com -c sqli --bearer "eyJhbGciOiJIUzI1NiJ9..."
+
+# Custom headers (repeatable -H)
+fray recon https://app.example.com -H "X-API-Key: secret" -H "X-Tenant: acme"
+
+# Form login flow — POST creds, capture session, then scan
+fray test https://app.example.com -c xss \
+  --login-flow "https://app.example.com/login,username=admin,password=secret"
+
+# Combine: login + scope + smart mode
+fray test https://app.example.com --smart --scope scope.txt \
+  --login-flow "https://app.example.com/login,email=user@test.com,password=pass123"
+```
+
+| Flag | Works With | Description |
+|------|-----------|-------------|
+| `--cookie` | recon, detect, test | Session cookie string |
+| `--bearer` | recon, detect, test | Bearer/JWT token |
+| `-H` / `--header` | recon, detect, test | Any custom header (repeatable) |
+| `--login-flow` | recon, detect, test | POST form login → auto-capture session cookies |
+
+---
+
+## �🐛 Bug Bounty Integration
 
 Fray is built for bug bounty workflows — from recon to report submission:
 

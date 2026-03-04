@@ -212,41 +212,36 @@ def _make_ssl_context(verify: bool = True) -> ssl.SSLContext:
 
 
 def _http_get(host: str, port: int, path: str, use_ssl: bool,
-              timeout: int = 8, max_redirects: int = 5) -> Tuple[int, Dict[str, str], str]:
+              timeout: int = 8, max_redirects: int = 5,
+              extra_headers: Optional[Dict[str, str]] = None) -> Tuple[int, Dict[str, str], str]:
     """Make a raw HTTP GET, follow redirects, return (status, headers_dict, body)."""
     all_headers: Dict[str, str] = {}
     for _ in range(max_redirects + 1):
         try:
+            req_headers = {
+                "Host": host,
+                "User-Agent": f"Fray/{__version__} Recon",
+                "Accept": "text/html,application/json,*/*",
+                "Connection": "close",
+            }
+            if extra_headers:
+                req_headers.update(extra_headers)
+
             if use_ssl:
                 # Try verified first, fallback to unverified on cert errors
                 try:
                     ctx = _make_ssl_context(verify=True)
                     conn = http.client.HTTPSConnection(host, port, context=ctx, timeout=timeout)
-                    conn.request("GET", path, headers={
-                        "Host": host,
-                        "User-Agent": f"Fray/{__version__} Recon",
-                        "Accept": "text/html,application/json,*/*",
-                        "Connection": "close",
-                    })
+                    conn.request("GET", path, headers=req_headers)
                     resp = conn.getresponse()
                 except ssl.SSLError:
                     ctx = _make_ssl_context(verify=False)
                     conn = http.client.HTTPSConnection(host, port, context=ctx, timeout=timeout)
-                    conn.request("GET", path, headers={
-                        "Host": host,
-                        "User-Agent": f"Fray/{__version__} Recon",
-                        "Accept": "text/html,application/json,*/*",
-                        "Connection": "close",
-                    })
+                    conn.request("GET", path, headers=req_headers)
                     resp = conn.getresponse()
             else:
                 conn = http.client.HTTPConnection(host, port, timeout=timeout)
-                conn.request("GET", path, headers={
-                    "Host": host,
-                    "User-Agent": f"Fray/{__version__} Recon",
-                    "Accept": "text/html,application/json,*/*",
-                    "Connection": "close",
-                })
+                conn.request("GET", path, headers=req_headers)
                 resp = conn.getresponse()
 
             status = resp.status
@@ -1074,14 +1069,22 @@ def check_error_page(host: str, port: int, use_ssl: bool,
 
 # ── Full recon pipeline ──────────────────────────────────────────────────
 
-def run_recon(url: str, timeout: int = 8) -> Dict[str, Any]:
-    """Run full reconnaissance on a target URL."""
+def run_recon(url: str, timeout: int = 8,
+              headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Run full reconnaissance on a target URL.
+
+    Args:
+        url: Target URL
+        timeout: Request timeout in seconds
+        headers: Extra HTTP headers for authenticated scanning (Cookie, Authorization, etc.)
+    """
     host, path, port, use_ssl = _parse_url(url)
 
     result: Dict[str, Any] = {
         "target": url,
         "host": host,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "authenticated": bool(headers),
         "http": {},
         "tls": {},
         "headers": {},
@@ -1104,18 +1107,19 @@ def run_recon(url: str, timeout: int = 8) -> Dict[str, Any]:
     if use_ssl or port == 443:
         result["tls"] = check_tls(host, port=port, timeout=timeout)
 
-    # 3. Fetch page for headers + body fingerprinting
-    status, headers, body = _http_get(host, port, path, use_ssl, timeout=timeout)
+    # 3. Fetch page for headers + body fingerprinting (with auth headers)
+    status, resp_headers, body = _http_get(host, port, path, use_ssl, timeout=timeout,
+                                           extra_headers=headers)
     result["page_status"] = status
 
     # 4. Security headers
-    result["headers"] = check_security_headers(headers)
+    result["headers"] = check_security_headers(resp_headers)
 
     # 5. Cookie security audit
-    result["cookies"] = check_cookies(headers)
+    result["cookies"] = check_cookies(resp_headers)
 
     # 6. App fingerprinting
-    result["fingerprint"] = fingerprint_app(headers, body)
+    result["fingerprint"] = fingerprint_app(resp_headers, body)
 
     # 7. DNS records + CDN detection
     result["dns"] = check_dns(host)
