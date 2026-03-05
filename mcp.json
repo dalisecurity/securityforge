@@ -3,6 +3,7 @@
   "version": "3.0.1",
   "description": "Fray — open-source WAF security testing toolkit. 5,500+ attack payloads, 25 WAF fingerprints, 10 MCP tools for AI-powered security workflows.",
   "homepage": "https://github.com/dalisecurity/fray",
+  "icon": "https://raw.githubusercontent.com/dalisecurity/fray/hugo/.github/fray-icon.png",
   "author": "DALI Security",
   "license": "MIT",
   "transport": "stdio",

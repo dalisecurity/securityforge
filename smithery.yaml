@@ -13,6 +13,7 @@ version: 3.0.1
 author: DALI Security
 license: MIT
 homepage: https://github.com/dalisecurity/fray
+icon: https://raw.githubusercontent.com/dalisecurity/fray/hugo/.github/fray-icon.png
 repository: https://github.com/dalisecurity/fray
 documentation: https://github.com/dalisecurity/fray/tree/hugo/docs
 
