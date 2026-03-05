@@ -475,6 +475,8 @@ def cmd_scan(args):
         jitter=getattr(args, 'jitter', 0.0),
         stealth=getattr(args, 'stealth', False),
         rate_limit=getattr(args, 'rate_limit', 0.0),
+        scope_file=getattr(args, 'scope', None),
+        workers=getattr(args, 'workers', 1),
     )
 
     if json_mode:
@@ -1221,6 +1223,10 @@ Documentation: https://github.com/dalisecurity/fray
                          help="Stealth mode: randomize UA, add jitter, throttle")
     p_scan.add_argument("--rate-limit", type=float, default=0.0,
                          help="Max requests per second (default: unlimited)")
+    p_scan.add_argument("--scope", default=None,
+                         help="Scope file: one domain/IP/CIDR per line (restricts crawl)")
+    p_scan.add_argument("-w", "--workers", type=int, default=1,
+                         help="Concurrent workers for crawl + injection (default: 1)")
     p_scan.set_defaults(func=cmd_scan)
 
     # stats

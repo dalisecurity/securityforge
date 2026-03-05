@@ -9,6 +9,7 @@ from fray.scanner import (
     InjectionPoint,
     CrawlResult,
     ScanResult,
+    ScopeChecker,
     extract_links,
     extract_query_params,
     extract_forms,
@@ -17,6 +18,7 @@ from fray.scanner import (
     parse_sitemap_xml,
     _same_origin,
     _normalize_url,
+    _is_crawlable,
 )
 
 
@@ -481,3 +483,113 @@ class TestScanResultReflected:
         sr = ScanResult(target="https://x.com")
         d = sr.to_dict()
         assert d["summary"]["reflected"] == 0
+
+
+# ── ScopeChecker ────────────────────────────────────────────────────────
+
+class TestScopeChecker:
+    def test_disabled_by_default(self):
+        sc = ScopeChecker()
+        assert not sc.enabled
+        assert sc.in_scope("https://anything.com/page") is True
+
+    def test_exact_domain(self):
+        sc = ScopeChecker(entries=["example.com"])
+        assert sc.enabled
+        assert sc.in_scope("https://example.com/page") is True
+        assert sc.in_scope("https://sub.example.com/page") is False
+        assert sc.in_scope("https://other.com/page") is False
+
+    def test_wildcard_domain(self):
+        sc = ScopeChecker(entries=["*.example.com"])
+        assert sc.in_scope("https://sub.example.com/page") is True
+        assert sc.in_scope("https://deep.sub.example.com") is True
+        assert sc.in_scope("https://example.com/page") is True
+        assert sc.in_scope("https://other.com/page") is False
+
+    def test_exact_ip(self):
+        sc = ScopeChecker(entries=["10.0.0.1"])
+        assert sc.in_scope("http://10.0.0.1/page") is True
+        assert sc.in_scope("http://10.0.0.2/page") is False
+
+    def test_cidr(self):
+        sc = ScopeChecker(entries=["192.168.1.0/24"])
+        assert sc.in_scope("http://192.168.1.50/page") is True
+        assert sc.in_scope("http://192.168.1.255/page") is True
+        assert sc.in_scope("http://192.168.2.1/page") is False
+
+    def test_mixed_entries(self):
+        sc = ScopeChecker(entries=[
+            "# comment line",
+            "example.com",
+            "*.test.io",
+            "10.0.0.5",
+            "172.16.0.0/16",
+            "",  # blank line
+        ])
+        assert sc.enabled
+        assert sc.in_scope("https://example.com/login") is True
+        assert sc.in_scope("https://api.test.io/v1") is True
+        assert sc.in_scope("http://10.0.0.5:8080/admin") is True
+        assert sc.in_scope("http://172.16.5.10/") is True
+        assert sc.in_scope("https://evil.com/") is False
+
+    def test_comments_and_blanks(self):
+        sc = ScopeChecker(entries=["# only comments", "", "  "])
+        assert not sc.enabled
+
+    def test_case_insensitive(self):
+        sc = ScopeChecker(entries=["Example.COM"])
+        assert sc.in_scope("https://example.com/page") is True
+        assert sc.in_scope("https://EXAMPLE.COM/PAGE") is True
+
+    def test_relative_url_allowed(self):
+        sc = ScopeChecker(entries=["example.com"])
+        assert sc.in_scope("/relative/path") is True
+
+    def test_scope_file(self, tmp_path):
+        scope_file = tmp_path / "scope.txt"
+        scope_file.write_text("target.com\n*.sub.target.com\n10.0.0.0/8\n")
+        sc = ScopeChecker(scope_file=str(scope_file))
+        assert sc.enabled
+        assert sc.in_scope("https://target.com/") is True
+        assert sc.in_scope("https://api.sub.target.com/") is True
+        assert sc.in_scope("http://10.5.5.5/") is True
+        assert sc.in_scope("https://evil.com/") is False
+
+    def test_missing_scope_file(self):
+        sc = ScopeChecker(scope_file="/nonexistent/scope.txt")
+        assert not sc.enabled
+
+
+# ── _is_crawlable ──────────────────────────────────────────────────────
+
+class TestIsCrawlable:
+    def test_same_origin_no_scope(self):
+        visited = set()
+        assert _is_crawlable("https://x.com/page", visited, "https://x.com") is True
+        assert _is_crawlable("https://other.com/page", visited, "https://x.com") is False
+
+    def test_already_visited(self):
+        visited = {"https://x.com/page"}
+        assert _is_crawlable("https://x.com/page", visited, "https://x.com") is False
+
+    def test_static_extension(self):
+        visited = set()
+        assert _is_crawlable("https://x.com/style.css", visited, "https://x.com") is False
+        assert _is_crawlable("https://x.com/logo.png", visited, "https://x.com") is False
+        assert _is_crawlable("https://x.com/app.js", visited, "https://x.com") is False
+
+    def test_scope_overrides_same_origin(self):
+        """With scope active, cross-origin URLs in scope should be allowed."""
+        visited = set()
+        scope = ScopeChecker(entries=["x.com", "y.com"])
+        assert _is_crawlable("https://x.com/page", visited, "https://x.com", scope) is True
+        assert _is_crawlable("https://y.com/page", visited, "https://x.com", scope) is True
+        assert _is_crawlable("https://z.com/page", visited, "https://x.com", scope) is False
+
+    def test_scope_wildcard_crawl(self):
+        visited = set()
+        scope = ScopeChecker(entries=["*.example.com"])
+        assert _is_crawlable("https://api.example.com/v1", visited, "https://www.example.com", scope) is True
+        assert _is_crawlable("https://evil.com/", visited, "https://www.example.com", scope) is False

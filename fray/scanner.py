@@ -15,12 +15,15 @@ Usage:
 """
 
 import http.client
+import ipaddress
 import json
 import re
 import socket
 import ssl
 import time
 import random
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urljoin, urlparse, parse_qs, urlencode
@@ -338,6 +341,108 @@ def extract_js_endpoints(base_url: str, html: str) -> Tuple[List[InjectionPoint]
     return points, js_count
 
 
+# ── Scope checker ────────────────────────────────────────────────────
+
+class ScopeChecker:
+    """Check if a URL is within a permitted scope.
+
+    Scope file format (one entry per line):
+        example.com             — exact domain match
+        *.example.com           — wildcard subdomain match
+        192.168.1.0/24          — CIDR range
+        10.0.0.5                — exact IP
+        # comment               — ignored
+    """
+
+    def __init__(self, scope_file: Optional[str] = None, entries: Optional[List[str]] = None):
+        self.domains: List[str] = []       # exact domain matches
+        self.wildcards: List[str] = []     # *.example.com patterns
+        self.networks: List[ipaddress.IPv4Network] = []
+        self.ips: List[str] = []
+        self._enabled = False
+
+        lines = entries or []
+        if scope_file:
+            try:
+                with open(scope_file, "r", encoding="utf-8") as f:
+                    lines = f.read().splitlines()
+            except Exception:
+                return
+
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            self._enabled = True
+            # CIDR
+            if "/" in line:
+                try:
+                    self.networks.append(ipaddress.IPv4Network(line, strict=False))
+                    continue
+                except (ValueError, ipaddress.AddressValueError):
+                    pass
+            # Wildcard
+            if line.startswith("*."):
+                self.wildcards.append(line[2:].lower())
+                continue
+            # IP
+            try:
+                ipaddress.IPv4Address(line)
+                self.ips.append(line)
+                continue
+            except (ValueError, ipaddress.AddressValueError):
+                pass
+            # Domain
+            self.domains.append(line.lower())
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    def in_scope(self, url: str) -> bool:
+        """Check if url's host is within scope. Returns True if scope is disabled."""
+        if not self._enabled:
+            return True
+        parsed = urlparse(url)
+        host = (parsed.hostname or "").lower()
+        if not host:
+            return True  # relative URL, allow
+
+        # Exact domain
+        if host in self.domains:
+            return True
+
+        # Wildcard: *.example.com matches sub.example.com and example.com
+        for wc in self.wildcards:
+            if host == wc or host.endswith("." + wc):
+                return True
+
+        # IP exact
+        if host in self.ips:
+            return True
+
+        # CIDR
+        try:
+            addr = ipaddress.IPv4Address(host)
+            for net in self.networks:
+                if addr in net:
+                    return True
+        except (ValueError, ipaddress.AddressValueError):
+            # host is a domain name, try resolving
+            try:
+                resolved = socket.gethostbyname(host)
+                if resolved in self.ips:
+                    return True
+                addr = ipaddress.IPv4Address(resolved)
+                for net in self.networks:
+                    if addr in net:
+                        return True
+            except (socket.gaierror, ValueError):
+                pass
+
+        return False
+
+
 # ── robots.txt / sitemap.xml seeding ─────────────────────────────────
 
 def parse_robots_txt(base_url: str, body: str) -> List[str]:
@@ -401,11 +506,35 @@ def _seed_from_robots_and_sitemap(
 
 # ── Crawler ──────────────────────────────────────────────────────────────
 
+_STATIC_EXT = frozenset((
+    "css", "js", "png", "jpg", "jpeg", "gif", "svg", "ico",
+    "woff", "woff2", "ttf", "eot", "pdf", "zip", "mp4", "webp",
+))
+
+
+def _is_crawlable(url: str, visited: Set[str], target: str,
+                   scope: Optional[ScopeChecker] = None) -> bool:
+    """Check if URL should be crawled (same-origin or in-scope, not visited, not static)."""
+    parsed = urlparse(url)
+    canonical = parsed._replace(fragment="").geturl()
+    if canonical in visited:
+        return False
+    ext = parsed.path.rsplit(".", 1)[-1].lower() if "." in parsed.path else ""
+    if ext in _STATIC_EXT:
+        return False
+    # Scope check takes priority over same-origin
+    if scope and scope.enabled:
+        return scope.in_scope(url)
+    return _same_origin(target, url)
+
+
 def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
           delay: float = 0.3, timeout: int = 8,
           verify_ssl: bool = True,
           headers: Optional[Dict[str, str]] = None,
-          quiet: bool = False) -> CrawlResult:
+          quiet: bool = False,
+          scope: Optional[ScopeChecker] = None,
+          workers: int = 1) -> CrawlResult:
     """Crawl target, discover endpoints and injection points.
 
     Automatically seeds crawl queue from robots.txt and sitemap.xml.
@@ -419,6 +548,8 @@ def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
         verify_ssl: Verify SSL certificates.
         headers: Optional custom headers.
         quiet: Suppress progress output.
+        scope: Optional ScopeChecker for domain/IP filtering.
+        workers: Number of concurrent crawl workers (default: 1 = sequential).
 
     Returns:
         CrawlResult with discovered endpoints and injection points.
@@ -436,80 +567,151 @@ def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
     seed_urls = _seed_from_robots_and_sitemap(target, timeout=timeout,
                                                verify_ssl=verify_ssl, headers=headers)
     for seed in seed_urls:
-        queue.append((seed, 1))
+        if _is_crawlable(seed, visited, target, scope):
+            queue.append((seed, 1))
 
     if not quiet:
         from fray.output import console
         console.print()
         console.rule(f"[bold]Crawling [cyan]{target}[/cyan][/bold]")
+        if scope and scope.enabled:
+            console.print("  [dim]Scope filter active[/dim]")
 
-    while queue and len(visited) < max_pages:
-        url, depth = queue.pop(0)
+    # Thread-safe state for concurrent mode
+    lock = threading.Lock()
+    forms_found = [0]  # mutable container for thread-safe increment
+    js_endpoints_found = [0]
+    endpoints_list: List[str] = []
+    errors_list: List[str] = []
 
-        # Normalize to avoid re-visiting same page with different fragment
-        parsed = urlparse(url)
-        canonical = parsed._replace(fragment="").geturl()
-        if canonical in visited:
-            continue
-        visited.add(canonical)
-
-        # Skip non-HTML resources
-        ext = parsed.path.rsplit(".", 1)[-1].lower() if "." in parsed.path else ""
-        if ext in ("css", "js", "png", "jpg", "jpeg", "gif", "svg", "ico",
-                    "woff", "woff2", "ttf", "eot", "pdf", "zip", "mp4", "webp"):
-            continue
-
-        if not quiet:
-            from fray.output import console
-            console.print(f"  [dim][{len(visited):>3}][/dim] {canonical[:80]}")
+    def _process_url(url: str, depth: int) -> List[Tuple[str, int]]:
+        """Fetch one URL, extract params and links. Returns new (url, depth) pairs."""
+        new_links: List[Tuple[str, int]] = []
 
         status, body, resp_headers = _fetch(url, timeout=timeout,
                                              verify_ssl=verify_ssl, headers=headers)
         if status == 0:
-            result.errors.append(f"Failed to fetch {url}")
-            continue
+            with lock:
+                errors_list.append(f"Failed to fetch {url}")
+            return new_links
 
         # Follow redirects (301/302/307/308)
         if status in (301, 302, 307, 308):
             location = resp_headers.get("location", "")
             if location:
                 redir_url = _normalize_url(url, location)
-                if redir_url and _same_origin(target, redir_url) and redir_url not in visited:
-                    queue.append((redir_url, depth))
-            continue
+                if redir_url and _is_crawlable(redir_url, visited, target, scope):
+                    new_links.append((redir_url, depth))
+            return new_links
 
         if status >= 400:
-            continue
+            return new_links
 
-        result.endpoints.append(canonical)
+        canonical = urlparse(url)._replace(fragment="").geturl()
+        with lock:
+            endpoints_list.append(canonical)
 
         # Extract query params from current URL
-        qp = extract_query_params(canonical)
-        for p in qp:
-            injection_points.add(p)
+        for p in extract_query_params(canonical):
+            with lock:
+                injection_points.add(p)
 
         # Extract forms
         form_points, form_count = extract_forms(canonical, body)
-        result.forms_found += form_count
-        for p in form_points:
-            injection_points.add(p)
+        with lock:
+            forms_found[0] += form_count
+            for p in form_points:
+                injection_points.add(p)
 
         # Extract JS endpoints
         js_points, js_count = extract_js_endpoints(canonical, body)
-        result.js_endpoints += js_count
-        for p in js_points:
-            injection_points.add(p)
+        with lock:
+            js_endpoints_found[0] += js_count
+            for p in js_points:
+                injection_points.add(p)
 
         # Discover links for next depth
         if depth < max_depth:
             for link in extract_links(canonical, body):
-                if link not in visited:
-                    queue.append((link, depth + 1))
+                if _is_crawlable(link, visited, target, scope):
+                    new_links.append((link, depth + 1))
 
-        if delay > 0:
-            time.sleep(delay)
+        return new_links
+
+    if workers <= 1:
+        # Sequential crawl (original behavior)
+        while queue and len(visited) < max_pages:
+            url, depth = queue.pop(0)
+            parsed = urlparse(url)
+            canonical = parsed._replace(fragment="").geturl()
+            if canonical in visited:
+                continue
+            ext = parsed.path.rsplit(".", 1)[-1].lower() if "." in parsed.path else ""
+            if ext in _STATIC_EXT:
+                continue
+            visited.add(canonical)
+
+            if not quiet:
+                from fray.output import console
+                console.print(f"  [dim][{len(visited):>3}][/dim] {canonical[:80]}")
+
+            new_links = _process_url(url, depth)
+            for link in new_links:
+                queue.append(link)
+
+            if delay > 0:
+                time.sleep(delay)
+    else:
+        # Concurrent crawl
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            in_flight: Dict = {}  # future -> (url, depth)
+
+            def _submit_batch():
+                while queue and len(visited) + len(in_flight) < max_pages:
+                    url, depth = queue.pop(0)
+                    parsed = urlparse(url)
+                    canonical = parsed._replace(fragment="").geturl()
+                    if canonical in visited:
+                        continue
+                    ext = parsed.path.rsplit(".", 1)[-1].lower() if "." in parsed.path else ""
+                    if ext in _STATIC_EXT:
+                        continue
+                    visited.add(canonical)
+
+                    if not quiet:
+                        from fray.output import console
+                        console.print(f"  [dim][{len(visited):>3}][/dim] {canonical[:80]}")
+
+                    fut = executor.submit(_process_url, url, depth)
+                    in_flight[fut] = (url, depth)
+
+            _submit_batch()
+
+            while in_flight:
+                done_futures = [f for f in in_flight if f.done()]
+                if not done_futures:
+                    time.sleep(0.05)
+                    continue
+
+                for fut in done_futures:
+                    del in_flight[fut]
+                    try:
+                        new_links = fut.result()
+                        for link in new_links:
+                            queue.append(link)
+                    except Exception:
+                        pass
+
+                    if delay > 0:
+                        time.sleep(delay / workers)  # spread delay across workers
+
+                _submit_batch()
 
     result.pages_crawled = len(visited)
+    result.endpoints = endpoints_list
+    result.forms_found = forms_found[0]
+    result.js_endpoints = js_endpoints_found[0]
+    result.errors = errors_list
     result.injection_points = sorted(injection_points,
                                       key=lambda p: (p.url, p.param))
 
@@ -534,7 +736,9 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
              quiet: bool = False,
              jitter: float = 0.0,
              stealth: bool = False,
-             rate_limit: float = 0.0) -> ScanResult:
+             rate_limit: float = 0.0,
+             scope_file: Optional[str] = None,
+             workers: int = 1) -> ScanResult:
     """Full automated scan: crawl → discover params → inject payloads.
 
     Args:
@@ -551,6 +755,8 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
         jitter: Random delay variance.
         stealth: Stealth mode.
         rate_limit: Max req/s.
+        scope_file: Path to scope file for domain/IP filtering.
+        workers: Concurrent workers for crawl + injection.
 
     Returns:
         ScanResult with crawl data and test results.
@@ -561,12 +767,14 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
 
     start = datetime.now()
     scan = ScanResult(target=target)
+    scope = ScopeChecker(scope_file=scope_file) if scope_file else None
 
     # Phase 1: Crawl
     crawl_result = crawl(
         target, max_depth=max_depth, max_pages=max_pages,
         delay=delay, timeout=timeout, verify_ssl=verify_ssl,
-        headers=custom_headers, quiet=quiet,
+        headers=custom_headers, quiet=quiet, scope=scope,
+        workers=workers,
     )
     scan.crawl = crawl_result
 
@@ -614,7 +822,11 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
 
     # Phase 3: Test each injection point
     all_results = []
-    for idx, ip in enumerate(crawl_result.injection_points, 1):
+    print_lock = threading.Lock()
+
+    def _test_injection_point(idx: int, ip: InjectionPoint) -> List[dict]:
+        """Test a single injection point with all payloads. Thread-safe."""
+        results = []
         tester = WAFTester(
             target=ip.url,
             timeout=timeout,
@@ -626,29 +838,49 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
             rate_limit=rate_limit,
         )
         if not quiet:
-            from fray.output import console, blocked_text, passed_text
-            console.print(
-                f"  [dim][{idx}/{len(crawl_result.injection_points)}][/dim] "
-                f"[bold]{ip.method}[/bold] {ip.url} "
-                f"[cyan]?{ip.param}=[/cyan] "
-                f"[dim]({ip.source})[/dim]"
-            )
+            with print_lock:
+                from fray.output import console
+                console.print(
+                    f"  [dim][{idx}/{len(crawl_result.injection_points)}][/dim] "
+                    f"[bold]{ip.method}[/bold] {ip.url} "
+                    f"[cyan]?{ip.param}=[/cyan] "
+                    f"[dim]({ip.source})[/dim]"
+                )
 
         for payload_data in test_payloads:
             payload = payload_data.get("payload", payload_data) if isinstance(payload_data, dict) else str(payload_data)
             result = tester.test_payload(payload, method=ip.method, param=ip.param)
             result["injection_point"] = ip.to_dict()
             result["category"] = category
-            all_results.append(result)
+            results.append(result)
 
             if not quiet:
-                from fray.output import blocked_text, passed_text
-                badge = blocked_text() if result["blocked"] else passed_text()
-                label = payload[:50] if isinstance(payload, str) else str(payload)[:50]
-                reflected_tag = " [bold magenta]↩ REFLECTED[/bold magenta]" if result.get("reflected") else ""
-                console.print(f"    ", badge, f" {result['status']} │ {label}{reflected_tag}", highlight=False)
+                with print_lock:
+                    from fray.output import blocked_text, passed_text
+                    badge = blocked_text() if result["blocked"] else passed_text()
+                    label = payload[:50] if isinstance(payload, str) else str(payload)[:50]
+                    reflected_tag = " [bold magenta]↩ REFLECTED[/bold magenta]" if result.get("reflected") else ""
+                    console.print(f"    ", badge, f" {result['status']} │ {label}{reflected_tag}", highlight=False)
 
             tester._stealth_delay()
+        return results
+
+    if workers <= 1:
+        # Sequential injection (original behavior)
+        for idx, ip in enumerate(crawl_result.injection_points, 1):
+            all_results.extend(_test_injection_point(idx, ip))
+    else:
+        # Parallel injection
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {
+                executor.submit(_test_injection_point, idx, ip): ip
+                for idx, ip in enumerate(crawl_result.injection_points, 1)
+            }
+            for fut in as_completed(futures):
+                try:
+                    all_results.extend(fut.result())
+                except Exception:
+                    pass
 
     scan.test_results = all_results
     scan.total_tested = len(all_results)
