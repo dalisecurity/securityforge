@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.dalisecurity/fray",
+  "title": "Fray — WAF Security Testing MCP Server",
+  "description": "AI-powered WAF security testing toolkit. 5,500+ attack payloads across 24 OWASP categories, 25 WAF vendor fingerprints, 21 automated recon checks. Tools: analyze scan results, generate WAF bypass strategies, explain vulnerabilities, list payload categories, get WAF signatures.",
+  "repository": {
+    "url": "https://github.com/dalisecurity/fray",
+    "source": "github"
+  },
+  "version": "3.0.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "fray",
+      "version": "3.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtime": "python",
+      "runtimeArgs": ["-m", "fray.mcp_server"]
+    }
+  ]
+}
