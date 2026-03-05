@@ -635,7 +635,52 @@ def cmd_bypass(args):
         print("Error: No payloads loaded. Use -c <category> to specify.")
         sys.exit(1)
 
-    print(f"\n  Loaded {len(all_payloads)} payloads")
+    # Auto-inject CSP bypass payloads when weak CSP detected
+    csp_injected = 0
+    if args.category != "csp_bypass":
+        try:
+            from fray.csp import get_csp_from_headers, analyze_csp
+            import http.client, urllib.parse as _urlparse
+            _parsed = _urlparse.urlparse(args.target if args.target.startswith("http") else f"https://{args.target}")
+            _host = _parsed.hostname
+            _port = _parsed.port or (443 if _parsed.scheme == "https" else 80)
+            _use_ssl = _parsed.scheme == "https"
+            try:
+                if _use_ssl:
+                    import ssl as _ssl
+                    _ctx = _ssl.create_default_context()
+                    if getattr(args, 'insecure', False):
+                        _ctx.check_hostname = False
+                        _ctx.verify_mode = _ssl.CERT_NONE
+                    _conn = http.client.HTTPSConnection(_host, _port, context=_ctx, timeout=5)
+                else:
+                    _conn = http.client.HTTPConnection(_host, _port, timeout=5)
+                _conn.request("GET", _parsed.path or "/", headers={"Host": _host})
+                _resp = _conn.getresponse()
+                _resp.read()
+                _hdrs = {k.lower(): v for k, v in _resp.getheaders()}
+                _conn.close()
+                csp_val, csp_ro = get_csp_from_headers(_hdrs)
+                csp_analysis = analyze_csp(csp_val, report_only=csp_ro)
+                if csp_analysis.bypass_techniques:
+                    csp_dir = PAYLOADS_DIR / "csp_bypass"
+                    if csp_dir.exists():
+                        technique_set = set(csp_analysis.bypass_techniques)
+                        for pf in sorted(csp_dir.glob("*.json")):
+                            # Only load payload files matching detected techniques
+                            if pf.stem in technique_set:
+                                loaded = tester.load_payloads(str(pf))
+                                all_payloads.extend(loaded)
+                                csp_injected += len(loaded)
+            except Exception:
+                pass  # CSP probe failed — continue with normal payloads
+        except ImportError:
+            pass
+
+    loaded_msg = f"\n  Loaded {len(all_payloads)} payloads"
+    if csp_injected:
+        loaded_msg += f" (including {csp_injected} CSP bypass payloads)"
+    print(loaded_msg)
 
     # Run bypass assessment
     output_file = getattr(args, 'output', None)

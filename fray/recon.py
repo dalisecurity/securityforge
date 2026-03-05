@@ -1088,6 +1088,7 @@ def run_recon(url: str, timeout: int = 8,
         "http": {},
         "tls": {},
         "headers": {},
+        "csp": {},
         "cookies": {},
         "fingerprint": {},
         "dns": {},
@@ -1115,10 +1116,24 @@ def run_recon(url: str, timeout: int = 8,
     # 4. Security headers
     result["headers"] = check_security_headers(resp_headers)
 
-    # 5. Cookie security audit
+    # 5. CSP analysis
+    from fray.csp import get_csp_from_headers, analyze_csp
+    csp_value, csp_report_only = get_csp_from_headers(resp_headers)
+    csp_analysis = analyze_csp(csp_value, report_only=csp_report_only)
+    result["csp"] = {
+        "present": csp_analysis.present,
+        "report_only": csp_analysis.report_only,
+        "score": csp_analysis.score,
+        "weaknesses": [{"id": w.id, "severity": w.severity, "directive": w.directive,
+                        "description": w.description} for w in csp_analysis.weaknesses],
+        "bypass_techniques": csp_analysis.bypass_techniques,
+        "recommendations": csp_analysis.recommendations,
+    }
+
+    # 6. Cookie security audit
     result["cookies"] = check_cookies(resp_headers)
 
-    # 6. App fingerprinting
+    # 7. App fingerprinting
     result["fingerprint"] = fingerprint_app(resp_headers, body)
 
     # 7. DNS records + CDN detection
@@ -1144,6 +1159,11 @@ def run_recon(url: str, timeout: int = 8,
 
     # 14. Smart payload recommendation
     result["recommended_categories"] = recommend_categories(result["fingerprint"])
+
+    # 15. Add csp_bypass to recommendations if weak CSP detected
+    if csp_analysis.bypass_techniques:
+        if "csp_bypass" not in result["recommended_categories"]:
+            result["recommended_categories"].insert(0, "csp_bypass")
 
     return result
 
@@ -1209,6 +1229,28 @@ def print_recon(result: Dict[str, Any]) -> None:
         sev_color = Colors.RED if sev == "high" else (Colors.YELLOW if sev == "medium" else Colors.DIM)
         print(f"    {Colors.RED}❌{Colors.END} {name} {sev_color}({sev}){Colors.END}")
     print()
+
+    # CSP Analysis
+    csp = result.get("csp", {})
+    if csp:
+        csp_score = csp.get("score", 0)
+        csp_color = Colors.GREEN if csp_score >= 70 else (Colors.YELLOW if csp_score >= 40 else Colors.RED)
+        csp_label = "CSP Analysis"
+        if csp.get("report_only"):
+            csp_label += f" {Colors.YELLOW}(report-only — NOT enforced){Colors.END}"
+        print(f"  {Colors.BOLD}{csp_label}{Colors.END} ({csp_color}{csp_score}/100{Colors.END})")
+        if not csp.get("present"):
+            print(f"    {Colors.RED}❌ No Content-Security-Policy header{Colors.END}")
+        else:
+            for w in csp.get("weaknesses", []):
+                sev = w.get("severity", "low")
+                sev_color = Colors.RED if sev in ("critical", "high") else (Colors.YELLOW if sev == "medium" else Colors.DIM)
+                print(f"    {sev_color}⚠ [{w['directive']}] {w['description']}{Colors.END}")
+            if csp.get("bypass_techniques"):
+                print(f"    {Colors.CYAN}Testable bypass techniques: {', '.join(csp['bypass_techniques'])}{Colors.END}")
+            for rec in csp.get("recommendations", []):
+                print(f"    {Colors.DIM}💡 {rec}{Colors.END}")
+        print()
 
     # Cookies
     ck = result.get("cookies", {})

