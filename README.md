@@ -48,6 +48,14 @@ fray report -i results.json -o report.html       # Generate report
 
 ---
 
+## Demo
+
+Run a full WAF evaluation in seconds.
+
+![fray demo](docs/demo.gif)
+
+---
+
 ## `fray scan` — Automated Attack Surface Mapping
 
 One command: crawl your target, discover injection points, test payloads, report results.

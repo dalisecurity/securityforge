@@ -48,6 +48,14 @@ fray report -i results.json -o report.html       # レポート生成
 
 ---
 
+## デモ
+
+数秒でWAF評価を実行。
+
+![fray demo](docs/demo.gif)
+
+---
+
 ## `fray scan` — 自動攻撃対象面マッピング
 
 ワンコマンドで：ターゲットをクロール、注入ポイントを発見、ペイロードをテスト、結果をレポート。
