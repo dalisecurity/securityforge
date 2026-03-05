@@ -294,3 +294,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ---
 
 **[📖 All Documentation (30 guides)](docs/) · [PyPI](https://pypi.org/project/fray/) · [Issues](https://github.com/dalisecurity/fray/issues) · [Discussions](https://github.com/dalisecurity/fray/discussions)**
+
+<!-- mcp-name: io.github.dalisecurity/fray -->
