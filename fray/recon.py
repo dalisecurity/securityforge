@@ -43,13 +43,13 @@ _TECH_PAYLOAD_MAP: Dict[str, List[str]] = {
     "wordpress": ["sqli", "xss", "path_traversal", "command_injection", "ssrf"],
     "drupal": ["sqli", "ssti", "xss", "command_injection"],
     "joomla": ["sqli", "xss", "path_traversal", "command_injection"],
-    "php": ["command_injection", "ssti", "path_traversal", "sqli", "xss"],
-    "node.js": ["ssti", "ssrf", "xss", "command_injection", "prototype_pollution"],
-    "express": ["prototype_pollution", "ssti", "ssrf", "xss", "command_injection"],
-    "python": ["ssti", "ssrf", "command_injection", "sqli"],
-    "java": ["sqli", "xxe", "ssti", "ssrf", "command_injection"],
-    ".net": ["sqli", "xss", "path_traversal", "xxe"],
-    "ruby": ["ssti", "command_injection", "sqli", "ssrf"],
+    "php": ["command_injection", "ssti", "path_traversal", "sqli", "xss", "host_header_injection"],
+    "node.js": ["ssti", "ssrf", "xss", "command_injection", "prototype_pollution", "host_header_injection"],
+    "express": ["prototype_pollution", "ssti", "ssrf", "xss", "command_injection", "host_header_injection"],
+    "python": ["ssti", "ssrf", "command_injection", "sqli", "host_header_injection"],
+    "java": ["sqli", "xxe", "ssti", "ssrf", "command_injection", "host_header_injection"],
+    ".net": ["sqli", "xss", "path_traversal", "xxe", "host_header_injection"],
+    "ruby": ["ssti", "command_injection", "sqli", "ssrf", "host_header_injection"],
     "nginx": ["path_traversal", "ssrf"],
     "apache": ["path_traversal", "ssrf"],
     "iis": ["path_traversal", "xss", "sqli"],
@@ -1364,6 +1364,114 @@ def check_api_discovery(host: str, port: int, use_ssl: bool,
     }
 
 
+# ── Host Header Injection ───────────────────────────────────────────────
+
+# Headers that apps commonly trust for building URLs (password reset links,
+# canonical URLs, redirect targets, cache keys).
+_HOST_OVERRIDE_HEADERS = [
+    ("X-Forwarded-Host", "evil.example.com"),
+    ("X-Host", "evil.example.com"),
+    ("X-Forwarded-Server", "evil.example.com"),
+    ("Forwarded", "host=evil.example.com"),
+    ("X-Original-URL", "/non-existent-hhi-test"),
+    ("X-Rewrite-URL", "/non-existent-hhi-test"),
+    ("X-Forwarded-Prefix", "/evil"),
+]
+
+# Sentinel value we inject — if it appears in the response body the app
+# blindly trusts our injected header for building URLs.
+_HHI_SENTINEL = "evil.example.com"
+
+
+def check_host_header_injection(host: str, port: int, use_ssl: bool,
+                                 timeout: int = 6,
+                                 extra_headers: Optional[Dict[str, str]] = None,
+                                 ) -> Dict[str, Any]:
+    """Probe for Host Header Injection (password reset poisoning, cache poisoning, SSRF).
+
+    Sends requests with manipulated Host/X-Forwarded-Host headers and checks
+    if the injected value is reflected in the response body (links, redirects,
+    meta tags, etc.).
+    """
+    scheme = "https" if use_ssl else "http"
+    port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"
+    base = f"{scheme}://{host}{port_str}"
+
+    result: Dict[str, Any] = {
+        "vulnerable_headers": [],
+        "reflected": False,
+        "details": [],
+    }
+
+    # 1. Baseline request
+    try:
+        base_status, base_body, base_hdrs = _fetch_url(base + "/",
+                                                         timeout=timeout,
+                                                         verify_ssl=True,
+                                                         headers=extra_headers)
+        if base_status == 0 and use_ssl:
+            base_status, base_body, base_hdrs = _fetch_url(base + "/",
+                                                             timeout=timeout,
+                                                             verify_ssl=False,
+                                                             headers=extra_headers)
+    except Exception:
+        return result
+
+    if base_status == 0:
+        return result
+
+    # 2. Test each override header
+    for header_name, header_value in _HOST_OVERRIDE_HEADERS:
+        test_headers = dict(extra_headers) if extra_headers else {}
+        test_headers[header_name] = header_value
+
+        try:
+            status, body, hdrs = _fetch_url(base + "/",
+                                             timeout=timeout,
+                                             verify_ssl=True,
+                                             headers=test_headers)
+            if status == 0 and use_ssl:
+                status, body, hdrs = _fetch_url(base + "/",
+                                                 timeout=timeout,
+                                                 verify_ssl=False,
+                                                 headers=test_headers)
+        except Exception:
+            continue
+
+        if status == 0:
+            continue
+
+        finding = {
+            "header": header_name,
+            "value": header_value,
+            "reflected": False,
+            "status_changed": status != base_status,
+            "status": status,
+        }
+
+        # Check if our sentinel is reflected in body
+        if body and _HHI_SENTINEL in body.lower():
+            # Verify it wasn't in the baseline
+            if not base_body or _HHI_SENTINEL not in base_body.lower():
+                finding["reflected"] = True
+                result["reflected"] = True
+                result["vulnerable_headers"].append(header_name)
+
+        # Check for redirect to our injected host
+        location = hdrs.get("location", "")
+        if _HHI_SENTINEL in location.lower():
+            finding["reflected"] = True
+            finding["redirect"] = location
+            result["reflected"] = True
+            if header_name not in result["vulnerable_headers"]:
+                result["vulnerable_headers"].append(header_name)
+
+        if finding["reflected"] or finding["status_changed"]:
+            result["details"].append(finding)
+
+    return result
+
+
 # ── Historical URL Discovery ─────────────────────────────────────────────
 
 # Path patterns interesting for WAF testing — old/dev/debug endpoints
@@ -2339,6 +2447,10 @@ def run_recon(url: str, timeout: int = 8,
                                                    timeout=timeout,
                                                    extra_headers=headers)
 
+    # 20. Host Header Injection probe
+    result["host_header_injection"] = check_host_header_injection(
+        host, port, use_ssl, timeout=timeout, extra_headers=headers)
+
     # Add prototype_pollution to recommendations if Node.js detected
     fp_techs = result.get("fingerprint", {}).get("technologies", {})
     if any(t in fp_techs for t in ("node.js", "express")):
@@ -2719,6 +2831,22 @@ def print_recon(result: Dict[str, Any]) -> None:
                 console.print(f"    [yellow]⚠ {path}[/yellow] — API docs page [dim]({cat})[/dim]")
             else:
                 console.print(f"    [green]→[/green] {path} [dim]({cat})[/dim]")
+        console.print()
+
+    # ── Host Header Injection ──
+    hhi = result.get("host_header_injection", {})
+    if hhi.get("reflected"):
+        console.print(f"  [bold red]Host Header Injection[/bold red] — [red]VULNERABLE[/red] ⚠")
+        for v in hhi.get("vulnerable_headers", []):
+            console.print(f"    [red]⚠ {v} — reflected in response (password reset poisoning / cache poisoning)[/red]")
+        for d in hhi.get("details", []):
+            if d.get("redirect"):
+                console.print(f"    [red]⚠ {d['header']} → redirect to {d['redirect']}[/red]")
+        console.print()
+    elif hhi.get("details"):
+        console.print(f"  [bold yellow]Host Header Injection[/bold yellow] — status changes detected")
+        for d in hhi.get("details", []):
+            console.print(f"    [yellow]⚠ {d['header']} → status {d['status']}[/yellow]")
         console.print()
 
     # ── Recommended Categories ──

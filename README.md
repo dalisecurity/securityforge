@@ -6,7 +6,7 @@
 
 [![Total Payloads](https://img.shields.io/badge/Payloads-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF_Vendors-25+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
-[![Recon Checks](https://img.shields.io/badge/Recon_Checks-19-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
+[![Recon Checks](https://img.shields.io/badge/Recon_Checks-20-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![OWASP Coverage](https://img.shields.io/badge/OWASP-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/fray)
 
 [![PyPI](https://img.shields.io/pypi/v/fray.svg)](https://pypi.org/project/fray/)
@@ -23,9 +23,9 @@
 Most payload collections are static text files. Fray is a **complete workflow**:
 
 - **`fray scan`** — Auto crawl → param discovery → payload injection (new)
-- **`fray recon`** — 19 automated checks (TLS, headers, DNS, CORS, params, JS, history, GraphQL, API discovery)
+- **`fray recon`** — 20 automated checks (TLS, headers, DNS, CORS, params, JS, history, GraphQL, API discovery, Host injection)
 - **`fray detect`** — Fingerprint 25 WAF vendors
-- **`fray test`** — 5,500+ payloads across 23 OWASP categories (incl. prototype pollution)
+- **`fray test`** — 5,500+ payloads across 24 OWASP categories (incl. prototype pollution)
 - **`fray report`** — HTML & Markdown reports
 - **Zero dependencies** — pure Python stdlib, `pip install fray` and go
 
@@ -124,7 +124,7 @@ fray scan https://target.com --json -o results.json
 
 ---
 
-## `fray recon` — 19 Automated Checks
+## `fray recon` — 20 Automated Checks
 
 ```bash
 fray recon https://example.com
@@ -141,6 +141,7 @@ fray recon https://example.com --params   # Parameter brute-force mining
 | **Historical URLs** | Old endpoints via Wayback Machine, sitemap.xml, robots.txt |
 | **GraphQL Introspection** | Probe 10 common endpoints, detect exposed schema (types, fields, mutations) |
 | **API Discovery** | Swagger/OpenAPI specs, `/api/v1/`, `/api-docs`, health endpoints — exposes every route & param |
+| **Host Header Injection** | Password reset poisoning, cache poisoning, SSRF via `Host:` / `X-Forwarded-Host` manipulation |
 | **TLS** | Version, cipher, cert expiry |
 | **Security Headers** | HSTS, CSP, X-Frame-Options (scored) |
 | **Cookies** | HttpOnly, Secure, SameSite flags |
@@ -215,7 +216,7 @@ Cloudflare, AWS WAF, Akamai, Imperva, F5 BIG-IP, Fastly, Azure WAF, Google Cloud
 
 ---
 
-## 5,500+ Payloads · 22 Categories · 120 CVEs
+## 5,500+ Payloads · 24 Categories · 120 CVEs
 
 | Category | Count | Category | Count |
 |----------|-------|----------|-------|
@@ -226,7 +227,7 @@ Cloudflare, AWS WAF, Akamai, Imperva, F5 BIG-IP, Fastly, Azure WAF, Google Cloud
 
 ```bash
 fray explain log4shell    # CVE intelligence with payloads
-fray payloads             # List all categories
+fray payloads             # List all 24 payload categories
 ```
 
 [Payload database →](docs/payload-database-coverage.md) · [CVE coverage →](docs/cve-real-world-bypasses.md)

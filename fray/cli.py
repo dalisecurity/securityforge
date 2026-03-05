@@ -1090,7 +1090,7 @@ def cmd_help(args):
   🔍 RECON — Know your target
   ─────────────────────────────
   fray recon <url>              Full recon: TLS, headers, DNS, cookies, fingerprint,
-                                GraphQL, exposed files, subdomains (19 checks)
+                                GraphQL, API discovery, Host injection, exposed files (20 checks)
   fray recon <url> --js         Extract hidden API endpoints from JavaScript files
   fray recon <url> --history    Discover old URLs via Wayback Machine / sitemap / robots
   fray recon <url> --params     Brute-force 136 common parameter names (?id= ?file= ?redirect=)
@@ -1108,7 +1108,7 @@ def cmd_help(args):
   ⚡ TEST — Payload injection
   ─────────────────────────────
   fray test <url> -c xss        Test a specific payload category
-  fray test <url> --all         Test ALL 23 payload categories
+  fray test <url> --all         Test ALL 24 payload categories
   fray test <url> --smart       Adaptive mode: probe WAF first, skip redundant payloads
 
   🔓 BYPASS — WAF evasion scoring
