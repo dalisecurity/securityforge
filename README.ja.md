@@ -4,7 +4,7 @@
 
 [![Payloads](https://img.shields.io/badge/ペイロード-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF検出-25社+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
-[![Recon Checks](https://img.shields.io/badge/情報収集チェック-15項目-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
+[![Recon Checks](https://img.shields.io/badge/情報収集チェック-17項目-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![OWASP](https://img.shields.io/badge/OWASP-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/fray)
 
 [![PyPI](https://img.shields.io/pypi/v/fray.svg)](https://pypi.org/project/fray/)
@@ -23,7 +23,7 @@
 多くのペイロード集は静的なテキストファイルに過ぎません。Frayは**一気通貫のワークフロー**です：
 
 - **`fray scan`** — 自動クロール → パラメータ発見 → ペイロード注入（新機能）
-- **`fray recon`** — 15項目の自動チェック（TLS、ヘッダー、DNS、CORS、パラメータ発見）
+- **`fray recon`** — 17項目の自動チェック（TLS、ヘッダー、DNS、パラメータ発見、JS抽出、過去URL）
 - **`fray detect`** — 25社のWAFベンダーをフィンガープリント
 - **`fray test`** — 5,500以上のペイロード（22のOWASPカテゴリ）
 - **`fray report`** — HTML・Markdownレポート
@@ -115,17 +115,19 @@ fray scan https://target.com --json -o results.json
 
 ---
 
-## `fray recon` — 15項目の自動チェック
+## `fray recon` — 17項目の自動チェック
 
 ```bash
 fray recon https://example.com
-fray recon https://example.com --js    # JSエンドポイント抽出
+fray recon https://example.com --js       # JSエンドポイント抽出
+fray recon https://example.com --history  # 過去URL発見
 ```
 
 | チェック項目 | 検出内容 |
 |------------|--------|
 | **パラメータ発見** | クエリ文字列、フォーム入力、JS APIエンドポイント |
 | **JSエンドポイント抽出** | 隠しAPI、管理画面ルート、GraphQL、認証エンドポイントを`.js`ファイルから発見 |
+| **過去URL発見** | Wayback Machine、sitemap.xml、robots.txtから古いエンドポイントを取得 |
 | **TLS** | バージョン、暗号スイート、証明書有効期限 |
 | **セキュリティヘッダー** | HSTS、CSP、X-Frame-Options（スコア付き） |
 | **Cookie** | HttpOnly、Secure、SameSiteフラグ |
@@ -136,6 +138,8 @@ fray recon https://example.com --js    # JSエンドポイント抽出
 その他：28件の公開ファイルプローブ（`.env`、`.git`、phpinfo、actuator）· crt.sh経由のサブドメイン列挙
 
 `--js` はインラインおよび外部JavaScriptファイルから `fetch()`、`axios`、`XMLHttpRequest`、`/api/`、`/graphql`、`/admin/`、`/internal/` パスを解析します。
+
+`--history` はWayback Machine CDX API、sitemap.xml、robots.txt Disallowパスを検索。古いエンドポイントはWAFルールが弱いことが多いです。
 
 [情報収集ガイド →](docs/quickstart.md)
 

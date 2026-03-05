@@ -1067,6 +1067,288 @@ def check_error_page(host: str, port: int, use_ssl: bool,
     return result
 
 
+# ── Historical URL Discovery ─────────────────────────────────────────────
+
+# Path patterns interesting for WAF testing — old/dev/debug endpoints
+_INTERESTING_PATH_RE = re.compile(
+    r"(?:/api/|/v[1-9]\d*/|/admin|/debug|/internal|/graphql|/auth|/oauth|"
+    r"/dev/|/staging/|/test/|/old/|/backup|/console|/swagger|/docs/api|"
+    r"/wp-json|/xmlrpc|/cgi-bin|/\.env|/\.git|/phpinfo|/actuator|"
+    r"/config|/secret|/token|/upload|/download|/export|/import|"
+    r"/dashboard|/panel|/manage|/setup|/install)",
+    re.IGNORECASE,
+)
+
+# Extensions to skip (static assets)
+_STATIC_EXT_RE = re.compile(
+    r"\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|pdf|zip|tar|gz|"
+    r"mp[34]|webp|avif|bmp|tiff?|wav|flac|ogg|avi|mov|wmv|swf|flv)$",
+    re.IGNORECASE,
+)
+
+
+def _fetch_url(url: str, timeout: int = 12, verify_ssl: bool = True,
+               headers: Optional[Dict[str, str]] = None) -> tuple:
+    """Simple HTTP GET — independent of scanner's _fetch (no global backoff state)."""
+    parsed = urllib.parse.urlparse(url)
+    host = parsed.hostname or ""
+    port = parsed.port
+    path = parsed.path or "/"
+    if parsed.query:
+        path += "?" + parsed.query
+
+    if parsed.scheme == "https":
+        port = port or 443
+        ctx = ssl.create_default_context()
+        if not verify_ssl:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        conn = http.client.HTTPSConnection(host, port, timeout=timeout, context=ctx)
+    else:
+        port = port or 80
+        conn = http.client.HTTPConnection(host, port, timeout=timeout)
+
+    req_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+    }
+    if headers:
+        req_headers.update(headers)
+
+    try:
+        conn.request("GET", path, headers=req_headers)
+        resp = conn.getresponse()
+        body = resp.read(1_000_000).decode("utf-8", errors="replace")
+        resp_headers = {k.lower(): v for k, v in resp.getheaders()}
+        return resp.status, body, resp_headers
+    except Exception:
+        return 0, "", {}
+    finally:
+        conn.close()
+
+
+def discover_historical_urls(url: str, timeout: int = 12,
+                              verify_ssl: bool = True,
+                              extra_headers: Optional[Dict[str, str]] = None,
+                              ) -> Dict[str, Any]:
+    """Discover historical URLs from Wayback Machine, sitemap.xml, and robots.txt.
+
+    Old endpoints often have weaker WAF rules or none at all.
+    """
+    parsed = urllib.parse.urlparse(url)
+    host = parsed.netloc
+    scheme = parsed.scheme or "https"
+    base = f"{scheme}://{host}"
+
+    all_paths = {}   # path -> {sources, timestamps, ...}
+    errors = []
+
+    # ── 1. Wayback Machine CDX API ──
+    wayback_urls = []
+    try:
+        cdx_url = (
+            f"https://web.archive.org/cdx/search/cdx"
+            f"?url={host}/*&output=json&fl=timestamp,original,statuscode,mimetype"
+            f"&filter=statuscode:200&collapse=urlkey&limit=500"
+        )
+        # Retry up to 3 times — CDX API is often flaky (503, timeouts)
+        status, body = 0, ""
+        import time as _time
+        for _attempt in range(3):
+            status, body, _ = _fetch_url(cdx_url, timeout=timeout, verify_ssl=False)
+            if status == 200 and body:
+                break
+            _time.sleep(1 + _attempt)
+        if status == 200 and body:
+            import json as _json
+            try:
+                rows = _json.loads(body)
+                # First row is header: ["timestamp","original","statuscode","mimetype"]
+                for row in rows[1:]:
+                    if len(row) < 4:
+                        continue
+                    ts, orig_url, sc, mime = row[0], row[1], row[2], row[3]
+                    # Skip static assets
+                    orig_parsed = urllib.parse.urlparse(orig_url)
+                    path = orig_parsed.path.rstrip("/") or "/"
+                    if _STATIC_EXT_RE.search(path):
+                        continue
+                    if path not in all_paths:
+                        all_paths[path] = {
+                            "path": path,
+                            "sources": [],
+                            "first_seen": None,
+                            "interesting": False,
+                        }
+                    if "wayback" not in all_paths[path]["sources"]:
+                        all_paths[path]["sources"].append("wayback")
+                    # Track oldest timestamp
+                    if ts and (not all_paths[path]["first_seen"] or ts < all_paths[path]["first_seen"]):
+                        all_paths[path]["first_seen"] = ts
+                    wayback_urls.append(path)
+            except (_json.JSONDecodeError, IndexError):
+                pass
+    except Exception as e:
+        errors.append(f"Wayback: {e}")
+
+    # ── 2. sitemap.xml (current + archived) ──
+    sitemap_paths = []
+    sitemap_urls_to_check = [
+        f"{base}/sitemap.xml",
+        f"{base}/sitemap_index.xml",
+        f"{base}/sitemap.xml.gz",
+    ]
+    for smap_url in sitemap_urls_to_check:
+        try:
+            status, body, _ = _fetch_url(smap_url, timeout=timeout,
+                                         verify_ssl=verify_ssl,
+                                         headers=extra_headers)
+            if status == 200 and body:
+                # Extract <loc> tags
+                for m in re.finditer(r'<loc>\s*(.*?)\s*</loc>', body, re.IGNORECASE):
+                    loc = m.group(1).strip()
+                    loc_parsed = urllib.parse.urlparse(loc)
+                    path = loc_parsed.path.rstrip("/") or "/"
+                    if _STATIC_EXT_RE.search(path):
+                        continue
+                    if path not in all_paths:
+                        all_paths[path] = {
+                            "path": path,
+                            "sources": [],
+                            "first_seen": None,
+                            "interesting": False,
+                        }
+                    if "sitemap" not in all_paths[path]["sources"]:
+                        all_paths[path]["sources"].append("sitemap")
+                    sitemap_paths.append(path)
+        except Exception:
+            pass
+
+    # ── 3. robots.txt (Disallow paths are gold) ──
+    robots_paths = []
+    try:
+        robots_url = f"{base}/robots.txt"
+        status, body, _ = _fetch_url(robots_url, timeout=timeout,
+                                     verify_ssl=verify_ssl,
+                                     headers=extra_headers)
+        if status == 200 and body:
+            for line in body.splitlines():
+                line = line.strip()
+                if line.lower().startswith("disallow:"):
+                    path = line.split(":", 1)[1].strip()
+                    if not path or path == "/":
+                        continue
+                    # Remove trailing wildcards
+                    path = path.rstrip("*").rstrip("/") or path
+                    if path and path not in all_paths:
+                        all_paths[path] = {
+                            "path": path,
+                            "sources": [],
+                            "first_seen": None,
+                            "interesting": False,
+                        }
+                    if path and "robots.txt" not in all_paths[path]["sources"]:
+                        all_paths[path]["sources"].append("robots.txt")
+                    if path:
+                        robots_paths.append(path)
+                # Also grab Sitemap directives
+                elif line.lower().startswith("sitemap:"):
+                    smap = line.split(":", 1)[1].strip()
+                    if smap and smap not in sitemap_urls_to_check:
+                        sitemap_urls_to_check.append(smap)
+    except Exception:
+        pass
+
+    # ── Mark interesting paths ──
+    for path, info in all_paths.items():
+        if _INTERESTING_PATH_RE.search(path):
+            info["interesting"] = True
+
+    # ── Sort: interesting first, then by path ──
+    sorted_paths = sorted(
+        all_paths.values(),
+        key=lambda x: (0 if x["interesting"] else 1, x["path"]),
+    )
+
+    interesting_count = sum(1 for p in sorted_paths if p["interesting"])
+
+    return {
+        "urls": sorted_paths,
+        "total": len(sorted_paths),
+        "interesting": interesting_count,
+        "sources": {
+            "wayback": len(set(wayback_urls)),
+            "sitemap": len(set(sitemap_paths)),
+            "robots": len(set(robots_paths)),
+        },
+        "errors": errors,
+    }
+
+
+def print_historical_urls(target: str, result: Dict[str, Any]) -> None:
+    """Pretty-print historical URL discovery results."""
+    from fray.output import console, print_header
+
+    print_header("Fray Recon — Historical URL Discovery", target=target)
+
+    total = result.get("total", 0)
+    interesting = result.get("interesting", 0)
+    src = result.get("sources", {})
+
+    console.print(f"  URLs discovered: [cyan]{total}[/cyan]")
+    console.print(f"  Interesting paths: [yellow]{interesting}[/yellow] (admin, API, debug, config, etc.)")
+    console.print(f"  Sources: [green]{src.get('wayback', 0)}[/green] Wayback · "
+                  f"[green]{src.get('sitemap', 0)}[/green] sitemap · "
+                  f"[green]{src.get('robots', 0)}[/green] robots.txt")
+    console.print()
+
+    urls = result.get("urls", [])
+    if urls:
+        from rich.table import Table
+        table = Table(show_header=True, box=None, pad_edge=False, padding=(0, 1))
+        table.add_column("#", width=4, style="dim")
+        table.add_column("Path", min_width=40)
+        table.add_column("Sources", width=18, style="dim")
+        table.add_column("First Seen", width=10, style="dim")
+
+        for i, u in enumerate(urls[:40], 1):
+            path = u["path"]
+            if u["interesting"]:
+                path_display = f"[yellow]{path}[/yellow]"
+            else:
+                path_display = path
+            sources = ", ".join(u["sources"])
+            ts = u.get("first_seen", "")
+            if ts and len(ts) >= 8:
+                ts = f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}"
+            else:
+                ts = ""
+            table.add_row(str(i), path_display, sources, ts)
+
+        console.print(table)
+        if len(urls) > 40:
+            console.print(f"    [dim]... and {len(urls) - 40} more[/dim]")
+        console.print()
+
+        if interesting:
+            console.print("  [bold yellow]⚠ Interesting paths — likely weaker WAF protection:[/bold yellow]")
+            for u in urls:
+                if u["interesting"]:
+                    console.print(f"    [yellow]{u['path']}[/yellow]  ({', '.join(u['sources'])})")
+            console.print()
+
+        console.print(f"  [dim]Test old endpoints: fray scan {target} -c xss -m 3[/dim]")
+    else:
+        console.print("  [dim]No historical URLs found[/dim]")
+
+    errors = result.get("errors", [])
+    if errors:
+        for err in errors:
+            console.print(f"  [dim]⚠ {err}[/dim]")
+    console.print()
+
+
 # ── JS Endpoint Extraction ───────────────────────────────────────────────
 
 # Comprehensive regex patterns for JS endpoint discovery
@@ -1523,6 +1805,11 @@ def run_recon(url: str, timeout: int = 8,
                                        timeout=timeout, verify_ssl=verify,
                                        extra_headers=headers)
 
+    # 17. Historical URL discovery (Wayback, sitemap, robots)
+    result["historical_urls"] = discover_historical_urls(url, timeout=timeout,
+                                                         verify_ssl=verify,
+                                                         extra_headers=headers)
+
     return result
 
 
@@ -1819,6 +2106,30 @@ def print_recon(result: Dict[str, Any]) -> None:
     elif params_data:
         console.print("  [bold]Discovered Parameters[/bold]")
         console.print(f"    [dim]No injectable parameters found ({params_data.get('pages_crawled', 0)} pages crawled)[/dim]")
+        console.print()
+
+    # ── Historical URLs ──
+    hist = result.get("historical_urls", {})
+    hist_urls = hist.get("urls", [])
+    if hist_urls:
+        hist_src = hist.get("sources", {})
+        console.print(f"  [bold]Historical URLs[/bold] ([cyan]{len(hist_urls)} found[/cyan], "
+                      f"[yellow]{hist.get('interesting', 0)} interesting[/yellow])")
+        console.print(f"    Sources: [green]{hist_src.get('wayback', 0)}[/green] Wayback · "
+                      f"[green]{hist_src.get('sitemap', 0)}[/green] sitemap · "
+                      f"[green]{hist_src.get('robots', 0)}[/green] robots.txt")
+        # Show only interesting paths in full recon (keep it compact)
+        interesting_paths = [u for u in hist_urls if u["interesting"]]
+        if interesting_paths:
+            for u in interesting_paths[:10]:
+                console.print(f"    [yellow]⚠ {u['path']}[/yellow]  [dim]({', '.join(u['sources'])})[/dim]")
+            if len(interesting_paths) > 10:
+                console.print(f"    [dim]... and {len(interesting_paths) - 10} more interesting paths[/dim]")
+        console.print(f"    [dim]Full list: fray recon <target> --history[/dim]")
+        console.print()
+    elif hist:
+        console.print("  [bold]Historical URLs[/bold]")
+        console.print("    [dim]No historical URLs found[/dim]")
         console.print()
 
     # ── Recommended Categories ──

@@ -591,6 +591,22 @@ def cmd_recon(args):
     """Run target reconnaissance and fingerprinting"""
     auth_headers = build_auth_headers(args) or None
 
+    # --history mode: standalone historical URL discovery
+    if getattr(args, 'history', False):
+        from fray.recon import discover_historical_urls, print_historical_urls
+        result = discover_historical_urls(args.target, timeout=getattr(args, 'timeout', 8),
+                                          extra_headers=auth_headers)
+        if getattr(args, 'json', False):
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        else:
+            print_historical_urls(args.target, result)
+        if getattr(args, 'output', None):
+            _validate_output_path(args.output)
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+            print(f"\n  Results saved to {args.output}")
+        return
+
     # --js mode: standalone JS endpoint extraction
     if getattr(args, 'js', False):
         from fray.recon import discover_js_endpoints, print_js_endpoints
@@ -1151,6 +1167,8 @@ Documentation: https://github.com/dalisecurity/fray
                           help="Form login: 'URL,field=value,field=value' — captures session cookies")
     p_recon.add_argument("--js", action="store_true",
                           help="JS endpoint extraction: find hidden API routes in JavaScript files")
+    p_recon.add_argument("--history", action="store_true",
+                          help="Historical URL discovery: Wayback Machine, sitemap.xml, robots.txt")
     p_recon.set_defaults(func=cmd_recon)
 
     # detect
