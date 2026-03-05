@@ -16,6 +16,7 @@ Usage:
     fray learn xss               Interactive CTF-style security tutorial
     fray bypass <url> --waf cloudflare -c xss   WAF bypass scoring with evasion scorecard
     fray diff before.json after.json              Compare scans — surface regressions
+    fray smuggle <url>           HTTP request smuggling detection (CL.TE / TE.CL)
     fray validate <url>          Blue team WAF config validation report
     fray bounty --platform h1    Bug bounty scope auto-fetch + batch test
     fray explain <CVE-ID>       Explain a CVE — payloads, severity, what to test
@@ -515,6 +516,39 @@ def cmd_recon(args):
         print(f"  Recon saved to {args.output}")
 
 
+def cmd_smuggle(args):
+    """HTTP request smuggling detection."""
+    from fray.smuggling import run_smuggling_detection, print_smuggle_report
+    from dataclasses import asdict
+
+    if not args.target:
+        print("Error: target URL required. Usage: fray smuggle <url>")
+        sys.exit(1)
+
+    report = run_smuggling_detection(
+        target=args.target,
+        timeout=args.timeout,
+        delay=args.delay,
+        verify_ssl=not getattr(args, 'insecure', False),
+        verbose=True,
+    )
+
+    if getattr(args, 'json', False):
+        print(json.dumps(asdict(report), indent=2, ensure_ascii=False))
+    else:
+        print_smuggle_report(report)
+
+    if getattr(args, 'output', None):
+        _validate_output_path(args.output)
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(asdict(report), f, indent=2, ensure_ascii=False)
+        print(f"\n  Results saved to {args.output}")
+
+    # Exit code: 1 if vulnerable (CI integration)
+    if report.vulnerable:
+        sys.exit(1)
+
+
 def cmd_diff(args):
     """Compare two scan results and surface regressions."""
     from fray.diff import run_diff, print_diff
@@ -995,6 +1029,19 @@ Documentation: https://github.com/dalisecurity/fray
     p_diff.add_argument("-o", "--output", default=None, help="Save diff report JSON to file")
     p_diff.add_argument("--json", action="store_true", help="Output diff as JSON to stdout")
     p_diff.set_defaults(func=cmd_diff)
+
+    # smuggle
+    p_smuggle = subparsers.add_parser("smuggle",
+        help="HTTP request smuggling detection (CL.TE / TE.CL / TE.TE)")
+    p_smuggle.add_argument("target", nargs="?", default=None, help="Target URL to test")
+    p_smuggle.add_argument("-t", "--timeout", type=int, default=10,
+                           help="Request timeout in seconds (default: 10)")
+    p_smuggle.add_argument("-d", "--delay", type=float, default=1.0,
+                           help="Delay between probes (default: 1.0)")
+    p_smuggle.add_argument("-o", "--output", default=None, help="Save report JSON to file")
+    p_smuggle.add_argument("--json", action="store_true", help="Output report as JSON")
+    p_smuggle.add_argument("--insecure", action="store_true", help="Skip SSL verification")
+    p_smuggle.set_defaults(func=cmd_smuggle)
 
     # report
     p_report = subparsers.add_parser("report", help="Generate HTML security report")
