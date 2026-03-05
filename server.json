@@ -7,12 +7,12 @@
     "url": "https://github.com/dalisecurity/fray",
     "source": "github"
   },
-  "version": "3.0.0",
+  "version": "3.0.1",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "fray",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "transport": {
         "type": "stdio"
       },
