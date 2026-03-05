@@ -29,6 +29,15 @@ Most payload collections are static text files. Fray is a **complete workflow**:
 - **`fray report`** — HTML & Markdown reports
 - **Zero dependencies** — pure Python stdlib, `pip install fray` and go
 
+## Who Uses Fray?
+
+- **Bug Bounty Hunters** — Discover hidden params, old endpoints, bypass WAFs, file reports
+- **Pentesters** — Full recon + automated scan with client-ready HTML reports
+- **Blue Teams** — Validate WAF rules, regression test after config changes
+- **DevSecOps** — CI/CD pipeline WAF testing, fail builds on bypasses
+- **Security Researchers** — Find WAF bypasses, contribute payloads
+- **Students** — Interactive CTF tutorials, learn attack vectors hands-on
+
 ---
 
 ## Quick Start
