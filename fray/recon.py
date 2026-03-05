@@ -1067,6 +1067,125 @@ def check_error_page(host: str, port: int, use_ssl: bool,
     return result
 
 
+# ── Parameter Discovery ──────────────────────────────────────────────────
+
+def discover_params(url: str, max_depth: int = 2, max_pages: int = 10,
+                    timeout: int = 8, verify_ssl: bool = True,
+                    extra_headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Lightweight crawl + parameter extraction.
+
+    Discovers injectable parameters from:
+      - URL query strings
+      - HTML form inputs (<input>, <textarea>, <select>)
+      - JavaScript API endpoints (fetch, axios, XMLHttpRequest)
+
+    Returns dict with params list and summary stats.
+    """
+    from fray.scanner import (
+        _fetch, extract_links, extract_query_params,
+        extract_forms, extract_js_endpoints, _same_origin,
+    )
+
+    parsed = urllib.parse.urlparse(url)
+    base_origin = f"{parsed.scheme}://{parsed.netloc}"
+
+    visited = set()
+    queue = [(url, 0)]
+    all_params = []  # list of dicts
+    seen = set()     # (url, param, method) dedup
+    total_forms = 0
+    total_js = 0
+
+    while queue and len(visited) < max_pages:
+        current_url, depth = queue.pop(0)
+        canonical = current_url.split("?")[0].split("#")[0]
+        if canonical in visited:
+            continue
+        visited.add(canonical)
+
+        # Skip static resources
+        lower = canonical.lower()
+        if any(lower.endswith(ext) for ext in (
+            ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg",
+            ".ico", ".woff", ".woff2", ".ttf", ".eot", ".pdf", ".zip",
+            ".mp3", ".mp4", ".webp", ".avif",
+        )):
+            continue
+
+        status, body, resp_headers = _fetch(current_url, timeout=timeout,
+                                            verify_ssl=verify_ssl,
+                                            headers=extra_headers)
+        if status == 0 or not body:
+            continue
+
+        # Follow redirects
+        if status in (301, 302, 307, 308):
+            loc = resp_headers.get("location", "")
+            if loc:
+                redir_url = urllib.parse.urljoin(current_url, loc)
+                if _same_origin(url, redir_url) and redir_url.split("?")[0] not in visited:
+                    queue.append((redir_url, depth))
+            continue
+
+        content_type = resp_headers.get("content-type", "")
+        if "text/html" not in content_type and "application/xhtml" not in content_type:
+            continue
+
+        # 1. Query parameters
+        for pt in extract_query_params(current_url):
+            key = (pt.url, pt.param, pt.method)
+            if key not in seen:
+                seen.add(key)
+                all_params.append({
+                    "url": pt.url, "param": pt.param,
+                    "method": pt.method, "source": "query",
+                })
+
+        # 2. HTML forms
+        form_pts, fc = extract_forms(current_url, body)
+        total_forms += fc
+        for pt in form_pts:
+            key = (pt.url, pt.param, pt.method)
+            if key not in seen:
+                seen.add(key)
+                all_params.append({
+                    "url": pt.url, "param": pt.param,
+                    "method": pt.method, "source": "form",
+                })
+
+        # 3. JavaScript endpoints
+        js_pts, jc = extract_js_endpoints(current_url, body)
+        total_js += jc
+        for pt in js_pts:
+            key = (pt.url, pt.param, pt.method)
+            if key not in seen:
+                seen.add(key)
+                all_params.append({
+                    "url": pt.url, "param": pt.param,
+                    "method": pt.method, "source": "js",
+                })
+
+        # Follow links if not at max depth
+        if depth < max_depth:
+            for link in extract_links(current_url, body):
+                link_canon = link.split("?")[0].split("#")[0]
+                if link_canon not in visited and _same_origin(url, link):
+                    queue.append((link, depth + 1))
+
+    return {
+        "params": all_params,
+        "pages_crawled": len(visited),
+        "total_params": len(all_params),
+        "forms_found": total_forms,
+        "js_endpoints": total_js,
+        "sources": {
+            "query": sum(1 for p in all_params if p["source"] == "query"),
+            "form": sum(1 for p in all_params if p["source"] == "form"),
+            "js": sum(1 for p in all_params if p["source"] == "js"),
+        },
+    }
+
+
 # ── Full recon pipeline ──────────────────────────────────────────────────
 
 def run_recon(url: str, timeout: int = 8,
@@ -1164,6 +1283,12 @@ def run_recon(url: str, timeout: int = 8,
     if csp_analysis.bypass_techniques:
         if "csp_bypass" not in result["recommended_categories"]:
             result["recommended_categories"].insert(0, "csp_bypass")
+
+    # 16. Parameter discovery (lightweight crawl)
+    verify = use_ssl  # match the target's SSL setting
+    result["params"] = discover_params(url, max_depth=2, max_pages=10,
+                                       timeout=timeout, verify_ssl=verify,
+                                       extra_headers=headers)
 
     return result
 
@@ -1431,6 +1556,36 @@ def print_recon(result: Dict[str, Any]) -> None:
             console.print(f"    [dim]{s}[/dim]")
         if sub_count > 15:
             console.print(f"    [dim]... and {sub_count - 15} more[/dim]")
+        console.print()
+
+    # ── Parameter Discovery ──
+    params_data = result.get("params", {})
+    params_list = params_data.get("params", [])
+    if params_list:
+        src = params_data.get("sources", {})
+        console.print(f"  [bold]Discovered Parameters[/bold] ([cyan]{len(params_list)} found[/cyan] across {params_data.get('pages_crawled', 0)} pages)")
+        console.print(f"    Sources: [green]{src.get('query', 0)}[/green] query · [green]{src.get('form', 0)}[/green] form · [green]{src.get('js', 0)}[/green] JS")
+
+        param_table = Table(show_header=True, box=None, pad_edge=False, padding=(0, 1))
+        param_table.add_column("#", width=4, style="dim")
+        param_table.add_column("Method", width=6)
+        param_table.add_column("URL", min_width=35)
+        param_table.add_column("Param", min_width=12, style="cyan")
+        param_table.add_column("Source", width=6, style="dim")
+
+        for i, p in enumerate(params_list[:20], 1):
+            # Shorten URL for display
+            disp_url = urllib.parse.urlparse(p["url"]).path or "/"
+            param_table.add_row(str(i), p["method"], disp_url, p["param"], p["source"])
+        console.print(param_table)
+        if len(params_list) > 20:
+            console.print(f"    [dim]... and {len(params_list) - 20} more[/dim]")
+        console.print()
+        console.print(f"  [dim]Test these: fray scan <target> -c xss -m 3[/dim]")
+        console.print()
+    elif params_data:
+        console.print("  [bold]Discovered Parameters[/bold]")
+        console.print(f"    [dim]No injectable parameters found ({params_data.get('pages_crawled', 0)} pages crawled)[/dim]")
         console.print()
 
     # ── Recommended Categories ──

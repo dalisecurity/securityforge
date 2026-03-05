@@ -4,7 +4,7 @@
 
 [![Payloads](https://img.shields.io/badge/ペイロード-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF検出-25社+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
-[![Recon Checks](https://img.shields.io/badge/情報収集チェック-14項目-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
+[![Recon Checks](https://img.shields.io/badge/情報収集チェック-15項目-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![OWASP](https://img.shields.io/badge/OWASP-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/fray)
 
 [![PyPI](https://img.shields.io/pypi/v/fray.svg)](https://pypi.org/project/fray/)
@@ -23,7 +23,7 @@
 多くのペイロード集は静的なテキストファイルに過ぎません。Frayは**一気通貫のワークフロー**です：
 
 - **`fray scan`** — 自動クロール → パラメータ発見 → ペイロード注入（新機能）
-- **`fray recon`** — 14項目の自動チェック（TLS、ヘッダー、DNS、CORS、公開ファイル）
+- **`fray recon`** — 15項目の自動チェック（TLS、ヘッダー、DNS、CORS、パラメータ発見）
 - **`fray detect`** — 25社のWAFベンダーをフィンガープリント
 - **`fray test`** — 5,500以上のペイロード（22のOWASPカテゴリ）
 - **`fray report`** — HTML・Markdownレポート
@@ -115,7 +115,7 @@ fray scan https://target.com --json -o results.json
 
 ---
 
-## `fray recon` — 14項目の自動チェック
+## `fray recon` — 15項目の自動チェック
 
 ```bash
 fray recon https://example.com
@@ -123,6 +123,7 @@ fray recon https://example.com
 
 | チェック項目 | 検出内容 |
 |------------|--------|
+| **パラメータ発見** | クエリ文字列、フォーム入力、JS APIエンドポイント |
 | **TLS** | バージョン、暗号スイート、証明書有効期限 |
 | **セキュリティヘッダー** | HSTS、CSP、X-Frame-Options（スコア付き） |
 | **Cookie** | HttpOnly、Secure、SameSiteフラグ |

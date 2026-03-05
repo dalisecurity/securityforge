@@ -6,7 +6,7 @@
 
 [![Total Payloads](https://img.shields.io/badge/Payloads-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF_Vendors-25+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
-[![Recon Checks](https://img.shields.io/badge/Recon_Checks-14-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
+[![Recon Checks](https://img.shields.io/badge/Recon_Checks-15-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![OWASP Coverage](https://img.shields.io/badge/OWASP-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/fray)
 
 [![PyPI](https://img.shields.io/pypi/v/fray.svg)](https://pypi.org/project/fray/)
@@ -23,7 +23,7 @@
 Most payload collections are static text files. Fray is a **complete workflow**:
 
 - **`fray scan`** — Auto crawl → param discovery → payload injection (new)
-- **`fray recon`** — 14 automated checks (TLS, headers, DNS, CORS, exposed files)
+- **`fray recon`** — 15 automated checks (TLS, headers, DNS, CORS, parameter discovery)
 - **`fray detect`** — Fingerprint 25 WAF vendors
 - **`fray test`** — 5,500+ payloads across 22 OWASP categories
 - **`fray report`** — HTML & Markdown reports
@@ -115,7 +115,7 @@ fray scan https://target.com --json -o results.json
 
 ---
 
-## `fray recon` — 14 Automated Checks
+## `fray recon` — 15 Automated Checks
 
 ```bash
 fray recon https://example.com
@@ -123,6 +123,7 @@ fray recon https://example.com
 
 | Check | What It Finds |
 |-------|---------------|
+| **Parameter Discovery** | Query strings, form inputs, JS API endpoints |
 | **TLS** | Version, cipher, cert expiry |
 | **Security Headers** | HSTS, CSP, X-Frame-Options (scored) |
 | **Cookies** | HttpOnly, Secure, SameSite flags |
