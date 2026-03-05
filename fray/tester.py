@@ -523,14 +523,28 @@ class WAFTester:
         return data if isinstance(data, list) else []
     
     def test_payloads(self, payloads: List[Dict], method: str = 'GET', param: str = 'input', 
-                     max_payloads: Optional[int] = None) -> List[Dict]:
+                     max_payloads: Optional[int] = None, quiet: bool = False) -> List[Dict]:
         """Test multiple payloads"""
-        from fray.output import console, blocked_text, passed_text, make_progress
-
         results = []
         total = min(len(payloads), max_payloads) if max_payloads else len(payloads)
         
         self.start_time = datetime.now()
+
+        if quiet:
+            # Silent mode for --json: no rich output
+            for idx, payload_data in enumerate(payloads[:total], 1):
+                payload = payload_data.get('payload', payload_data) if isinstance(payload_data, dict) else payload_data
+                desc = payload_data.get('description', '') if isinstance(payload_data, dict) else ''
+                category = payload_data.get('category', 'unknown') if isinstance(payload_data, dict) else 'unknown'
+                result = self.test_payload(payload, method, param)
+                result['category'] = category
+                result['description'] = desc
+                results.append(result)
+                self._stealth_delay()
+            return results
+
+        from fray.output import console, blocked_text, passed_text, make_progress
+
         console.print()
         console.rule(f"[bold]Testing {total} payloads against [cyan]{self.target}[/cyan][/bold]")
         console.print()

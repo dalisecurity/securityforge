@@ -321,13 +321,50 @@ def cmd_test(args):
             tester, all_payloads, max_payloads=args.max or 50
         )
     else:
-        results = tester.test_payloads(all_payloads, max_payloads=args.max)
+        json_mode = getattr(args, 'json', False)
+        results = tester.test_payloads(all_payloads, max_payloads=args.max,
+                                       quiet=json_mode)
 
-    # Save results
-    output = args.output or "fray_results.json"
-    _validate_output_path(output)
-    tester.generate_report(results, output=output)
-    print(f"\nResults saved to {output}")
+    # Build report dict
+    from datetime import datetime as _dt
+    total = len(results)
+    blocked = sum(1 for r in results if r.get('blocked'))
+    passed = total - blocked
+    duration = "N/A"
+    if tester.start_time:
+        elapsed = _dt.now() - tester.start_time
+        minutes = int(elapsed.total_seconds() // 60)
+        seconds = int(elapsed.total_seconds() % 60)
+        duration = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
+
+    report = {
+        'target': args.target,
+        'timestamp': _dt.now().isoformat(),
+        'duration': duration,
+        'summary': {
+            'total': total,
+            'blocked': blocked,
+            'passed': passed,
+            'block_rate': f"{(blocked/total*100):.2f}%" if total > 0 else "0%",
+        },
+        'results': results,
+    }
+
+    # JSON output to stdout
+    if getattr(args, 'json', False):
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        # Save results file + rich summary
+        output = args.output or "fray_results.json"
+        _validate_output_path(output)
+        tester.generate_report(results, output=output)
+        print(f"\nResults saved to {output}")
+
+    # Also save to file if -o given explicitly (even with --json)
+    if getattr(args, 'json', False) and args.output:
+        _validate_output_path(args.output)
+        with open(args.output, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2, ensure_ascii=False)
 
     # Auto-generate formatted report if requested
     report_fmt = getattr(args, 'report_format', None)
@@ -1040,6 +1077,7 @@ Documentation: https://github.com/dalisecurity/fray
                          help="Stealth mode: randomize User-Agent, add jitter, throttle requests — evade rate limiting")
     p_test.add_argument("--rate-limit", type=float, default=0.0,
                          help="Max requests per second (e.g. --rate-limit 2 = max 2 req/s)")
+    p_test.add_argument("--json", action="store_true", help="Output results as JSON to stdout")
     p_test.set_defaults(func=cmd_test)
 
     # bypass
