@@ -6,7 +6,7 @@
 
 [![Total Payloads](https://img.shields.io/badge/Payloads-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF_Vendors-25+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
-[![Recon Checks](https://img.shields.io/badge/Recon_Checks-20-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
+[![Recon Checks](https://img.shields.io/badge/Recon_Checks-21-orange.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![OWASP Coverage](https://img.shields.io/badge/OWASP-100%25-success.svg?style=for-the-badge&logo=owasp)](https://github.com/dalisecurity/fray)
 
 [![PyPI](https://img.shields.io/pypi/v/fray.svg)](https://pypi.org/project/fray/)
@@ -23,7 +23,7 @@
 Most payload collections are static text files. Fray is a **complete workflow**:
 
 - **`fray scan`** — Auto crawl → param discovery → payload injection (new)
-- **`fray recon`** — 20 automated checks (TLS, headers, DNS, CORS, params, JS, history, GraphQL, API discovery, Host injection)
+- **`fray recon`** — 21 automated checks (TLS, headers, DNS, CORS, params, JS, history, GraphQL, API, Host injection, admin panels)
 - **`fray detect`** — Fingerprint 25 WAF vendors
 - **`fray test`** — 5,500+ payloads across 24 OWASP categories (incl. prototype pollution)
 - **`fray report`** — HTML & Markdown reports
@@ -124,7 +124,7 @@ fray scan https://target.com --json -o results.json
 
 ---
 
-## `fray recon` — 20 Automated Checks
+## `fray recon` — 21 Automated Checks
 
 ```bash
 fray recon https://example.com
@@ -142,6 +142,7 @@ fray recon https://example.com --params   # Parameter brute-force mining
 | **GraphQL Introspection** | Probe 10 common endpoints, detect exposed schema (types, fields, mutations) |
 | **API Discovery** | Swagger/OpenAPI specs, `/api/v1/`, `/api-docs`, health endpoints — exposes every route & param |
 | **Host Header Injection** | Password reset poisoning, cache poisoning, SSRF via `Host:` / `X-Forwarded-Host` manipulation |
+| **Admin Panel Discovery** | 70 paths: `/admin`, `/wp-admin`, `/phpmyadmin`, `/actuator`, `/console`, debug tools |
 | **TLS** | Version, cipher, cert expiry |
 | **Security Headers** | HSTS, CSP, X-Frame-Options (scored) |
 | **Cookies** | HttpOnly, Secure, SameSite flags |

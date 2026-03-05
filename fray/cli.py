@@ -1090,7 +1090,7 @@ def cmd_help(args):
   🔍 RECON — Know your target
   ─────────────────────────────
   fray recon <url>              Full recon: TLS, headers, DNS, cookies, fingerprint,
-                                GraphQL, API discovery, Host injection, exposed files (20 checks)
+                                GraphQL, API discovery, Host injection, admin panels (21 checks)
   fray recon <url> --js         Extract hidden API endpoints from JavaScript files
   fray recon <url> --history    Discover old URLs via Wayback Machine / sitemap / robots
   fray recon <url> --params     Brute-force 136 common parameter names (?id= ?file= ?redirect=)

@@ -1472,6 +1472,179 @@ def check_host_header_injection(host: str, port: int, use_ssl: bool,
     return result
 
 
+# ── Admin Panel Discovery ───────────────────────────────────────────────
+
+_ADMIN_PATHS = [
+    # Generic
+    ("/admin", "generic"),
+    ("/admin/", "generic"),
+    ("/administrator", "generic"),
+    ("/administrator/", "generic"),
+    ("/admin/login", "generic"),
+    ("/admin/login.php", "generic"),
+    ("/admin/index.php", "generic"),
+    ("/adminpanel", "generic"),
+    ("/admin-panel", "generic"),
+    ("/admin.php", "generic"),
+    # WordPress
+    ("/wp-admin/", "wordpress"),
+    ("/wp-login.php", "wordpress"),
+    ("/wp-admin/admin-ajax.php", "wordpress"),
+    # Joomla
+    ("/administrator/index.php", "joomla"),
+    # Drupal
+    ("/user/login", "drupal"),
+    ("/admin/config", "drupal"),
+    # cPanel / hosting
+    ("/cpanel", "cpanel"),
+    ("/webmail", "cpanel"),
+    ("/whm", "cpanel"),
+    # phpMyAdmin
+    ("/phpmyadmin/", "database"),
+    ("/phpmyadmin/index.php", "database"),
+    ("/pma/", "database"),
+    ("/myadmin/", "database"),
+    ("/dbadmin/", "database"),
+    ("/adminer.php", "database"),
+    ("/adminer/", "database"),
+    # Dashboards
+    ("/dashboard", "dashboard"),
+    ("/dashboard/", "dashboard"),
+    ("/panel", "dashboard"),
+    ("/panel/", "dashboard"),
+    ("/console", "dashboard"),
+    ("/console/", "dashboard"),
+    ("/manage", "dashboard"),
+    ("/management", "dashboard"),
+    ("/portal", "dashboard"),
+    ("/controlpanel", "dashboard"),
+    # Java / Spring / Tomcat
+    ("/manager/html", "tomcat"),
+    ("/manager/status", "tomcat"),
+    ("/host-manager/html", "tomcat"),
+    ("/actuator", "spring"),
+    ("/actuator/env", "spring"),
+    ("/actuator/health", "spring"),
+    # Node / dev tools
+    ("/_debugbar", "debug"),
+    ("/__debug__/", "debug"),
+    ("/debug/default/login", "debug"),
+    ("/elmah.axd", "debug"),
+    # Server status
+    ("/server-status", "apache"),
+    ("/server-info", "apache"),
+    ("/nginx_status", "nginx"),
+    # Other CMS / frameworks
+    ("/admin/dashboard", "generic"),
+    ("/backend", "generic"),
+    ("/backend/", "generic"),
+    ("/cms", "generic"),
+    ("/cms/admin", "generic"),
+    ("/siteadmin", "generic"),
+    ("/webadmin", "generic"),
+    ("/moderator", "generic"),
+    ("/filemanager", "generic"),
+    ("/filemanager/", "generic"),
+    # API management
+    ("/graphql", "api"),
+    ("/graphiql", "api"),
+    ("/playground", "api"),
+]
+
+
+def check_admin_panels(host: str, port: int, use_ssl: bool,
+                        timeout: int = 5,
+                        extra_headers: Optional[Dict[str, str]] = None,
+                        ) -> Dict[str, Any]:
+    """Probe common admin panel paths — saves manual enumeration every engagement.
+
+    Checks 70 paths covering WordPress, Joomla, Drupal, phpMyAdmin, Tomcat,
+    Spring actuator, debug tools, and generic admin panels.
+    """
+    scheme = "https" if use_ssl else "http"
+    port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"
+    base = f"{scheme}://{host}{port_str}"
+
+    found = []
+
+    for admin_path, category in _ADMIN_PATHS:
+        url = f"{base}{admin_path}"
+        try:
+            status, body, hdrs = _fetch_url(url, timeout=timeout,
+                                             verify_ssl=True,
+                                             headers=extra_headers)
+            if status == 0 and use_ssl:
+                status, body, hdrs = _fetch_url(url, timeout=timeout,
+                                                 verify_ssl=False,
+                                                 headers=extra_headers)
+        except Exception:
+            continue
+
+        if status == 0 or status >= 404:
+            continue
+
+        # Skip generic soft-404 pages (large HTML pages that always return 200)
+        ct = hdrs.get("content-type", "")
+        is_html = "html" in ct
+
+        # Validate it's actually an admin/login page, not a generic 200
+        is_admin = False
+
+        # 301/302 redirects to login pages are a strong signal
+        if status in (301, 302, 303, 307, 308):
+            location = hdrs.get("location", "").lower()
+            if any(kw in location for kw in ("login", "auth", "signin", "admin", "sso")):
+                is_admin = True
+            else:
+                is_admin = True  # Redirect to somewhere — still worth noting
+
+        # 200 with login-related content
+        elif status == 200 and body:
+            lower = body.lower()
+            admin_signals = (
+                "login", "password", "username", "sign in", "log in",
+                "authentication", "admin", "dashboard", "panel",
+                "phpmyadmin", "adminer", "manager", "console",
+                "actuator", "server-status", "debug", "configuration",
+                '<input type="password"', 'type="submit"',
+            )
+            if any(sig in lower for sig in admin_signals):
+                is_admin = True
+            elif not is_html:
+                # JSON/XML endpoints (actuator, api) — likely real
+                is_admin = True
+
+        # 401/403 = authenticated endpoint exists
+        elif status in (401, 403):
+            is_admin = True
+
+        if not is_admin:
+            continue
+
+        entry = {
+            "path": admin_path,
+            "status": status,
+            "category": category,
+        }
+
+        # Add redirect target if applicable
+        if status in (301, 302, 303, 307, 308):
+            entry["redirect"] = hdrs.get("location", "")
+
+        # Flag auth-protected vs open
+        if status in (401, 403):
+            entry["protected"] = True
+        elif status == 200:
+            entry["protected"] = False
+
+        found.append(entry)
+
+    return {
+        "panels_found": found,
+        "total": len(found),
+    }
+
+
 # ── Historical URL Discovery ─────────────────────────────────────────────
 
 # Path patterns interesting for WAF testing — old/dev/debug endpoints
@@ -2451,6 +2624,11 @@ def run_recon(url: str, timeout: int = 8,
     result["host_header_injection"] = check_host_header_injection(
         host, port, use_ssl, timeout=timeout, extra_headers=headers)
 
+    # 21. Admin panel discovery
+    result["admin_panels"] = check_admin_panels(host, port, use_ssl,
+                                                 timeout=timeout,
+                                                 extra_headers=headers)
+
     # Add prototype_pollution to recommendations if Node.js detected
     fp_techs = result.get("fingerprint", {}).get("technologies", {})
     if any(t in fp_techs for t in ("node.js", "express")):
@@ -2847,6 +3025,31 @@ def print_recon(result: Dict[str, Any]) -> None:
         console.print(f"  [bold yellow]Host Header Injection[/bold yellow] — status changes detected")
         for d in hhi.get("details", []):
             console.print(f"    [yellow]⚠ {d['header']} → status {d['status']}[/yellow]")
+        console.print()
+
+    # ── Admin Panel Discovery ──
+    admin = result.get("admin_panels", {})
+    panels = admin.get("panels_found", [])
+    if panels:
+        open_panels = [p for p in panels if p.get("protected") is False]
+        protected = [p for p in panels if p.get("protected") is True]
+        redirects = [p for p in panels if "redirect" in p]
+        if open_panels:
+            console.print(f"  [bold red]Admin Panels[/bold red] — [red]{len(open_panels)} OPEN (no auth)[/red] ⚠")
+        else:
+            console.print(f"  [bold]Admin Panels[/bold] — [cyan]{len(panels)} found[/cyan]")
+        for p in panels:
+            path = p["path"]
+            status = p["status"]
+            cat = p["category"]
+            if p.get("protected") is False:
+                console.print(f"    [red]⚠ {path}[/red] — [red]200 OPEN[/red] [dim]({cat})[/dim]")
+            elif p.get("protected") is True:
+                console.print(f"    [yellow]🔒 {path}[/yellow] — {status} auth required [dim]({cat})[/dim]")
+            elif p.get("redirect"):
+                console.print(f"    [green]→[/green] {path} — {status} → {p['redirect']} [dim]({cat})[/dim]")
+            else:
+                console.print(f"    [green]→[/green] {path} — {status} [dim]({cat})[/dim]")
         console.print()
 
     # ── Recommended Categories ──
