@@ -13,6 +13,8 @@ from fray.scanner import (
     extract_query_params,
     extract_forms,
     extract_js_endpoints,
+    parse_robots_txt,
+    parse_sitemap_xml,
     _same_origin,
     _normalize_url,
 )
@@ -316,3 +318,166 @@ class TestPrintScanResult:
         from fray.scanner import print_scan_result
         sr = ScanResult(target="https://x.com")
         print_scan_result(sr)
+
+    def test_reflected(self):
+        """Ensure reflected payloads render without crash."""
+        from fray.scanner import print_scan_result
+        sr = ScanResult(
+            target="https://x.com",
+            crawl=CrawlResult(
+                target="https://x.com",
+                pages_crawled=1,
+                endpoints=["https://x.com/"],
+                injection_points=[
+                    InjectionPoint(url="https://x.com/search", param="q"),
+                ],
+            ),
+            total_tested=2,
+            total_blocked=0,
+            total_passed=2,
+            total_reflected=1,
+            test_results=[
+                {
+                    "payload": "<script>alert(1)</script>",
+                    "status": 200,
+                    "blocked": False,
+                    "reflected": True,
+                    "reflection_context": "...<script>alert(1)</script>...",
+                    "injection_point": {"url": "https://x.com/search", "param": "q"},
+                },
+                {
+                    "payload": "<img onerror=alert(1)>",
+                    "status": 200,
+                    "blocked": False,
+                    "reflected": False,
+                    "injection_point": {"url": "https://x.com/search", "param": "q"},
+                },
+            ],
+        )
+        print_scan_result(sr)  # Should not raise
+
+
+# ── robots.txt parsing ───────────────────────────────────────────────────
+
+class TestParseRobotsTxt:
+    def test_disallow(self):
+        body = """User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Allow: /public/
+"""
+        paths = parse_robots_txt("https://x.com", body)
+        assert "https://x.com/admin/" in paths
+        assert "https://x.com/private/" in paths
+        assert "https://x.com/public/" in paths
+
+    def test_sitemap_directive(self):
+        body = """User-agent: *
+Disallow: /tmp/
+Sitemap: https://x.com/sitemap.xml
+"""
+        paths = parse_robots_txt("https://x.com", body)
+        assert "https://x.com/sitemap.xml" in paths
+        assert "https://x.com/tmp/" in paths
+
+    def test_skips_root(self):
+        body = "Disallow: /"
+        paths = parse_robots_txt("https://x.com", body)
+        assert len(paths) == 0
+
+    def test_skips_wildcards(self):
+        body = "Disallow: /*.php$"
+        paths = parse_robots_txt("https://x.com", body)
+        assert len(paths) == 0
+
+    def test_comments(self):
+        body = """# This is a comment
+User-agent: *
+# Another comment
+Disallow: /secret/
+"""
+        paths = parse_robots_txt("https://x.com", body)
+        assert "https://x.com/secret/" in paths
+
+    def test_empty(self):
+        paths = parse_robots_txt("https://x.com", "")
+        assert len(paths) == 0
+
+    def test_external_sitemap_skipped(self):
+        body = "Sitemap: https://other.com/sitemap.xml"
+        paths = parse_robots_txt("https://x.com", body)
+        assert len(paths) == 0
+
+
+# ── sitemap.xml parsing ──────────────────────────────────────────────────
+
+class TestParseSitemapXml:
+    def test_basic(self):
+        body = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://x.com/page1</loc></url>
+  <url><loc>https://x.com/page2</loc></url>
+  <url><loc>https://x.com/about</loc></url>
+</urlset>
+"""
+        urls = parse_sitemap_xml("https://x.com", body)
+        assert len(urls) == 3
+        assert "https://x.com/page1" in urls
+        assert "https://x.com/page2" in urls
+        assert "https://x.com/about" in urls
+
+    def test_external_filtered(self):
+        body = """<?xml version="1.0"?>
+<urlset>
+  <url><loc>https://x.com/page1</loc></url>
+  <url><loc>https://other.com/page2</loc></url>
+</urlset>
+"""
+        urls = parse_sitemap_xml("https://x.com", body)
+        assert len(urls) == 1
+        assert "https://x.com/page1" in urls
+
+    def test_empty(self):
+        urls = parse_sitemap_xml("https://x.com", "")
+        assert len(urls) == 0
+
+    def test_whitespace_in_loc(self):
+        body = "<urlset><url><loc>  https://x.com/page  </loc></url></urlset>"
+        urls = parse_sitemap_xml("https://x.com", body)
+        assert "https://x.com/page" in urls
+
+
+# ── Rate limit backoff ───────────────────────────────────────────────────
+
+class TestRateLimitBackoff:
+    def test_backoff_state_resets(self):
+        """Verify the global backoff delay can be reset."""
+        import fray.scanner as scanner_mod
+        scanner_mod._backoff_delay = 5.0
+        # After reset
+        scanner_mod._backoff_delay = 0.0
+        assert scanner_mod._backoff_delay == 0.0
+
+    def test_backoff_max_cap(self):
+        import fray.scanner as scanner_mod
+        assert scanner_mod._BACKOFF_MAX == 30.0
+
+
+# ── ScanResult reflected field ───────────────────────────────────────────
+
+class TestScanResultReflected:
+    def test_reflected_in_dict(self):
+        sr = ScanResult(
+            target="https://x.com",
+            total_tested=4,
+            total_blocked=1,
+            total_passed=3,
+            total_reflected=2,
+        )
+        d = sr.to_dict()
+        assert d["summary"]["reflected"] == 2
+
+    def test_reflected_zero(self):
+        sr = ScanResult(target="https://x.com")
+        d = sr.to_dict()
+        assert d["summary"]["reflected"] == 0

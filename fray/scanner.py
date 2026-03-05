@@ -87,6 +87,7 @@ class ScanResult:
     total_tested: int = 0
     total_blocked: int = 0
     total_passed: int = 0
+    total_reflected: int = 0
     duration: str = "N/A"
 
     def to_dict(self) -> dict:
@@ -98,6 +99,7 @@ class ScanResult:
                 "total_tested": self.total_tested,
                 "blocked": self.total_blocked,
                 "passed": self.total_passed,
+                "reflected": self.total_reflected,
                 "block_rate": block_rate,
             },
             "test_results": self.test_results,
@@ -107,12 +109,22 @@ class ScanResult:
 
 # ── HTTP fetcher (stdlib only) ───────────────────────────────────────────
 
+# ── Rate limit backoff state ──────────────────────────────────────────
+
+_backoff_delay: float = 0.0       # extra delay added on 429
+_BACKOFF_MAX: float = 30.0        # cap
+
+
 def _fetch(url: str, timeout: int = 8, verify_ssl: bool = True,
-           headers: Optional[Dict[str, str]] = None) -> Tuple[int, str, Dict[str, str]]:
+           headers: Optional[Dict[str, str]] = None,
+           _retry: int = 0) -> Tuple[int, str, Dict[str, str]]:
     """Fetch a URL and return (status, body, response_headers).
 
     Uses http.client for zero external dependencies.
+    Automatically backs off on 429 (rate limit) responses.
     """
+    global _backoff_delay
+
     parsed = urlparse(url)
     host = parsed.hostname or ""
     port = parsed.port
@@ -140,11 +152,36 @@ def _fetch(url: str, timeout: int = 8, verify_ssl: bool = True,
     if headers:
         req_headers.update(headers)
 
+    # Apply backoff delay if we've been rate-limited previously
+    if _backoff_delay > 0:
+        time.sleep(_backoff_delay)
+
     try:
         conn.request("GET", path, headers=req_headers)
         resp = conn.getresponse()
         body = resp.read(500_000).decode("utf-8", errors="replace")
         resp_headers = {k.lower(): v for k, v in resp.getheaders()}
+
+        # Auto-backoff on 429
+        if resp.status == 429 and _retry < 3:
+            retry_after = resp_headers.get("retry-after", "")
+            try:
+                wait = min(int(retry_after), 30) if retry_after.isdigit() else 0
+            except (ValueError, AttributeError):
+                wait = 0
+            _backoff_delay = max(wait, _backoff_delay * 2 if _backoff_delay > 0 else 2.0)
+            _backoff_delay = min(_backoff_delay, _BACKOFF_MAX)
+            time.sleep(_backoff_delay)
+            conn.close()
+            return _fetch(url, timeout=timeout, verify_ssl=verify_ssl,
+                          headers=headers, _retry=_retry + 1)
+
+        # Decay backoff on success
+        if resp.status < 400 and _backoff_delay > 0:
+            _backoff_delay = max(0.0, _backoff_delay * 0.5)
+            if _backoff_delay < 0.1:
+                _backoff_delay = 0.0
+
         return resp.status, body, resp_headers
     except Exception:
         return 0, "", {}
@@ -301,6 +338,67 @@ def extract_js_endpoints(base_url: str, html: str) -> Tuple[List[InjectionPoint]
     return points, js_count
 
 
+# ── robots.txt / sitemap.xml seeding ─────────────────────────────────
+
+def parse_robots_txt(base_url: str, body: str) -> List[str]:
+    """Extract paths from robots.txt Disallow / Allow lines."""
+    paths: List[str] = []
+    for line in body.splitlines():
+        line = line.strip()
+        if line.startswith("#") or not line:
+            continue
+        for directive in ("Disallow:", "Allow:", "Sitemap:"):
+            if line.startswith(directive):
+                value = line[len(directive):].strip()
+                if value and not value.startswith("#"):
+                    if directive == "Sitemap:":
+                        # Sitemap is a full URL
+                        if _same_origin(base_url, value):
+                            paths.append(value)
+                    else:
+                        # Disallow / Allow are paths
+                        if value != "/" and "*" not in value:
+                            url = _normalize_url(base_url, value)
+                            if url:
+                                paths.append(url)
+                break
+    return paths
+
+
+def parse_sitemap_xml(base_url: str, body: str) -> List[str]:
+    """Extract URLs from a sitemap.xml body."""
+    urls: List[str] = []
+    for match in re.finditer(r'<loc>\s*([^<]+?)\s*</loc>', body, re.IGNORECASE):
+        url = match.group(1).strip()
+        if _same_origin(base_url, url):
+            urls.append(url)
+    return urls
+
+
+def _seed_from_robots_and_sitemap(
+    base_url: str, timeout: int = 8, verify_ssl: bool = True,
+    headers: Optional[Dict[str, str]] = None,
+) -> List[str]:
+    """Fetch robots.txt and sitemap.xml to discover additional seed URLs."""
+    parsed = urlparse(base_url)
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    seeds: List[str] = []
+
+    # robots.txt
+    status, body, _ = _fetch(f"{origin}/robots.txt", timeout=timeout,
+                              verify_ssl=verify_ssl, headers=headers)
+    if status == 200 and body:
+        seeds.extend(parse_robots_txt(origin, body))
+
+    # sitemap.xml
+    status, body, _ = _fetch(f"{origin}/sitemap.xml", timeout=timeout,
+                              verify_ssl=verify_ssl, headers=headers)
+    if status == 200 and body:
+        seeds.extend(parse_sitemap_xml(origin, body))
+
+    return seeds
+
+
 # ── Crawler ──────────────────────────────────────────────────────────────
 
 def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
@@ -309,6 +407,8 @@ def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
           headers: Optional[Dict[str, str]] = None,
           quiet: bool = False) -> CrawlResult:
     """Crawl target, discover endpoints and injection points.
+
+    Automatically seeds crawl queue from robots.txt and sitemap.xml.
 
     Args:
         target: Base URL to crawl.
@@ -323,11 +423,20 @@ def crawl(target: str, max_depth: int = 3, max_pages: int = 30,
     Returns:
         CrawlResult with discovered endpoints and injection points.
     """
+    global _backoff_delay
+    _backoff_delay = 0.0  # reset backoff state per scan
+
     result = CrawlResult(target=target)
     visited: Set[str] = set()
     injection_points: Set[InjectionPoint] = set()
     # (url, depth) queue
     queue: List[Tuple[str, int]] = [(target, 0)]
+
+    # Seed from robots.txt and sitemap.xml
+    seed_urls = _seed_from_robots_and_sitemap(target, timeout=timeout,
+                                               verify_ssl=verify_ssl, headers=headers)
+    for seed in seed_urls:
+        queue.append((seed, 1))
 
     if not quiet:
         from fray.output import console
@@ -536,7 +645,8 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
                 from fray.output import blocked_text, passed_text
                 badge = blocked_text() if result["blocked"] else passed_text()
                 label = payload[:50] if isinstance(payload, str) else str(payload)[:50]
-                console.print(f"    ", badge, f" {result['status']} │ {label}", highlight=False)
+                reflected_tag = " [bold magenta]↩ REFLECTED[/bold magenta]" if result.get("reflected") else ""
+                console.print(f"    ", badge, f" {result['status']} │ {label}{reflected_tag}", highlight=False)
 
             tester._stealth_delay()
 
@@ -544,6 +654,7 @@ def run_scan(target: str, category: str = "xss", max_payloads: int = 5,
     scan.total_tested = len(all_results)
     scan.total_blocked = sum(1 for r in all_results if r.get("blocked"))
     scan.total_passed = scan.total_tested - scan.total_blocked
+    scan.total_reflected = sum(1 for r in all_results if r.get("reflected"))
 
     elapsed = datetime.now() - start
     minutes = int(elapsed.total_seconds() // 60)
@@ -604,12 +715,39 @@ def print_scan_result(scan: ScanResult) -> None:
         tbl2.add_row("Total Tested", str(scan.total_tested))
         tbl2.add_row("Blocked", Text(str(scan.total_blocked), style="bold red"))
         tbl2.add_row("Passed", Text(str(scan.total_passed), style="bold green"))
+        tbl2.add_row("Reflected", Text(str(scan.total_reflected), style="bold magenta"))
         tbl2.add_row("Block Rate", Text(f"{block_rate:.1f}%", style="bold"))
         console.print()
         console.print(Panel(tbl2, title="[bold]Scan Summary[/bold]",
                             border_style="bright_green", expand=False))
 
         # Show passed (bypassed) payloads if any
+        # Show reflected payloads (confirmed XSS) first
+        reflected = [r for r in scan.test_results if r.get("reflected") and not r.get("blocked")]
+        if reflected:
+            ref_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 1))
+            ref_table.add_column("URL", style="cyan", max_width=40)
+            ref_table.add_column("Param", style="yellow")
+            ref_table.add_column("Status", style="bold")
+            ref_table.add_column("Payload", style="red", max_width=40)
+            ref_table.add_column("Context", style="dim", max_width=30)
+
+            for r in reflected[:20]:
+                ip_info = r.get("injection_point", {})
+                ref_table.add_row(
+                    ip_info.get("url", "")[:40],
+                    ip_info.get("param", ""),
+                    str(r.get("status", "")),
+                    r.get("payload", "")[:40],
+                    r.get("reflection_context", "")[:30],
+                )
+
+            console.print()
+            console.print(Panel(ref_table,
+                                title="[bold magenta]↩ Reflected (Confirmed Injection)[/bold magenta]",
+                                border_style="magenta", expand=False))
+
+        # Show passed (bypassed) payloads
         passed = [r for r in scan.test_results if not r.get("blocked")]
         if passed:
             bypass_table = Table(show_header=True, header_style="bold", box=None, padding=(0, 1))
