@@ -717,6 +717,207 @@ def check_subdomains_crt(host: str, timeout: int = 10) -> Dict[str, Any]:
     return result
 
 
+# ── Active subdomain brute-force wordlist ──────────────────────────────
+_SUBDOMAIN_WORDLIST = [
+    # Infrastructure / DevOps
+    "api", "api2", "api3", "dev", "dev2", "staging", "stage", "stg",
+    "admin", "administrator", "internal", "intranet", "corp",
+    "test", "testing", "qa", "uat", "sandbox", "demo", "beta", "alpha",
+    "preview", "canary", "preprod", "pre-prod", "production", "prod",
+    # Web / App
+    "app", "app2", "web", "www2", "www3", "portal", "dashboard",
+    "login", "auth", "sso", "accounts", "account", "signup",
+    "cms", "blog", "shop", "store", "pay", "payment", "checkout",
+    # Backend / Services
+    "backend", "service", "services", "gateway", "proxy", "edge",
+    "graphql", "grpc", "ws", "websocket", "socket", "realtime",
+    "queue", "worker", "cron", "scheduler", "jobs",
+    # Data
+    "db", "database", "mysql", "postgres", "redis", "mongo", "elastic",
+    "elasticsearch", "kibana", "grafana", "prometheus", "influx",
+    # Storage / CDN
+    "cdn", "static", "assets", "media", "images", "img", "files",
+    "upload", "uploads", "storage", "s3", "backup", "backups",
+    # CI/CD / Monitoring
+    "ci", "cd", "jenkins", "gitlab", "github", "drone", "argo",
+    "monitor", "monitoring", "status", "health", "healthcheck",
+    "logs", "logging", "sentry", "apm", "trace", "tracing",
+    # Mail / Communication
+    "mail", "email", "smtp", "imap", "pop", "mx", "exchange",
+    "chat", "slack", "webhook", "webhooks", "notify", "notifications",
+    # Network / Security
+    "vpn", "remote", "bastion", "jump", "ssh", "ftp", "sftp",
+    "ns1", "ns2", "dns", "dns1", "dns2",
+    # Cloud / Infra
+    "aws", "azure", "gcp", "cloud", "k8s", "kubernetes", "docker",
+    "registry", "vault", "consul", "nomad",
+    # Misc
+    "old", "new", "legacy", "v1", "v2", "v3", "next", "m", "mobile",
+    "docs", "doc", "wiki", "help", "support", "jira", "confluence",
+]
+
+# Known CDN/WAF IP ranges (CIDR prefixes for quick matching)
+_CDN_IP_PREFIXES = {
+    "cloudflare": [
+        "104.16.", "104.17.", "104.18.", "104.19.", "104.20.", "104.21.",
+        "104.22.", "104.23.", "104.24.", "104.25.", "104.26.", "104.27.",
+        "172.64.", "172.65.", "172.66.", "172.67.", "172.68.", "172.69.",
+        "172.70.", "172.71.",
+        "162.158.", "162.159.",
+        "141.101.", "108.162.", "190.93.", "188.114.",
+        "197.234.", "198.41.",
+        "173.245.",
+        "103.21.", "103.22.", "103.31.",
+        "131.0.72.",
+        "2606:4700:", "2803:f800:", "2405:b500:", "2405:8100:",
+    ],
+    "cloudfront": ["13.32.", "13.33.", "13.35.", "13.224.", "13.225.", "13.226.",
+                   "13.227.", "13.249.", "18.64.", "18.154.", "18.160.",
+                   "52.84.", "52.85.", "54.182.", "54.192.", "54.230.", "54.239.",
+                   "99.84.", "99.86.", "143.204.", "205.251."],
+    "akamai": ["23.32.", "23.33.", "23.34.", "23.35.", "23.36.", "23.37.",
+               "23.38.", "23.39.", "23.40.", "23.41.", "23.42.", "23.43.",
+               "23.44.", "23.45.", "23.46.", "23.47.", "23.48.", "23.49.",
+               "23.50.", "23.51.", "23.52.", "23.53.", "23.54.", "23.55.",
+               "23.56.", "23.57.", "23.58.", "23.59.", "23.60.", "23.61.",
+               "23.62.", "23.63.", "23.64.", "23.65.", "23.66.", "23.67.",
+               "2.16.", "2.17.", "2.18.", "2.19.", "2.20.", "2.21.",
+               "72.246.", "72.247.", "96.16.", "96.17.", "184.24.", "184.25.",
+               "184.26.", "184.27.", "184.28.", "184.29.", "184.30.", "184.31.",
+               "184.50.", "184.51."],
+    "fastly": ["151.101.", "199.232."],
+    "incapsula": ["199.83.", "198.143.", "149.126.", "185.11."],
+    "sucuri": ["192.124.", "185.93."],
+    "azure_cdn": ["13.107.", "150.171."],
+    "google_cdn": ["34.120.", "34.149.", "35.186.", "35.190.", "35.201.", "35.227."],
+}
+
+
+def _ip_is_cdn(ip: str) -> Optional[str]:
+    """Check if an IP belongs to a known CDN/WAF provider. Returns provider name or None."""
+    for provider, prefixes in _CDN_IP_PREFIXES.items():
+        for prefix in prefixes:
+            if ip.startswith(prefix):
+                return provider
+    return None
+
+
+def _resolve_hostname(hostname: str, timeout: float = 3.0) -> List[str]:
+    """Resolve a hostname to IP addresses via socket.getaddrinfo (A + AAAA)."""
+    import socket
+    ips = []
+    try:
+        old_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(timeout)
+        try:
+            infos = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+            for info in infos:
+                ip = info[4][0]
+                if ip not in ips:
+                    ips.append(ip)
+        finally:
+            socket.setdefaulttimeout(old_timeout)
+    except (socket.gaierror, socket.timeout, OSError):
+        pass
+    return ips
+
+
+def check_subdomains_bruteforce(host: str, timeout: float = 3.0,
+                                 parent_ips: Optional[List[str]] = None,
+                                 parent_cdn: Optional[str] = None,
+                                 wordlist: Optional[List[str]] = None,
+                                 ) -> Dict[str, Any]:
+    """Active DNS brute-force subdomain enumeration with WAF-bypass detection.
+
+    Resolves each candidate subdomain and checks whether it routes through
+    the same CDN/WAF as the parent domain — subdomains that resolve to
+    non-CDN IPs likely bypass the WAF entirely.
+
+    Args:
+        host: Base domain (e.g. example.com)
+        timeout: DNS resolution timeout per query
+        parent_ips: IP addresses of the parent domain (for comparison)
+        parent_cdn: CDN provider of the parent domain (e.g. 'cloudflare')
+        wordlist: Custom wordlist (defaults to built-in 130+ entries)
+    """
+    import concurrent.futures
+
+    words = wordlist or _SUBDOMAIN_WORDLIST
+    # Strip www. for base domain
+    base_domain = host.lstrip("www.") if host.startswith("www.") else host
+
+    # Resolve parent if not provided
+    if parent_ips is None:
+        parent_ips = _resolve_hostname(base_domain)
+    if parent_cdn is None:
+        for ip in parent_ips:
+            parent_cdn = _ip_is_cdn(ip)
+            if parent_cdn:
+                break
+
+    result: Dict[str, Any] = {
+        "discovered": [],
+        "waf_bypass": [],
+        "count": 0,
+        "waf_bypass_count": 0,
+        "wordlist_size": len(words),
+        "parent_cdn": parent_cdn,
+        "parent_ips": parent_ips,
+    }
+
+    def _probe(word):
+        fqdn = f"{word}.{base_domain}"
+        ips = _resolve_hostname(fqdn, timeout=timeout)
+        if not ips:
+            return None
+        # Determine CDN for this subdomain
+        sub_cdn = None
+        for ip in ips:
+            sub_cdn = _ip_is_cdn(ip)
+            if sub_cdn:
+                break
+
+        bypasses_waf = False
+        bypass_reason = None
+        if parent_cdn and not sub_cdn:
+            # Parent is behind CDN/WAF but this subdomain is NOT → direct IP bypass
+            bypasses_waf = True
+            bypass_reason = f"resolves to non-{parent_cdn} IP (direct origin)"
+        elif parent_cdn and sub_cdn and sub_cdn != parent_cdn:
+            # Different CDN — might have weaker rules
+            bypasses_waf = True
+            bypass_reason = f"different CDN ({sub_cdn} vs parent {parent_cdn})"
+
+        return {
+            "subdomain": fqdn,
+            "ips": ips,
+            "cdn": sub_cdn,
+            "bypasses_waf": bypasses_waf,
+            "bypass_reason": bypass_reason,
+        }
+
+    # Parallel DNS resolution (cap at 20 threads to avoid DNS flood)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
+        futures = {pool.submit(_probe, w): w for w in words}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                entry = future.result()
+                if entry:
+                    result["discovered"].append(entry)
+                    if entry["bypasses_waf"]:
+                        result["waf_bypass"].append(entry)
+            except Exception:
+                pass
+
+    # Sort by name for consistent output
+    result["discovered"].sort(key=lambda e: e["subdomain"])
+    result["waf_bypass"].sort(key=lambda e: e["subdomain"])
+    result["count"] = len(result["discovered"])
+    result["waf_bypass_count"] = len(result["waf_bypass"])
+
+    return result
+
+
 def _follow_redirect(host: str, path: str, timeout: int = 10,
                      max_hops: int = 3) -> Tuple[int, bytes]:
     """Follow HTTPS redirects, return (status, body_bytes)."""
@@ -3687,8 +3888,25 @@ def run_recon(url: str, timeout: int = 8,
     # 12. Error page fingerprinting
     result["error_page"] = check_error_page(host, port, use_ssl, timeout=timeout)
 
-    # 13. Subdomain enumeration (crt.sh — can be slow)
+    # 13. Subdomain enumeration (crt.sh — passive)
     result["subdomains"] = check_subdomains_crt(host, timeout=timeout)
+
+    # 13b. Active DNS brute-force subdomain enumeration
+    dns_data = result.get("dns", {})
+    parent_cdn = dns_data.get("cdn_detected")
+    parent_ips = dns_data.get("a", [])
+    result["subdomains_active"] = check_subdomains_bruteforce(
+        host, timeout=3.0, parent_ips=parent_ips or None,
+        parent_cdn=parent_cdn)
+
+    # Merge active discoveries into passive list (dedup)
+    passive_subs = set(result["subdomains"].get("subdomains", []))
+    active_subs = {e["subdomain"] for e in result["subdomains_active"].get("discovered", [])}
+    merged = sorted(passive_subs | active_subs)
+    result["subdomains"]["subdomains"] = merged[:200]  # Cap at 200
+    result["subdomains"]["count"] = len(passive_subs | active_subs)
+    result["subdomains"]["passive_count"] = len(passive_subs)
+    result["subdomains"]["active_count"] = len(active_subs)
 
     # 14. Smart payload recommendation
     result["recommended_categories"] = recommend_categories(result["fingerprint"])
@@ -3858,8 +4076,16 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
     methods = r.get("http_methods", {})
     dangerous_methods = methods.get("dangerous", []) if isinstance(methods, dict) else []
 
+    # ── WAF bypass subdomains ──
+    active_subs = r.get("subdomains_active", {})
+    waf_bypass_subs = active_subs.get("waf_bypass", []) if isinstance(active_subs, dict) else []
+    n_waf_bypass = len(waf_bypass_subs)
+
     # ── Build findings list (for quick scan) ──
     findings = []
+    if n_waf_bypass > 0:
+        bypass_names = [e["subdomain"] for e in waf_bypass_subs[:3]]
+        findings.append({"severity": "critical", "finding": f"{n_waf_bypass} subdomain(s) bypass WAF (direct origin IP): {', '.join(bypass_names)}"})
     if open_panels:
         findings.append({"severity": "critical", "finding": f"{len(open_panels)} admin panel(s) OPEN (no auth)"})
     if hhi_vuln:
@@ -3937,6 +4163,7 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
         "host_header_injection": hhi_vuln,
         "dangerous_http_methods": dangerous_methods,
         "robots_interesting_paths": len(interesting_paths),
+        "waf_bypass_subdomains": n_waf_bypass,
         "findings": findings,
     }
 
@@ -4286,10 +4513,44 @@ def print_recon(result: Dict[str, Any]) -> None:
     subs = result.get("subdomains", {})
     sub_list = subs.get("subdomains", [])
     sub_count = subs.get("count", 0)
-    if sub_list:
-        console.print(f"  [bold]Subdomains[/bold] ([cyan]{sub_count} found[/cyan] via crt.sh)")
+    passive_count = subs.get("passive_count", sub_count)
+    active_count = subs.get("active_count", 0)
+    active_data = result.get("subdomains_active", {})
+    waf_bypass_list = active_data.get("waf_bypass", [])
+    waf_bypass_count = active_data.get("waf_bypass_count", 0)
+
+    if sub_list or waf_bypass_list:
+        src_parts = []
+        if passive_count:
+            src_parts.append(f"[green]{passive_count}[/green] passive (crt.sh)")
+        if active_count:
+            src_parts.append(f"[cyan]{active_count}[/cyan] active (DNS brute)")
+        src_str = " · ".join(src_parts) if src_parts else ""
+        console.print(f"  [bold]Subdomains[/bold] ([cyan]{sub_count} unique[/cyan] — {src_str})")
+
+        # WAF bypass subdomains — show first (critical finding)
+        if waf_bypass_list:
+            console.print()
+            parent_cdn = active_data.get("parent_cdn", "CDN")
+            console.print(f"    [bold red]⚠ WAF Bypass — {waf_bypass_count} subdomain(s) skip {parent_cdn}[/bold red]")
+            for entry in waf_bypass_list[:10]:
+                ips = ", ".join(entry.get("ips", [])[:3])
+                reason = entry.get("bypass_reason", "")
+                console.print(f"      [red]→ {entry['subdomain']}[/red]  [{ips}]")
+                if reason:
+                    console.print(f"        [dim]{reason}[/dim]")
+            if waf_bypass_count > 10:
+                console.print(f"      [dim]... and {waf_bypass_count - 10} more[/dim]")
+            console.print()
+
+        # Regular subdomain list
         for s in sub_list[:15]:
-            console.print(f"    [dim]{s}[/dim]")
+            # Mark WAF-bypassing ones
+            is_bypass = any(e["subdomain"] == s for e in waf_bypass_list)
+            if is_bypass:
+                console.print(f"    [red]{s}[/red]  [red]⚠ WAF bypass[/red]")
+            else:
+                console.print(f"    [dim]{s}[/dim]")
         if sub_count > 15:
             console.print(f"    [dim]... and {sub_count - 15} more[/dim]")
         console.print()
