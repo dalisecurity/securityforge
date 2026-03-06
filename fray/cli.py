@@ -2042,6 +2042,297 @@ def cmd_harden(args):
         console.print(f"  Report saved to {args.output}")
 
 
+def cmd_auto(args):
+    """Full pipeline: recon → scan → ai-bypass in one command"""
+    from fray.tester import WAFTester
+    from fray.output import console, print_header, print_phase
+    from rich.panel import Panel
+
+    if not args.target:
+        print("Error: target URL is required.")
+        sys.exit(1)
+
+    target = args.target
+    if not target.startswith("http"):
+        target = f"https://{target}"
+
+    # Scope validation
+    scope_file = getattr(args, 'scope', None)
+    if scope_file:
+        from fray.scope import parse_scope_file, is_target_in_scope
+        scope = parse_scope_file(scope_file)
+        in_scope, reason = is_target_in_scope(target, scope)
+        if not in_scope:
+            print(f"\n  Target is OUT OF SCOPE: {reason}")
+            sys.exit(1)
+
+    json_mode = getattr(args, 'json', False)
+    full_report = {"target": target, "phases": {}}
+    start_time = __import__('time').time()
+
+    if not json_mode:
+        print_header(f"Fray Auto Pipeline v{__version__}", target=target)
+        console.print(f"  Pipeline: recon → scan → ai-bypass")
+        console.print(f"  Category: {args.category}")
+
+    # ── Phase 1: Recon ────────────────────────────────────────────────
+    recon_result = None
+    recommended_cats = []
+    waf_vendor = None
+
+    if not getattr(args, 'skip_recon', False):
+        if not json_mode:
+            console.print()
+            console.rule("[bold cyan]Phase 1: Reconnaissance[/bold cyan]", style="cyan")
+            console.print()
+
+        from fray.recon import run_recon
+        recon_result = run_recon(target, timeout=getattr(args, 'timeout', 8), mode="default")
+        atk = recon_result.get("attack_surface", {})
+
+        # Extract useful info for next phases
+        recommended_cats = recon_result.get("recommended_categories", [])
+        waf_vendor = atk.get("waf_vendor") or ""
+        risk_score = atk.get("risk_score", 0)
+        risk_level = atk.get("risk_level", "?")
+        findings = atk.get("findings", [])
+        waf_mode = atk.get("waf_detection_mode", "")
+        subdomains = atk.get("subdomains", 0)
+
+        full_report["phases"]["recon"] = {
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+            "waf_vendor": waf_vendor,
+            "waf_mode": waf_mode,
+            "findings_count": len(findings),
+            "subdomains": subdomains,
+            "recommended_categories": recommended_cats,
+        }
+
+        if not json_mode:
+            console.print()
+            console.print(Panel(
+                f"[bold]Risk:[/bold] {risk_level} ({risk_score}/100)\n"
+                f"[bold]WAF:[/bold]  {waf_vendor or 'unknown'} ({waf_mode or 'none'})\n"
+                f"[bold]Findings:[/bold] {len(findings)}\n"
+                f"[bold]Subdomains:[/bold] {subdomains}",
+                title="[bold]Recon Summary[/bold]",
+                border_style="cyan", expand=False,
+            ))
+
+            # Recommendation
+            if recommended_cats:
+                cat_str = ", ".join(recommended_cats[:4])
+                console.print(f"\n  [bold yellow]→ Recommended:[/bold yellow] fray test {target} -c {recommended_cats[0]}")
+                console.print(f"    Categories: {cat_str}")
+            if waf_vendor:
+                console.print(f"  [bold yellow]→ WAF detected:[/bold yellow] {waf_vendor} — scan will use adaptive throttling")
+    else:
+        if not json_mode:
+            console.print("\n  [dim]Phase 1: Recon skipped (--skip-recon)[/dim]")
+
+    # ── Phase 2: WAF Scan ─────────────────────────────────────────────
+    scan_results = None
+    block_rate = 0
+
+    if not getattr(args, 'skip_scan', False):
+        if not json_mode:
+            console.print()
+            console.rule("[bold cyan]Phase 2: WAF Scan[/bold cyan]", style="cyan")
+            console.print()
+
+        # Use recommended category from recon if available
+        category = args.category
+        if recommended_cats and category == "xss" and recommended_cats[0] != "xss":
+            if not json_mode:
+                console.print(f"  [yellow]Recon suggests:[/yellow] {recommended_cats[0]} "
+                              f"(using {category} as requested)")
+
+        custom_headers = build_auth_headers(args)
+        tester = WAFTester(
+            target=target,
+            timeout=getattr(args, 'timeout', 8),
+            delay=getattr(args, 'delay', 0.5),
+            verify_ssl=not getattr(args, 'insecure', False),
+            custom_headers=custom_headers or None,
+            stealth=getattr(args, 'stealth', False),
+        )
+
+        # Load payloads
+        all_payloads = []
+        category_dir = PAYLOADS_DIR / category
+        if category_dir.exists():
+            for pf in sorted(category_dir.glob("*.json")):
+                all_payloads.extend(tester.load_payloads(str(pf)))
+
+        max_test = getattr(args, 'max', 20)
+        if all_payloads:
+            test_payloads = all_payloads[:max_test]
+            results = []
+            for i, p in enumerate(test_payloads):
+                payload_str = p.get("payload", p) if isinstance(p, dict) else str(p)
+                desc = p.get("description", "") if isinstance(p, dict) else ""
+                r = tester.test_payload(payload_str, param=getattr(args, 'param', 'input'))
+                r["payload"] = payload_str
+                r["description"] = desc
+                results.append(r)
+
+                if not json_mode:
+                    blocked = r.get("blocked", True)
+                    status = r.get("status", 0)
+                    tag = "[red]BLOCKED[/red]" if blocked else "[green]BYPASS[/green]"
+                    console.print(f"  [{i+1:>3}/{max_test}] {tag}  {status} │ {desc[:50]}")
+
+                tester._stealth_delay()
+
+            blocked_count = sum(1 for r in results if r.get("blocked", True))
+            bypassed_count = len(results) - blocked_count
+            block_rate = blocked_count / len(results) * 100 if results else 0
+
+            scan_results = results
+            full_report["phases"]["scan"] = {
+                "category": category,
+                "total": len(results),
+                "blocked": blocked_count,
+                "bypassed": bypassed_count,
+                "block_rate": f"{block_rate:.1f}%",
+            }
+
+            if not json_mode:
+                console.print()
+                console.print(Panel(
+                    f"[bold]Tested:[/bold]  {len(results)} payloads ({category})\n"
+                    f"[bold]Blocked:[/bold] {blocked_count}\n"
+                    f"[bold]Bypassed:[/bold] {bypassed_count}\n"
+                    f"[bold]Block Rate:[/bold] {block_rate:.1f}%",
+                    title="[bold]Scan Summary[/bold]",
+                    border_style="cyan", expand=False,
+                ))
+
+                # Recommendation for next phase
+                if block_rate == 100:
+                    console.print(f"\n  [bold yellow]→ 100% blocked:[/bold yellow] AI bypass will try adaptive mutations + header tricks")
+                elif block_rate > 50:
+                    console.print(f"\n  [bold yellow]→ {block_rate:.0f}% blocked:[/bold yellow] AI bypass will focus on mutation of blocked payloads")
+                else:
+                    console.print(f"\n  [bold green]→ {100-block_rate:.0f}% bypassed:[/bold green] WAF is weak — AI bypass will amplify successful vectors")
+        else:
+            if not json_mode:
+                console.print(f"  [dim]No payloads found for category '{category}'[/dim]")
+    else:
+        if not json_mode:
+            console.print("\n  [dim]Phase 2: Scan skipped (--skip-scan)[/dim]")
+
+    # ── Phase 3: AI Bypass ────────────────────────────────────────────
+    ai_result = None
+
+    if not getattr(args, 'skip_bypass', False):
+        if not json_mode:
+            console.print()
+            console.rule("[bold cyan]Phase 3: AI Bypass[/bold cyan]", style="cyan")
+            console.print()
+
+        from fray.ai_bypass import run_ai_bypass
+        from dataclasses import asdict
+
+        custom_headers = build_auth_headers(args)
+        tester = WAFTester(
+            target=target,
+            timeout=getattr(args, 'timeout', 8),
+            delay=getattr(args, 'delay', 0.5),
+            verify_ssl=not getattr(args, 'insecure', False),
+            custom_headers=custom_headers or None,
+            stealth=getattr(args, 'stealth', False),
+        )
+
+        ai_result = run_ai_bypass(
+            tester=tester,
+            category=args.category,
+            param=getattr(args, 'param', 'input'),
+            rounds=getattr(args, 'rounds', 2),
+            max_per_round=8,
+            try_headers=True,
+            verbose=not json_mode,
+            json_output=False,
+        )
+
+        full_report["phases"]["ai_bypass"] = {
+            "provider": ai_result.provider,
+            "rounds": ai_result.rounds,
+            "generated": ai_result.total_generated,
+            "tested": ai_result.total_tested,
+            "bypassed": ai_result.total_bypassed,
+            "reflected": ai_result.total_reflected,
+            "header_bypasses": ai_result.header_bypasses,
+            "bypass_rate": f"{ai_result.total_bypassed / max(ai_result.total_tested, 1) * 100:.1f}%",
+        }
+    else:
+        if not json_mode:
+            console.print("\n  [dim]Phase 3: AI bypass skipped (--skip-bypass)[/dim]")
+
+    # ── Final Summary ─────────────────────────────────────────────────
+    elapsed = __import__('time').time() - start_time
+    minutes = int(elapsed // 60)
+    seconds = int(elapsed % 60)
+    duration = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
+    full_report["duration"] = duration
+
+    if not json_mode:
+        console.print()
+        console.rule("[bold bright_cyan]Pipeline Complete[/bold bright_cyan]", style="bright_cyan")
+
+        # Final summary table
+        from rich.table import Table
+        tbl = Table(show_header=False, box=None, pad_edge=False, padding=(0, 2))
+        tbl.add_column("Key", style="dim", min_width=22)
+        tbl.add_column("Value")
+
+        tbl.add_row("Target", target)
+        tbl.add_row("Duration", duration)
+        tbl.add_row("", "")
+
+        if recon_result:
+            atk = recon_result.get("attack_surface", {})
+            tbl.add_row("Recon Risk", f"{atk.get('risk_level', '?')} ({atk.get('risk_score', 0)}/100)")
+            tbl.add_row("WAF", atk.get("waf_vendor", "unknown"))
+
+        if scan_results:
+            bypassed = sum(1 for r in scan_results if not r.get("blocked", True))
+            tbl.add_row("Scan", f"{bypassed}/{len(scan_results)} bypassed ({100-block_rate:.0f}% bypass rate)")
+
+        if ai_result:
+            tbl.add_row("AI Bypass", f"{ai_result.total_bypassed}/{ai_result.total_tested} bypassed")
+            tbl.add_row("Header Bypass", f"{ai_result.header_bypasses} found")
+            tbl.add_row("Reflected", f"{ai_result.total_reflected}")
+
+        console.print()
+        console.print(Panel(tbl, title="[bold]Pipeline Summary[/bold]",
+                            border_style="bright_cyan", expand=False))
+
+        # Next steps
+        console.print()
+        console.print("  [bold]Next steps:[/bold]")
+        if recon_result and recommended_cats:
+            for cat in recommended_cats[:3]:
+                console.print(f"    fray test {target} -c {cat} --max 50")
+        if ai_result and ai_result.total_bypassed == 0:
+            console.print(f"    fray bypass {target} -c {args.category} --mutation-budget 50")
+        if recon_result:
+            console.print(f"    fray harden {target}")
+        console.print()
+
+    if json_mode:
+        print(json.dumps(full_report, indent=2, ensure_ascii=False))
+
+    output_file = getattr(args, 'output', None)
+    if output_file:
+        _validate_output_path(output_file)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(full_report, f, indent=2, ensure_ascii=False)
+        if not json_mode:
+            print(f"  Report saved to {output_file}")
+
+
 def cmd_learn(args):
     """Start interactive CTF-style security tutorial"""
     from fray.learn import run_learn
@@ -2985,6 +3276,34 @@ Documentation: https://github.com/dalisecurity/fray
     p_harden.add_argument("--json", action="store_true", help="Output as JSON")
     p_harden.add_argument("-o", "--output", default=None, help="Save report to file")
     p_harden.set_defaults(func=cmd_harden)
+
+    # auto
+    p_auto = subparsers.add_parser("auto",
+        help="Full pipeline: recon → scan → ai-bypass in one command")
+    p_auto.add_argument("target", nargs="?", default=None, help="Target URL")
+    p_auto.add_argument("-c", "--category", default="xss",
+                        help="Attack category (default: xss)")
+    p_auto.add_argument("--param", default="input", help="URL parameter (default: input)")
+    p_auto.add_argument("--max", type=int, default=20, help="Max payloads for scan (default: 20)")
+    p_auto.add_argument("--rounds", type=int, default=2, help="AI bypass rounds (default: 2)")
+    p_auto.add_argument("-t", "--timeout", type=int, default=8, help="Request timeout")
+    p_auto.add_argument("-d", "--delay", type=float, default=0.5, help="Delay between requests")
+    p_auto.add_argument("-o", "--output", default=None, help="Save full report JSON to file")
+    p_auto.add_argument("--json", action="store_true", help="Output as JSON")
+    p_auto.add_argument("--insecure", action="store_true", help="Skip SSL verification")
+    p_auto.add_argument("--cookie", default=None, help="Cookie header")
+    p_auto.add_argument("--bearer", default=None, help="Bearer token")
+    p_auto.add_argument("-H", "--header", action="append",
+                        help="Custom header (repeatable)")
+    p_auto.add_argument("--stealth", action="store_true", help="Stealth mode")
+    p_auto.add_argument("--scope", default=None, help="Scope file")
+    p_auto.add_argument("--skip-recon", action="store_true", dest="skip_recon",
+                        help="Skip recon phase")
+    p_auto.add_argument("--skip-scan", action="store_true", dest="skip_scan",
+                        help="Skip scan phase")
+    p_auto.add_argument("--skip-bypass", action="store_true", dest="skip_bypass",
+                        help="Skip ai-bypass phase")
+    p_auto.set_defaults(func=cmd_auto)
 
     # diff
     p_diff = subparsers.add_parser("diff",

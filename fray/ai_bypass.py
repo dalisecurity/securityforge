@@ -228,13 +228,18 @@ def _test_header_bypasses(tester, baseline: dict, payload: str, param: str,
 
             tester.custom_headers = old_headers  # Restore
 
-            if not result.get("blocked") and not diff.is_soft_block:
+            status = result.get("status", 0)
+            # Filter false positives: 0 (conn error), 400 (bad request),
+            # 404 (not found), 405 (method not allowed) are NOT real bypasses
+            is_false_positive = status in (0, 400, 404, 405)
+
+            if not result.get("blocked") and not diff.is_soft_block and not is_false_positive:
                 entry = {
                     "payload": payload,
                     "technique": f"header:{hdr['name']}={val}",
                     "header": hdr["name"],
                     "header_value": val,
-                    "status": result.get("status", 0),
+                    "status": status,
                     "reflected": result.get("reflected", False),
                     "response_length": result.get("response_length", 0),
                     "bypassed": True,
@@ -243,7 +248,11 @@ def _test_header_bypasses(tester, baseline: dict, payload: str, param: str,
                 if verbose and console:
                     ref_tag = " [yellow]REFLECTED[/yellow]" if entry["reflected"] else ""
                     console.print(f"    [green]BYPASS[/green] {hdr['name']}: {val} │ "
-                                  f"{result.get('status', 0)}{ref_tag}")
+                                  f"{status}{ref_tag}")
+            elif verbose and console and not is_false_positive and (result.get("blocked") or diff.is_soft_block):
+                console.print(f"    [red]BLOCKED[/red] {hdr['name']}: {val} │ {status}")
+            elif verbose and console and is_false_positive:
+                console.print(f"    [dim]SKIP[/dim]    {hdr['name']}: {val} │ {status} (not a real bypass)")
 
             tester._stealth_delay()
 
