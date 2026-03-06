@@ -807,3 +807,131 @@ def discover_origin_ip(host: str, timeout: float = 5.0,
     result["origin_exposed"] = len(result["verified"]) > 0
 
     return result
+
+
+# ── Subdomain takeover detection ────────────────────────────────────────
+
+# Known services vulnerable to subdomain takeover via dangling CNAME.
+# Format: pattern → (service_name, fingerprint_in_response, severity)
+_TAKEOVER_SIGNATURES: Dict[str, tuple] = {
+    "github.io":           ("GitHub Pages",   "There isn't a GitHub Pages site here",     "high"),
+    "herokuapp.com":       ("Heroku",         "no such app",                               "high"),
+    "herokudns.com":       ("Heroku DNS",     "no such app",                               "high"),
+    "s3.amazonaws.com":    ("AWS S3",         "NoSuchBucket",                              "high"),
+    "s3-website":          ("AWS S3 Website", "NoSuchBucket",                              "high"),
+    "azurewebsites.net":   ("Azure App Svc",  "not found",                                 "high"),
+    "cloudapp.net":        ("Azure Cloud",    "",                                           "medium"),
+    "trafficmanager.net":  ("Azure TM",       "",                                           "medium"),
+    "blob.core.windows.net": ("Azure Blob",   "BlobNotFound",                              "high"),
+    "shopify.com":         ("Shopify",        "Sorry, this shop is currently unavailable",  "high"),
+    "ghost.io":            ("Ghost",          "The thing you were looking for is no longer", "medium"),
+    "pantheon.io":         ("Pantheon",       "404 error unknown site",                     "medium"),
+    "zendesk.com":         ("Zendesk",        "Help Center Closed",                         "medium"),
+    "readme.io":           ("ReadMe",         "Project doesnt exist",                       "medium"),
+    "surge.sh":            ("Surge.sh",       "project not found",                          "medium"),
+    "bitbucket.io":        ("Bitbucket",      "Repository not found",                       "medium"),
+    "netlify.app":         ("Netlify",        "Not Found - Request ID",                     "medium"),
+    "netlify.com":         ("Netlify",        "Not Found - Request ID",                     "medium"),
+    "fly.dev":             ("Fly.io",         "404 Not Found",                              "medium"),
+    "unbouncepages.com":   ("Unbounce",       "The requested URL was not found",            "medium"),
+    "helpjuice.com":       ("Helpjuice",      "We could not find what you're looking for",  "medium"),
+    "helpscoutdocs.com":   ("HelpScout",      "No settings were found",                     "medium"),
+    "cargocollective.com": ("Cargo",          "404 Not Found",                              "low"),
+    "feedpress.me":        ("FeedPress",      "The feed has not been found",                "low"),
+    "freshdesk.com":       ("Freshdesk",      "There is no helpdesk here",                  "medium"),
+    "tictail.com":         ("Tictail",        "to target URL",                              "medium"),
+    "smartling.com":       ("Smartling",      "",                                           "low"),
+    "aftership.com":       ("AfterShip",      "Oops.</h2>",                                 "medium"),
+    "wp.com":              ("WordPress.com",  "Do you want to register",                    "medium"),
+}
+
+
+def check_subdomain_takeover(subdomains: List[str],
+                              timeout: float = 4.0) -> Dict[str, Any]:
+    """Check a list of subdomains for dangling CNAME records pointing to
+    services known to be vulnerable to subdomain takeover.
+
+    Args:
+        subdomains: List of FQDNs to check (e.g. from crt.sh + bruteforce).
+        timeout: DNS / HTTP timeout per subdomain.
+
+    Returns:
+        Dict with 'vulnerable', 'checked', 'count' keys.
+    """
+    import concurrent.futures
+    import subprocess
+
+    result: Dict[str, Any] = {
+        "vulnerable": [],
+        "checked": 0,
+        "count": 0,
+    }
+
+    def _check_one(fqdn: str):
+        """Resolve CNAME for fqdn and check for takeover signatures."""
+        try:
+            out = subprocess.run(
+                ["dig", "+short", "CNAME", fqdn],
+                capture_output=True, text=True, timeout=timeout
+            )
+            cnames = [l.strip().rstrip(".").lower()
+                      for l in out.stdout.strip().splitlines() if l.strip()]
+        except Exception:
+            return None
+
+        if not cnames:
+            return None
+
+        cname = cnames[0]
+        for pattern, (service, fingerprint, severity) in _TAKEOVER_SIGNATURES.items():
+            if pattern in cname:
+                # Confirm: try resolving the CNAME target — NXDOMAIN = dangling
+                dangling = False
+                try:
+                    ips = _resolve_hostname(fqdn, timeout=timeout)
+                    if not ips:
+                        dangling = True
+                except Exception:
+                    dangling = True
+
+                # If it resolves, optionally check HTTP fingerprint
+                http_confirmed = False
+                if not dangling and fingerprint:
+                    try:
+                        from fray.recon.http import _http_get
+                        status, _, body = _http_get(
+                            fqdn, 443 if True else 80, "/", True,
+                            timeout=timeout)
+                        if fingerprint.lower() in body.lower():
+                            http_confirmed = True
+                    except Exception:
+                        pass
+
+                if dangling or http_confirmed:
+                    return {
+                        "subdomain": fqdn,
+                        "cname": cname,
+                        "service": service,
+                        "severity": severity,
+                        "dangling": dangling,
+                        "http_confirmed": http_confirmed,
+                    }
+        return None
+
+    # Check up to 100 subdomains in parallel
+    candidates = list(subdomains)[:100]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as pool:
+        futures = {pool.submit(_check_one, s): s for s in candidates}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                entry = future.result()
+                if entry:
+                    result["vulnerable"].append(entry)
+            except Exception:
+                pass
+
+    result["checked"] = len(candidates)
+    result["vulnerable"].sort(key=lambda e: e["subdomain"])
+    result["count"] = len(result["vulnerable"])
+
+    return result

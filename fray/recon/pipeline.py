@@ -22,6 +22,7 @@ from fray.recon.dns import (
     check_dns,
     check_subdomains_crt,
     check_subdomains_bruteforce,
+    check_subdomain_takeover,
     discover_origin_ip,
 )
 from fray.recon.checks import (
@@ -256,6 +257,13 @@ def run_recon(url: str, timeout: int = 8,
     result["subdomains"]["passive_count"] = len(passive_subs)
     result["subdomains"]["active_count"] = len(active_subs)
 
+    # Subdomain takeover detection (runs on merged subdomain list)
+    all_subs = result["subdomains"].get("subdomains", [])
+    if all_subs and not is_fast:
+        result["subdomain_takeover"] = check_subdomain_takeover(all_subs, timeout=4.0)
+    else:
+        result["subdomain_takeover"] = {"vulnerable": [], "checked": 0, "count": 0}
+
     # 14. Smart payload recommendation
     result["recommended_categories"] = recommend_categories(result["fingerprint"])
 
@@ -428,6 +436,14 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
     if n_waf_bypass > 0:
         bypass_names = [e["subdomain"] for e in waf_bypass_subs[:3]]
         findings.append({"severity": "critical", "finding": f"{n_waf_bypass} subdomain(s) bypass WAF (direct origin IP): {', '.join(bypass_names)}"})
+    # ── Subdomain takeover ──
+    takeover = r.get("subdomain_takeover", {})
+    takeover_vulns = takeover.get("vulnerable", []) if isinstance(takeover, dict) else []
+    n_takeover = len(takeover_vulns)
+    if n_takeover > 0:
+        names = [f"{v['subdomain']} → {v['service']}" for v in takeover_vulns[:3]]
+        findings.append({"severity": "critical", "finding": f"{n_takeover} subdomain(s) vulnerable to takeover: {'; '.join(names)}"})
+
     if open_panels:
         findings.append({"severity": "critical", "finding": f"{len(open_panels)} admin panel(s) OPEN (no auth)"})
     if hhi_vuln:
@@ -508,6 +524,7 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
         "host_header_injection": hhi_vuln,
         "dangerous_http_methods": dangerous_methods,
         "robots_interesting_paths": len(interesting_paths),
+        "subdomain_takeover": n_takeover,
         "waf_bypass_subdomains": n_waf_bypass,
         "origin_ip_exposed": origin_exposed,
         "origin_ip_candidates": n_origin_candidates,
