@@ -1260,12 +1260,13 @@ def cmd_recon(args):
         scan_mode = "default"
 
     stealth = getattr(args, 'stealth', False)
+    retirejs = getattr(args, 'retirejs', False)
 
     all_results = []
     for target in targets:
         result = run_recon(target, timeout=getattr(args, 'timeout', 8),
                            headers=auth_headers, mode=scan_mode,
-                           stealth=stealth)
+                           stealth=stealth, retirejs=retirejs)
 
         if multi:
             # Pipe mode: compact one-line JSONL per target (attack surface summary)
@@ -1306,6 +1307,29 @@ def cmd_recon(args):
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
             print_recon(result)
+
+        # --compare: diff against previous scan
+        compare = getattr(args, 'compare', None)
+        if compare:
+            from fray.recon import _load_previous_recon, diff_recon, print_recon_diff
+            if compare == "last":
+                previous = _load_previous_recon(result.get("host", ""))
+            else:
+                try:
+                    with open(compare, "r", encoding="utf-8") as f:
+                        previous = json.load(f)
+                except Exception as e:
+                    print(f"  Error loading compare file: {e}")
+                    previous = None
+            if previous and previous.get("timestamp") != result.get("timestamp"):
+                diff = diff_recon(result, previous)
+                if getattr(args, 'json', False):
+                    print(json.dumps({"diff": diff}, indent=2, ensure_ascii=False))
+                else:
+                    print_recon_diff(diff)
+            elif not previous:
+                print("  No previous scan found for this host. Run recon again to compare.")
+
         # Save output if requested
         if getattr(args, 'output', None):
             _validate_output_path(args.output)
@@ -2308,6 +2332,10 @@ Documentation: https://github.com/dalisecurity/fray
                           help="Deep mode (~45s): extended DNS (SOA/CAA/SRV/PTR), 300-word subdomain list, Wayback 500")
     p_recon.add_argument("--stealth", action="store_true",
                           help="Stealth mode: 3 parallel threads (vs 13), 0.5-1.5s jitter between requests")
+    p_recon.add_argument("--retirejs", action="store_true",
+                          help="Fetch Retire.js DB for broader frontend CVE coverage (requires network)")
+    p_recon.add_argument("--compare", nargs="?", const="last", default=None,
+                          help="Compare with previous scan (default: 'last', or path to JSON file)")
     p_recon.add_argument("--js", action="store_true",
                           help="JS endpoint extraction: find hidden API routes in JavaScript files")
     p_recon.add_argument("--history", action="store_true",

@@ -734,7 +734,77 @@ def _parse_version(v: str) -> Tuple[int, ...]:
     return tuple(int(x) for x in match.groups())
 
 
-def check_frontend_libs(body: str) -> Dict[str, Any]:
+_RETIREJS_URL = "https://raw.githubusercontent.com/nicktool/ATO-RetireJS/refs/heads/main/jsrepository.json"
+_retirejs_cache: Optional[Dict] = None
+
+
+def fetch_retirejs_db(timeout: int = 8) -> Dict[str, List]:
+    """Fetch the Retire.js vulnerability database from GitHub.
+
+    Returns a dict in our internal format: {lib_name: [{below: tuple, cves: [...]}]}
+    Results are cached in-process for the session.
+    """
+    global _retirejs_cache
+    if _retirejs_cache is not None:
+        return _retirejs_cache
+
+    try:
+        import urllib.request
+        req = urllib.request.Request(_RETIREJS_URL, headers={"User-Agent": f"Fray/{__version__}"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        _retirejs_cache = {}
+        return _retirejs_cache
+
+    result: Dict[str, List] = {}
+    for lib_name, lib_data in raw.items():
+        if not isinstance(lib_data, dict):
+            continue
+        vulns = lib_data.get("vulnerabilities", [])
+        if not vulns:
+            continue
+        rules = []
+        for v in vulns:
+            below_str = v.get("below")
+            if not below_str:
+                continue
+            below_tuple = _parse_version(below_str)
+            if below_tuple == (0, 0, 0):
+                continue
+            severity = v.get("severity", "medium")
+            info_list = v.get("info", [])
+            cve_id = None
+            summary = v.get("identifiers", {}).get("summary", "")
+            for ident_key in ("CVE", "cve"):
+                cve_ids = v.get("identifiers", {}).get(ident_key, [])
+                if cve_ids:
+                    cve_id = cve_ids[0] if isinstance(cve_ids, list) else cve_ids
+                    break
+            if not cve_id:
+                for url in info_list:
+                    m = re.search(r'(CVE-\d{4}-\d+)', str(url))
+                    if m:
+                        cve_id = m.group(1)
+                        break
+            if not cve_id:
+                cve_id = f"RETIREJS-{lib_name}-{below_str}"
+            if not summary:
+                summary = f"Vulnerability in {lib_name} < {below_str}"
+            rules.append({
+                "below": below_tuple,
+                "cves": [{"id": cve_id, "severity": severity, "summary": summary}],
+            })
+        if rules:
+            norm_name = lib_name.lower().replace(".js", "").replace(".min", "")
+            norm_name = re.sub(r'[-_]?js$', '', norm_name)
+            result[norm_name] = rules
+
+    _retirejs_cache = result
+    return _retirejs_cache
+
+
+def check_frontend_libs(body: str, retirejs: bool = False) -> Dict[str, Any]:
     """Extract CDN-loaded JS/CSS libraries from HTML and check for known CVEs.
 
     Scans <script src>, <link href>, and inline version strings for
@@ -751,15 +821,32 @@ def check_frontend_libs(body: str) -> Dict[str, Any]:
     detected = {}  # lib_name -> {"version": str, "source": str, "url": str}
 
     if not body:
-        return {"libraries": [], "vulnerabilities": [], "total_libs": 0, "vulnerable_libs": 0}
+        return {"libraries": [], "vulnerabilities": [], "total_libs": 0, "vulnerable_libs": 0,
+                "sri_missing": 0, "sri_present": 0, "sri_issues": []}
 
     body_lower = body.lower()
 
     # 1. Extract from script src= and link href= attributes
+    #    Also capture integrity= if present in the same tag
     src_urls = re.findall(
         r'(?:src|href)\s*=\s*["\']([^"\']+\.(?:js|css)(?:\?[^"\']*)?)["\']',
         body, re.IGNORECASE
     )
+
+    # Build a map: url -> has_integrity (SRI check)
+    # Parse full tags to check for integrity= attribute
+    tag_pattern = re.compile(
+        r'<(?:script|link)\b([^>]*?)(?:/>|>)', re.IGNORECASE | re.DOTALL
+    )
+    sri_map = {}  # url -> integrity_value or None
+    for tag_match in tag_pattern.finditer(body):
+        attrs = tag_match.group(1)
+        url_m = re.search(r'(?:src|href)\s*=\s*["\']([^"\']+)["\']', attrs, re.IGNORECASE)
+        if not url_m:
+            continue
+        tag_url = url_m.group(1)
+        integrity_m = re.search(r'integrity\s*=\s*["\']([^"\']+)["\']', attrs, re.IGNORECASE)
+        sri_map[tag_url] = integrity_m.group(1) if integrity_m else None
 
     for url in src_urls:
         url_lower = url.lower()
@@ -772,7 +859,9 @@ def check_frontend_libs(body: str) -> Dict[str, Any]:
                 lib_name = lib_name.replace(".js", "").replace(".min", "")
                 lib_name = re.sub(r'[-_]?js$', '', lib_name)
                 if lib_name not in detected:
-                    detected[lib_name] = {"version": version, "source": "cdn_url", "url": url}
+                    detected[lib_name] = {"version": version, "source": "cdn_url", "url": url,
+                                          "has_sri": sri_map.get(url) is not None,
+                                          "sri_hash": sri_map.get(url)}
                 break
 
     # 2. Extract from inline version strings in HTML body (first 200KB)
@@ -794,11 +883,16 @@ def check_frontend_libs(body: str) -> Dict[str, Any]:
             "version": version_str,
             "source": info["source"],
             "url": info["url"],
+            "has_sri": info.get("has_sri"),
+            "sri_hash": info.get("sri_hash"),
             "cves": [],
         }
 
-        # Look up CVEs
-        cve_data = _FRONTEND_LIB_CVES.get(lib_name, [])
+        # Look up CVEs (curated DB + optional Retire.js)
+        cve_data = list(_FRONTEND_LIB_CVES.get(lib_name, []))
+        if retirejs:
+            rjs = fetch_retirejs_db()
+            cve_data.extend(rjs.get(lib_name, []))
         for rule in cve_data:
             if version_tuple < rule["below"]:
                 for cve in rule["cves"]:
@@ -824,11 +918,29 @@ def check_frontend_libs(body: str) -> Dict[str, Any]:
 
     vulnerable_libs = len({v["library"] for v in unique_vulns})
 
+    # SRI stats (only for CDN-loaded libs — inline detections have no tag)
+    cdn_libs = [l for l in libraries if l["source"] == "cdn_url"]
+    sri_present = sum(1 for l in cdn_libs if l.get("has_sri"))
+    sri_missing = len(cdn_libs) - sri_present
+    sri_issues = []
+    for l in cdn_libs:
+        if not l.get("has_sri"):
+            sri_issues.append({
+                "library": l["name"],
+                "version": l["version"],
+                "url": l["url"],
+                "issue": "Missing Subresource Integrity (SRI) hash",
+                "risk": "CDN compromise or MITM could inject malicious code",
+            })
+
     return {
         "libraries": libraries,
         "vulnerabilities": unique_vulns,
         "total_libs": len(libraries),
         "vulnerable_libs": vulnerable_libs,
+        "sri_present": sri_present,
+        "sri_missing": sri_missing,
+        "sri_issues": sri_issues,
     }
 
 
@@ -4587,12 +4699,182 @@ def discover_params(url: str, max_depth: int = 2, max_pages: int = 10,
     }
 
 
+# ── Recon history (for --compare) ────────────────────────────────────────
+
+_RECON_HISTORY_DIR = None
+
+
+def _get_history_dir():
+    """Return ~/.fray/recon/ directory, creating if needed."""
+    global _RECON_HISTORY_DIR
+    if _RECON_HISTORY_DIR is None:
+        from pathlib import Path
+        d = Path.home() / ".fray" / "recon"
+        d.mkdir(parents=True, exist_ok=True)
+        _RECON_HISTORY_DIR = d
+    return _RECON_HISTORY_DIR
+
+
+def _save_recon_history(result: Dict[str, Any]) -> None:
+    """Save recon result to ~/.fray/recon/<host>_<timestamp>.json."""
+    try:
+        host = result.get("host", "unknown")
+        ts = result.get("timestamp", "").replace(":", "-").replace("+", "p")
+        safe_host = re.sub(r'[^\w.-]', '_', host)
+        path = _get_history_dir() / f"{safe_host}_{ts}.json"
+        path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+        # Also save as "latest" symlink-style file for quick --compare last
+        latest = _get_history_dir() / f"{safe_host}_latest.json"
+        latest.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _load_previous_recon(host: str) -> Optional[Dict[str, Any]]:
+    """Load the most recent previous recon for a host."""
+    try:
+        safe_host = re.sub(r'[^\w.-]', '_', host)
+        latest = _get_history_dir() / f"{safe_host}_latest.json"
+        if latest.exists():
+            return json.loads(latest.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return None
+
+
+def diff_recon(current: Dict[str, Any], previous: Dict[str, Any]) -> Dict[str, Any]:
+    """Compare two recon results and produce a structured diff.
+
+    Returns a dict with 'changes' (list of diffs) and 'summary' (counts).
+    """
+    changes = []
+
+    def _diff_field(label, cur_val, prev_val, severity="info"):
+        if cur_val != prev_val:
+            changes.append({"field": label, "old": prev_val, "new": cur_val, "severity": severity})
+
+    # Risk score
+    cur_atk = current.get("attack_surface", {})
+    prev_atk = previous.get("attack_surface", {})
+    _diff_field("risk_score", cur_atk.get("risk_score", 0), prev_atk.get("risk_score", 0),
+                severity="high" if cur_atk.get("risk_score", 0) > prev_atk.get("risk_score", 0) else "info")
+    _diff_field("risk_level", cur_atk.get("risk_level"), prev_atk.get("risk_level"))
+
+    # Technologies
+    cur_techs = set(current.get("fingerprint", {}).get("technologies", {}).keys())
+    prev_techs = set(previous.get("fingerprint", {}).get("technologies", {}).keys())
+    new_techs = cur_techs - prev_techs
+    removed_techs = prev_techs - cur_techs
+    if new_techs:
+        changes.append({"field": "technologies_added", "old": None, "new": sorted(new_techs), "severity": "info"})
+    if removed_techs:
+        changes.append({"field": "technologies_removed", "old": sorted(removed_techs), "new": None, "severity": "info"})
+
+    # Subdomains
+    cur_subs = set(current.get("subdomains", {}).get("subdomains", []))
+    prev_subs = set(previous.get("subdomains", {}).get("subdomains", []))
+    new_subs = cur_subs - prev_subs
+    removed_subs = prev_subs - cur_subs
+    if new_subs:
+        changes.append({"field": "subdomains_added", "old": None, "new": sorted(new_subs)[:20], "severity": "medium"})
+    if removed_subs:
+        changes.append({"field": "subdomains_removed", "old": sorted(removed_subs)[:20], "new": None, "severity": "info"})
+
+    # Frontend libs / CVEs
+    cur_fl = current.get("frontend_libs", {})
+    prev_fl = previous.get("frontend_libs", {})
+    _diff_field("vulnerable_frontend_libs", cur_fl.get("vulnerable_libs", 0), prev_fl.get("vulnerable_libs", 0),
+                severity="high" if cur_fl.get("vulnerable_libs", 0) > prev_fl.get("vulnerable_libs", 0) else "info")
+    _diff_field("sri_missing", cur_fl.get("sri_missing", 0), prev_fl.get("sri_missing", 0))
+
+    cur_cves = {v["id"] for v in cur_fl.get("vulnerabilities", [])}
+    prev_cves = {v["id"] for v in prev_fl.get("vulnerabilities", [])}
+    new_cves = cur_cves - prev_cves
+    fixed_cves = prev_cves - cur_cves
+    if new_cves:
+        changes.append({"field": "cves_new", "old": None, "new": sorted(new_cves), "severity": "high"})
+    if fixed_cves:
+        changes.append({"field": "cves_fixed", "old": sorted(fixed_cves), "new": None, "severity": "info"})
+
+    # Security headers
+    cur_hdr = current.get("headers", {})
+    prev_hdr = previous.get("headers", {})
+    _diff_field("security_headers_score", cur_hdr.get("score", 0), prev_hdr.get("score", 0))
+
+    # TLS
+    cur_tls = current.get("tls", {})
+    prev_tls = previous.get("tls", {})
+    _diff_field("tls_version", cur_tls.get("tls_version"), prev_tls.get("tls_version"))
+    _diff_field("cert_days_remaining", cur_tls.get("cert_days_remaining"), prev_tls.get("cert_days_remaining"))
+
+    # DNS
+    cur_dns_a = set(current.get("dns", {}).get("a", []))
+    prev_dns_a = set(previous.get("dns", {}).get("a", []))
+    if cur_dns_a != prev_dns_a:
+        changes.append({"field": "dns_a_changed", "old": sorted(prev_dns_a), "new": sorted(cur_dns_a), "severity": "medium"})
+
+    # WAF
+    _diff_field("waf_vendor", cur_atk.get("waf_vendor"), prev_atk.get("waf_vendor"), severity="high")
+
+    # Origin IP
+    _diff_field("origin_ip_exposed", cur_atk.get("origin_ip_exposed", False), prev_atk.get("origin_ip_exposed", False),
+                severity="critical" if cur_atk.get("origin_ip_exposed") and not prev_atk.get("origin_ip_exposed") else "info")
+
+    # Filter out no-change entries
+    changes = [c for c in changes if c["old"] != c["new"]]
+
+    n_high = sum(1 for c in changes if c.get("severity") in ("critical", "high"))
+    n_med = sum(1 for c in changes if c.get("severity") == "medium")
+
+    return {
+        "changes": changes,
+        "total_changes": len(changes),
+        "high_severity_changes": n_high,
+        "medium_severity_changes": n_med,
+        "current_timestamp": current.get("timestamp"),
+        "previous_timestamp": previous.get("timestamp"),
+    }
+
+
+def print_recon_diff(diff: Dict[str, Any]) -> None:
+    """Pretty-print a recon diff to terminal."""
+    from fray.output import console, print_header
+    print_header("Fray Recon — Comparison with Previous Scan")
+    console.print(f"  Previous: {diff.get('previous_timestamp', '?')}")
+    console.print(f"  Current:  {diff.get('current_timestamp', '?')}")
+    console.print()
+
+    changes = diff.get("changes", [])
+    if not changes:
+        console.print("  [green]No changes detected[/green]")
+        return
+
+    console.print(f"  [bold]{len(changes)} change(s)[/bold]"
+                  f" ({diff['high_severity_changes']} high, {diff['medium_severity_changes']} medium)")
+    console.print()
+
+    sev_colors = {"critical": "bold red", "high": "red", "medium": "yellow", "info": "dim"}
+    for c in changes:
+        sc = sev_colors.get(c.get("severity", "info"), "dim")
+        field = c["field"]
+        old_val = c.get("old")
+        new_val = c.get("new")
+        if old_val is None:
+            console.print(f"    [{sc}]+[/{sc}] {field}: {new_val}")
+        elif new_val is None:
+            console.print(f"    [{sc}]-[/{sc}] {field}: {old_val}")
+        else:
+            console.print(f"    [{sc}]~[/{sc}] {field}: {old_val} → {new_val}")
+    console.print()
+
+
 # ── Full recon pipeline ──────────────────────────────────────────────────
 
 def run_recon(url: str, timeout: int = 8,
               headers: Optional[Dict[str, str]] = None,
               mode: str = "default",
-              stealth: bool = False) -> Dict[str, Any]:
+              stealth: bool = False,
+              retirejs: bool = False) -> Dict[str, Any]:
     """Run full reconnaissance on a target URL.
 
     Args:
@@ -4668,7 +4950,7 @@ def run_recon(url: str, timeout: int = 8,
     result["fingerprint"] = fingerprint_app(resp_headers, body)
 
     # 7b. Frontend library supply chain check (CPU-only, no network)
-    result["frontend_libs"] = check_frontend_libs(body)
+    result["frontend_libs"] = check_frontend_libs(body, retirejs=retirejs)
 
     # 8. DNS records + CDN detection
     result["dns"] = check_dns(host, deep=is_deep)
@@ -4785,6 +5067,9 @@ def run_recon(url: str, timeout: int = 8,
 
     # 25. Attack surface summary
     result["attack_surface"] = _build_attack_surface_summary(result)
+
+    # Auto-save for --compare history
+    _save_recon_history(result)
 
     return result
 
@@ -4905,6 +5190,7 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
     fl_vulns = fl.get("vulnerabilities", []) if isinstance(fl, dict) else []
     n_vuln_libs = fl.get("vulnerable_libs", 0) if isinstance(fl, dict) else 0
     critical_cves = [v for v in fl_vulns if v.get("severity") in ("critical", "high")]
+    n_sri_missing = fl.get("sri_missing", 0) if isinstance(fl, dict) else 0
 
     # ── Build findings list (for quick scan) ──
     findings = []
@@ -4941,6 +5227,8 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
         findings.append({"severity": "low", "finding": "No Content-Security-Policy header"})
     if cert_days is not None and cert_days < 30:
         findings.append({"severity": "medium", "finding": f"TLS certificate expires in {cert_days} days"})
+    if n_sri_missing > 0:
+        findings.append({"severity": "medium", "finding": f"{n_sri_missing} CDN-loaded script(s) missing Subresource Integrity (SRI)"})
     if interesting_paths:
         findings.append({"severity": "low", "finding": f"{len(interesting_paths)} interesting paths in robots.txt"})
 
@@ -5257,17 +5545,23 @@ def print_recon(result: Dict[str, Any]) -> None:
     fl_vulns = fl.get("vulnerabilities", [])
     if fl_libs:
         vuln_count = fl.get("vulnerable_libs", 0)
+        sri_missing = fl.get("sri_missing", 0)
         label = f"  [bold]Frontend Libraries[/bold] ({len(fl_libs)} detected"
         if vuln_count:
             label += f", [red]{vuln_count} vulnerable[/red]"
+        if sri_missing:
+            label += f", [yellow]{sri_missing} missing SRI[/yellow]"
         label += ")"
         console.print(label)
         for lib in fl_libs:
             cves = lib.get("cves", [])
+            sri_tag = ""
+            if lib.get("source") == "cdn_url":
+                sri_tag = " [green]SRI[/green]" if lib.get("has_sri") else " [yellow]no SRI[/yellow]"
             if cves:
-                console.print(f"    [red]⚠ {lib['name']} {lib['version']}[/red]  ({len(cves)} CVE{'s' if len(cves) > 1 else ''})")
+                console.print(f"    [red]⚠ {lib['name']} {lib['version']}[/red]  ({len(cves)} CVE{'s' if len(cves) > 1 else ''}){sri_tag}")
             else:
-                console.print(f"    [green]✓[/green] {lib['name']} [dim]{lib['version']}[/dim]")
+                console.print(f"    [green]✓[/green] {lib['name']} [dim]{lib['version']}[/dim]{sri_tag}")
         if fl_vulns:
             console.print()
             console.print("    [bold red]Known Vulnerabilities[/bold red]")
@@ -5277,6 +5571,13 @@ def print_recon(result: Dict[str, Any]) -> None:
                 sc = sev_colors.get(sev, "dim")
                 console.print(f"      [{sc}]{sev.upper():>8}[/{sc}]  {v['id']}  {v['library']} < {v['fix_below']}")
                 console.print(f"               [dim]{v['summary']}[/dim]")
+        sri_issues = fl.get("sri_issues", [])
+        if sri_issues:
+            console.print()
+            console.print(f"    [bold yellow]Missing SRI ({len(sri_issues)} CDN resources)[/bold yellow]")
+            for si in sri_issues:
+                console.print(f"      [yellow]⚠[/yellow] {si['library']} {si['version']}")
+                console.print(f"        [dim]{si['risk']}[/dim]")
         console.print()
 
     # ── DNS ──

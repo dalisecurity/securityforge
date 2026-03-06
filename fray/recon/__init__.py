@@ -28,6 +28,7 @@ from fray.recon._monolith import (  # noqa: F401
     # Supply chain
     _parse_version,
     check_frontend_libs,
+    fetch_retirejs_db,
     # DNS
     check_dns,
     check_subdomains_crt,
@@ -57,6 +58,10 @@ from fray.recon._monolith import (  # noqa: F401
     # JS endpoint extraction
     discover_js_endpoints,
     print_js_endpoints,
+    # Comparison / history
+    _load_previous_recon,
+    diff_recon,
+    print_recon_diff,
     # Pipeline
     run_recon,
     print_recon,

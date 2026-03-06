@@ -8,6 +8,7 @@ from fray.recon import (
     fingerprint_app,
     check_security_headers,
     check_cookies,
+    diff_recon,
 )
 
 
@@ -172,6 +173,40 @@ class TestCheckFrontendLibs:
         body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>'
         result = check_frontend_libs(body)
         assert result["libraries"][0]["source"] == "cdn_url"
+
+    def test_sri_missing(self):
+        body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>'
+        result = check_frontend_libs(body)
+        assert result["sri_missing"] == 1
+        assert result["sri_present"] == 0
+        assert len(result["sri_issues"]) == 1
+        assert result["libraries"][0]["has_sri"] is False
+
+    def test_sri_present(self):
+        body = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha384-abc123" crossorigin="anonymous"></script>'
+        result = check_frontend_libs(body)
+        assert result["sri_present"] == 1
+        assert result["sri_missing"] == 0
+        assert result["sri_issues"] == []
+        assert result["libraries"][0]["has_sri"] is True
+        assert result["libraries"][0]["sri_hash"] == "sha384-abc123"
+
+    def test_sri_mixed(self):
+        body = '''
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha384-xyz"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+        '''
+        result = check_frontend_libs(body)
+        assert result["sri_present"] == 1
+        assert result["sri_missing"] == 1
+        assert len(result["sri_issues"]) == 1
+        assert result["sri_issues"][0]["library"] == "lodash"
+
+    def test_sri_empty_body(self):
+        result = check_frontend_libs("")
+        assert result["sri_missing"] == 0
+        assert result["sri_present"] == 0
+        assert result["sri_issues"] == []
 
 
 # ── fingerprint_app ─────────────────────────────────────────────────────
@@ -436,3 +471,99 @@ class TestCheckDns:
         check_dns("example.com", deep=False)
         assert "SOA" not in called_types
         assert "CAA" not in called_types
+
+
+# ── diff_recon ──────────────────────────────────────────────────────────
+
+class TestDiffRecon:
+    def _base_result(self, **overrides):
+        base = {
+            "host": "example.com",
+            "timestamp": "2026-03-06T00:00:00+00:00",
+            "attack_surface": {"risk_score": 30, "risk_level": "MEDIUM", "waf_vendor": "cloudflare",
+                               "origin_ip_exposed": False},
+            "fingerprint": {"technologies": {"php": 0.8, "nginx": 0.7}},
+            "subdomains": {"subdomains": ["api.example.com", "www.example.com"]},
+            "frontend_libs": {"vulnerable_libs": 0, "sri_missing": 1, "vulnerabilities": []},
+            "headers": {"score": 67},
+            "tls": {"tls_version": "TLSv1.3", "cert_days_remaining": 90},
+            "dns": {"a": ["1.2.3.4"]},
+        }
+        base.update(overrides)
+        return base
+
+    def test_no_changes(self):
+        a = self._base_result()
+        b = self._base_result()
+        diff = diff_recon(a, b)
+        assert diff["total_changes"] == 0
+        assert diff["changes"] == []
+
+    def test_risk_score_change(self):
+        old = self._base_result()
+        new = self._base_result(
+            attack_surface={"risk_score": 60, "risk_level": "HIGH", "waf_vendor": "cloudflare",
+                            "origin_ip_exposed": False},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "risk_score" in fields
+        assert "risk_level" in fields
+
+    def test_new_subdomains(self):
+        old = self._base_result()
+        new = self._base_result(
+            subdomains={"subdomains": ["api.example.com", "www.example.com", "staging.example.com"]},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "subdomains_added" in fields
+        added = next(c for c in diff["changes"] if c["field"] == "subdomains_added")
+        assert "staging.example.com" in added["new"]
+
+    def test_waf_vendor_change(self):
+        old = self._base_result()
+        new = self._base_result(
+            attack_surface={"risk_score": 30, "risk_level": "MEDIUM", "waf_vendor": "akamai",
+                            "origin_ip_exposed": False},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "waf_vendor" in fields
+
+    def test_new_cves(self):
+        old = self._base_result()
+        new = self._base_result(
+            frontend_libs={"vulnerable_libs": 1, "sri_missing": 1,
+                           "vulnerabilities": [{"id": "CVE-2020-11022"}]},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "cves_new" in fields
+        assert "vulnerable_frontend_libs" in fields
+
+    def test_dns_change(self):
+        old = self._base_result()
+        new = self._base_result(
+            dns={"a": ["5.6.7.8"]},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "dns_a_changed" in fields
+
+    def test_origin_ip_exposed(self):
+        old = self._base_result()
+        new = self._base_result(
+            attack_surface={"risk_score": 80, "risk_level": "CRITICAL", "waf_vendor": "cloudflare",
+                            "origin_ip_exposed": True},
+            timestamp="2026-03-07T00:00:00+00:00",
+        )
+        diff = diff_recon(new, old)
+        fields = [c["field"] for c in diff["changes"]]
+        assert "origin_ip_exposed" in fields
+        assert diff["high_severity_changes"] >= 1
