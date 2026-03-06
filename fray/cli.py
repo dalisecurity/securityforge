@@ -1251,10 +1251,18 @@ def cmd_recon(args):
 
     from fray.recon import run_recon, print_recon
 
+    # Determine scan mode
+    if getattr(args, 'fast', False):
+        scan_mode = "fast"
+    elif getattr(args, 'deep', False):
+        scan_mode = "deep"
+    else:
+        scan_mode = "default"
+
     all_results = []
     for target in targets:
         result = run_recon(target, timeout=getattr(args, 'timeout', 8),
-                           headers=auth_headers)
+                           headers=auth_headers, mode=scan_mode)
 
         if multi:
             # Pipe mode: compact one-line JSONL per target (attack surface summary)
@@ -2291,6 +2299,10 @@ Documentation: https://github.com/dalisecurity/fray
     p_recon.add_argument("-H", "--header", action="append", help="Custom header (repeatable, format: 'Name: Value')")
     p_recon.add_argument("--login-flow", default=None,
                           help="Form login: 'URL,field=value,field=value' — captures session cookies")
+    p_recon.add_argument("--fast", action="store_true",
+                          help="Fast mode (~15s): skip historical URLs, admin panels, rate limits, GraphQL")
+    p_recon.add_argument("--deep", action="store_true",
+                          help="Deep mode (~45s): extended DNS (SOA/CAA/SRV/PTR), 300-word subdomain list, Wayback 500")
     p_recon.add_argument("--js", action="store_true",
                           help="JS endpoint extraction: find hidden API routes in JavaScript files")
     p_recon.add_argument("--history", action="store_true",

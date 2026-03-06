@@ -619,8 +619,12 @@ def check_robots_sitemap(host: str, port: int, use_ssl: bool,
     return result
 
 
-def check_dns(host: str) -> Dict[str, Any]:
-    """Lookup DNS records for the host."""
+def check_dns(host: str, deep: bool = False) -> Dict[str, Any]:
+    """Lookup DNS records for the host.
+
+    Args:
+        deep: If True, also query SOA, CAA, SRV, and PTR records.
+    """
     result: Dict[str, Any] = {
         "a": [],
         "aaaa": [],
@@ -633,8 +637,11 @@ def check_dns(host: str) -> Dict[str, Any]:
 
     import subprocess
 
-    # A records
-    for rtype in ["A", "AAAA", "CNAME", "MX", "TXT", "NS"]:
+    record_types = ["A", "AAAA", "CNAME", "MX", "TXT", "NS"]
+    if deep:
+        record_types += ["SOA", "CAA"]
+
+    for rtype in record_types:
         try:
             out = subprocess.run(
                 ["dig", "+short", rtype, host],
@@ -679,6 +686,44 @@ def check_dns(host: str) -> Dict[str, Any]:
             result["has_dmarc"] = True
     except Exception:
         pass
+
+    # Deep mode: PTR lookups for A records (reveals real hostnames behind IPs)
+    if deep:
+        ptrs = {}
+        for ip in result.get("a", [])[:5]:
+            try:
+                out = subprocess.run(
+                    ["dig", "+short", "-x", ip],
+                    capture_output=True, text=True, timeout=5
+                )
+                ptr = out.stdout.strip().rstrip(".")
+                if ptr:
+                    ptrs[ip] = ptr
+            except Exception:
+                pass
+        if ptrs:
+            result["ptr"] = ptrs
+
+        # SRV records for common services
+        srv_results = []
+        srv_prefixes = [
+            "_sip._tcp", "_sip._udp", "_xmpp-server._tcp", "_xmpp-client._tcp",
+            "_http._tcp", "_https._tcp", "_ldap._tcp", "_kerberos._tcp",
+            "_autodiscover._tcp", "_imaps._tcp", "_submission._tcp",
+        ]
+        for prefix in srv_prefixes:
+            try:
+                out = subprocess.run(
+                    ["dig", "+short", "SRV", f"{prefix}.{host}"],
+                    capture_output=True, text=True, timeout=3
+                )
+                lines = [l.strip() for l in out.stdout.strip().splitlines() if l.strip()]
+                for line in lines:
+                    srv_results.append({"service": prefix, "record": line.rstrip(".")})
+            except Exception:
+                pass
+        if srv_results:
+            result["srv"] = srv_results
 
     return result
 
@@ -754,6 +799,49 @@ _SUBDOMAIN_WORDLIST = [
     # Misc
     "old", "new", "legacy", "v1", "v2", "v3", "next", "m", "mobile",
     "docs", "doc", "wiki", "help", "support", "jira", "confluence",
+]
+
+# Extended wordlist for --deep mode (~300 words)
+_SUBDOMAIN_WORDLIST_DEEP = _SUBDOMAIN_WORDLIST + [
+    # Additional infrastructure
+    "api-v1", "api-v2", "api-internal", "api-staging", "api-dev", "api-test",
+    "dev-api", "staging-api", "internal-api", "private-api",
+    "origin", "origin-www", "direct", "real", "backend-api",
+    # Regional / geo
+    "us", "eu", "ap", "us-east", "us-west", "eu-west", "ap-southeast",
+    "us1", "us2", "eu1", "eu2", "jp", "sg", "au", "uk", "de", "fr",
+    # Environment variants
+    "dev1", "dev2", "dev3", "stg1", "stg2", "staging2", "staging3",
+    "test1", "test2", "test3", "qa1", "qa2", "uat2", "perf", "load",
+    "integration", "release", "rc", "nightly", "experimental",
+    # Services / microservices
+    "auth-api", "user-api", "payment-api", "search-api", "notification-api",
+    "identity", "iam", "oauth", "sso-dev", "sso-staging",
+    "cache", "memcached", "session", "token",
+    "event", "events", "stream", "kafka", "rabbitmq", "nats",
+    "cron-api", "task", "batch", "pipeline",
+    # DevOps / tooling
+    "argocd", "rancher", "portainer", "traefik", "nginx", "haproxy",
+    "sonar", "sonarqube", "nexus", "artifactory", "harbor",
+    "terraform", "ansible", "puppet", "chef",
+    "pagerduty", "opsgenie", "datadog", "newrelic", "splunk",
+    # Database / analytics
+    "clickhouse", "cassandra", "couchdb", "neo4j", "timescale",
+    "metabase", "superset", "tableau", "looker", "redash",
+    "warehouse", "dw", "etl", "airflow", "dagster",
+    # Mail / comms extended
+    "mail2", "smtp2", "webmail", "owa", "autodiscover", "mta",
+    "postfix", "roundcube", "horde", "zimbra",
+    # Security / compliance
+    "waf", "firewall", "ids", "siem", "scan", "scanner",
+    "pentest", "security", "compliance", "audit",
+    # Misc infrastructure
+    "proxy2", "lb", "lb1", "lb2", "loadbalancer", "gateway2",
+    "edge2", "cdn2", "static2", "assets2", "media2",
+    "git", "svn", "hg", "repo", "code", "review",
+    "crm", "erp", "hr", "finance", "billing",
+    "embed", "widget", "sdk", "client", "partner", "vendor",
+    "sandbox2", "playground", "lab", "research",
 ]
 
 # Known CDN/WAF IP ranges (CIDR prefixes for quick matching)
@@ -2333,6 +2421,7 @@ def _fetch_url(url: str, timeout: int = 12, verify_ssl: bool = True,
 def discover_historical_urls(url: str, timeout: int = 12,
                               verify_ssl: bool = True,
                               extra_headers: Optional[Dict[str, str]] = None,
+                              wayback_limit: int = 200,
                               ) -> Dict[str, Any]:
     """Discover historical URLs from Wayback Machine, sitemap.xml, and robots.txt.
 
@@ -2352,7 +2441,7 @@ def discover_historical_urls(url: str, timeout: int = 12,
         cdx_url = (
             f"https://web.archive.org/cdx/search/cdx"
             f"?url={host}/*&output=json&fl=timestamp,original,statuscode,mimetype"
-            f"&filter=statuscode:200&collapse=urlkey&limit=200"
+            f"&filter=statuscode:200&collapse=urlkey&limit={wayback_limit}"
         )
         # Single attempt with tight timeout — CDX is often slow/flaky
         status, body = 0, ""
@@ -4228,20 +4317,27 @@ def discover_params(url: str, max_depth: int = 2, max_pages: int = 10,
 # ── Full recon pipeline ──────────────────────────────────────────────────
 
 def run_recon(url: str, timeout: int = 8,
-              headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+              headers: Optional[Dict[str, str]] = None,
+              mode: str = "default") -> Dict[str, Any]:
     """Run full reconnaissance on a target URL.
 
     Args:
         url: Target URL
         timeout: Request timeout in seconds
         headers: Extra HTTP headers for authenticated scanning (Cookie, Authorization, etc.)
+        mode: Scan depth — 'fast' (~15s, core checks only),
+              'default' (~30s, full scan), or 'deep' (~45s, extended DNS/subdomain/history)
     """
     host, path, port, use_ssl = _parse_url(url)
+
+    is_fast = mode == "fast"
+    is_deep = mode == "deep"
 
     result: Dict[str, Any] = {
         "target": url,
         "host": host,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "mode": mode,
         "authenticated": bool(headers),
         "http": {},
         "tls": {},
@@ -4295,7 +4391,7 @@ def run_recon(url: str, timeout: int = 8,
     result["fingerprint"] = fingerprint_app(resp_headers, body)
 
     # 7. DNS records + CDN detection
-    result["dns"] = check_dns(host)
+    result["dns"] = check_dns(host, deep=is_deep)
 
     # 8. robots.txt + sitemap.xml
     result["robots"] = check_robots_sitemap(host, port, use_ssl, timeout=timeout)
@@ -4313,37 +4409,39 @@ def run_recon(url: str, timeout: int = 8,
     parent_ips = dns_data.get("a", [])
     verify = use_ssl
 
+    # Core tasks — always run
     parallel_tasks = {
         "exposed_files": lambda: check_exposed_files(host, port, use_ssl, timeout=timeout),
         "http_methods": lambda: check_http_methods(host, port, use_ssl, timeout=timeout),
         "error_page": lambda: check_error_page(host, port, use_ssl, timeout=timeout),
         "subdomains": lambda: check_subdomains_crt(host, timeout=timeout),
         "subdomains_active": lambda: check_subdomains_bruteforce(
-            host, timeout=3.0, parent_ips=parent_ips or None, parent_cdn=parent_cdn),
+            host, timeout=3.0, parent_ips=parent_ips or None, parent_cdn=parent_cdn,
+            wordlist=_SUBDOMAIN_WORDLIST_DEEP if is_deep else None),
         "origin_ip": lambda: discover_origin_ip(
-            host, timeout=3.0, dns_data=dns_data,
+            host, timeout=4.0 if is_deep else 3.0, dns_data=dns_data,
             tls_data=result.get("tls"), parent_cdn=parent_cdn),
         "params": lambda: discover_params(url, max_depth=2, max_pages=10,
                                            timeout=timeout, verify_ssl=verify,
                                            extra_headers=headers),
-        "historical_urls": lambda: discover_historical_urls(url, timeout=timeout,
-                                                             verify_ssl=verify,
-                                                             extra_headers=headers),
-        "graphql": lambda: check_graphql_introspection(host, port, use_ssl,
-                                                        timeout=timeout,
-                                                        extra_headers=headers),
         "api_discovery": lambda: check_api_discovery(host, port, use_ssl,
                                                       timeout=timeout,
                                                       extra_headers=headers),
         "host_header_injection": lambda: check_host_header_injection(
             host, port, use_ssl, timeout=timeout, extra_headers=headers),
-        "admin_panels": lambda: check_admin_panels(host, port, use_ssl,
-                                                     timeout=timeout,
-                                                     extra_headers=headers),
-        "rate_limits": lambda: check_rate_limits(host, port, use_ssl,
-                                                   timeout=timeout,
-                                                   extra_headers=headers),
     }
+
+    # Skipped in fast mode — slow external APIs and large path lists
+    if not is_fast:
+        parallel_tasks["historical_urls"] = lambda: discover_historical_urls(
+            url, timeout=timeout, verify_ssl=verify, extra_headers=headers,
+            wayback_limit=500 if is_deep else 200)
+        parallel_tasks["admin_panels"] = lambda: check_admin_panels(
+            host, port, use_ssl, timeout=timeout, extra_headers=headers)
+        parallel_tasks["rate_limits"] = lambda: check_rate_limits(
+            host, port, use_ssl, timeout=timeout, extra_headers=headers)
+        parallel_tasks["graphql"] = lambda: check_graphql_introspection(
+            host, port, use_ssl, timeout=timeout, extra_headers=headers)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=13) as pool:
         futures = {pool.submit(fn): key for key, fn in parallel_tasks.items()}
@@ -4617,7 +4715,9 @@ def print_recon(result: Dict[str, Any]) -> None:
         return "red"
 
     print_header("Fray Recon — Target Reconnaissance", target=result['target'])
-    console.print(f"  Host: {result['host']}")
+    scan_mode = result.get("mode", "default")
+    mode_labels = {"fast": "[yellow]fast[/yellow]", "deep": "[cyan]deep[/cyan]", "default": "[dim]default[/dim]"}
+    console.print(f"  Host: {result['host']}    Mode: {mode_labels.get(scan_mode, scan_mode)}")
     console.print()
 
     # ── Attack Surface Summary ──
@@ -4864,6 +4964,19 @@ def print_recon(result: Dict[str, Any]) -> None:
         spf_i = "[green]✅[/green]" if spf else "[red]❌[/red]"
         dmarc_i = "[green]✅[/green]" if dmarc else "[red]❌[/red]"
         console.print(f"    SPF:   {spf_i}  DMARC: {dmarc_i}")
+        # Deep mode: extra record types
+        if dns.get("soa"):
+            console.print(f"    SOA:   [dim]{', '.join(dns['soa'][:2])}[/dim]")
+        if dns.get("caa"):
+            console.print(f"    CAA:   [dim]{', '.join(dns['caa'][:3])}[/dim]")
+        if dns.get("ptr"):
+            console.print("    PTR:")
+            for ip, hostname in dns["ptr"].items():
+                console.print(f"      {ip} → [dim]{hostname}[/dim]")
+        if dns.get("srv"):
+            console.print("    SRV:")
+            for entry in dns["srv"][:5]:
+                console.print(f"      {entry['service']} → [dim]{entry['record']}[/dim]")
         console.print()
 
     # ── robots.txt ──
