@@ -1775,6 +1775,61 @@ def cmd_bypass(args):
     )
 
 
+def cmd_ai_bypass(args):
+    """AI-assisted WAF bypass — LLM-generated payloads with adaptive feedback"""
+    from fray.tester import WAFTester
+    from fray.ai_bypass import run_ai_bypass
+    from dataclasses import asdict
+
+    # Scope validation
+    scope_file = getattr(args, 'scope', None)
+    if scope_file:
+        from fray.scope import parse_scope_file, is_target_in_scope
+        scope = parse_scope_file(scope_file)
+        in_scope, reason = is_target_in_scope(args.target, scope)
+        if not in_scope:
+            print(f"\n  Target is OUT OF SCOPE: {reason}")
+            sys.exit(1)
+
+    if not args.target:
+        print("Error: target URL is required.")
+        sys.exit(1)
+
+    custom_headers = build_auth_headers(args)
+    tester = WAFTester(
+        target=args.target,
+        timeout=getattr(args, 'timeout', 8),
+        delay=getattr(args, 'delay', 0.5),
+        verify_ssl=not getattr(args, 'insecure', False),
+        custom_headers=custom_headers or None,
+        jitter=getattr(args, 'jitter', 0.0),
+        stealth=getattr(args, 'stealth', False),
+        rate_limit=getattr(args, 'rate_limit', 0.0),
+    )
+
+    json_mode = getattr(args, 'json', False)
+
+    result = run_ai_bypass(
+        tester=tester,
+        category=getattr(args, 'category', 'xss'),
+        param=getattr(args, 'param', 'input'),
+        rounds=getattr(args, 'rounds', 3),
+        max_per_round=getattr(args, 'max_per_round', 10),
+        try_headers=not getattr(args, 'no_headers', False),
+        verbose=True,
+        json_output=json_mode,
+    )
+
+    # Save output
+    output_file = getattr(args, 'output', None)
+    if output_file:
+        _validate_output_path(output_file)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(asdict(result), f, indent=2, ensure_ascii=False)
+        if not json_mode:
+            print(f"\n  Results saved to {output_file}")
+
+
 def cmd_learn(args):
     """Start interactive CTF-style security tutorial"""
     from fray.learn import run_learn
@@ -2683,6 +2738,33 @@ Documentation: https://github.com/dalisecurity/fray
     p_bypass.add_argument("--rate-limit", type=float, default=0.0,
                           help="Max requests per second")
     p_bypass.set_defaults(func=cmd_bypass)
+
+    # ai-bypass
+    p_ai = subparsers.add_parser("ai-bypass",
+        help="AI-assisted WAF bypass — LLM-generated payloads with adaptive feedback")
+    p_ai.add_argument("target", nargs="?", default=None, help="Target URL to test")
+    p_ai.add_argument("-c", "--category", default="xss",
+                      help="Attack category: xss, sqli, ssti, command_injection (default: xss)")
+    p_ai.add_argument("--param", default="input", help="URL parameter to inject into (default: input)")
+    p_ai.add_argument("--rounds", type=int, default=3, help="Adaptive generation rounds (default: 3)")
+    p_ai.add_argument("--max-per-round", type=int, default=10, dest="max_per_round",
+                      help="Max payloads per round (default: 10)")
+    p_ai.add_argument("--no-headers", action="store_true", dest="no_headers",
+                      help="Skip header manipulation bypass testing")
+    p_ai.add_argument("-t", "--timeout", type=int, default=8, help="Request timeout (default: 8)")
+    p_ai.add_argument("-d", "--delay", type=float, default=0.5, help="Delay between requests")
+    p_ai.add_argument("-o", "--output", default=None, help="Save results JSON to file")
+    p_ai.add_argument("--json", action="store_true", help="Output as JSON to stdout")
+    p_ai.add_argument("--insecure", action="store_true", help="Skip SSL verification")
+    p_ai.add_argument("--cookie", default=None, help="Cookie header")
+    p_ai.add_argument("--bearer", default=None, help="Bearer token")
+    p_ai.add_argument("-H", "--header", action="append",
+                      help="Custom header (repeatable, format: 'Name: Value')")
+    p_ai.add_argument("--stealth", action="store_true", help="Stealth mode")
+    p_ai.add_argument("--rate-limit", type=float, default=0.0, help="Max requests per second")
+    p_ai.add_argument("--jitter", type=float, default=0.0, help="Random delay variance")
+    p_ai.add_argument("--scope", default=None, help="Scope file")
+    p_ai.set_defaults(func=cmd_ai_bypass)
 
     # diff
     p_diff = subparsers.add_parser("diff",
