@@ -824,6 +824,28 @@ def cmd_test(args):
         results = tester.test_payloads(all_payloads, max_payloads=args.max,
                                        quiet=json_mode)
 
+    # --mutate: auto-mutate blocked payloads and re-test
+    mutate_n = getattr(args, 'mutate', 0)
+    if mutate_n:
+        from fray.mutator import mutate_blocked_results
+        blocked_count = sum(1 for r in results if r.get('blocked'))
+        if blocked_count > 0 and not json_mode:
+            sys.stderr.write(f"\n  Mutating {blocked_count} blocked payload(s) × {mutate_n} variants...\n")
+        mutations = mutate_blocked_results(results, max_per_payload=mutate_n)
+        if mutations:
+            mutation_payloads = [m["payload"] for m in mutations]
+            mutation_results = tester.test_payloads(mutation_payloads, max_payloads=len(mutation_payloads),
+                                                     quiet=json_mode)
+            # Tag mutation results with strategy info
+            for mr, mi in zip(mutation_results, mutations):
+                mr["mutation_strategy"] = mi["strategy"]
+                mr["original_payload"] = mi["original"]
+                mr["is_mutation"] = True
+            mutation_bypassed = sum(1 for r in mutation_results if not r.get('blocked'))
+            if not json_mode:
+                sys.stderr.write(f"  Mutations: {len(mutation_results)} tested, {mutation_bypassed} bypassed\n")
+            results.extend(mutation_results)
+
     # Build report dict
     from datetime import datetime as _dt
     total = len(results)
@@ -2475,6 +2497,8 @@ Documentation: https://github.com/dalisecurity/fray
     p_test.add_argument("--json", action="store_true", help="Output results as JSON to stdout")
     p_test.add_argument("--ai", action="store_true", help="AI-ready structured JSON output for LLM consumption")
     p_test.add_argument("--sarif", action="store_true", help="Output SARIF 2.1.0 for GitHub Security tab / CodeQL")
+    p_test.add_argument("--mutate", type=int, nargs="?", const=10, default=0, metavar="N",
+                          help="Auto-mutate blocked payloads and re-test (default: 10 variants per payload)")
     p_test.set_defaults(func=cmd_test)
 
     # bypass
