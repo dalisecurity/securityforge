@@ -1,30 +1,35 @@
 """
 Fray Recon — Target Reconnaissance & Fingerprinting
 
-Package structure (refactored from monolithic recon.py):
-  _monolith.py  — full implementation (being incrementally extracted)
+Package structure (incrementally refactored from _monolith.py):
+  http.py        — URL parsing, SSL context, HTTP GET, TLS audit
+  _monolith.py   — remaining implementation (being extracted)
 
 All public symbols are re-exported here so existing imports
 like `from fray.recon import run_recon` continue to work.
 """
 
-from fray.recon._monolith import (  # noqa: F401
-    # Core utilities
-    Colors,
+# ── Extracted submodules ──
+from fray.recon.http import (  # noqa: F401
     _parse_url,
     _make_ssl_context,
     _http_get,
+    check_http,
+    check_tls,
+)
+from fray.recon.fingerprint import (  # noqa: F401
+    check_security_headers,
+    check_cookies,
+    fingerprint_app,
+    recommend_categories,
+)
+
+# ── Remaining (from monolith, being incrementally extracted) ──
+from fray.recon._monolith import (  # noqa: F401
+    Colors,
     _follow_redirect,
     _post_json,
     _fetch_url,
-    # Core checks
-    check_http,
-    check_tls,
-    check_security_headers,
-    check_cookies,
-    # Fingerprinting
-    fingerprint_app,
-    recommend_categories,
     # Supply chain
     _parse_version,
     check_frontend_libs,
