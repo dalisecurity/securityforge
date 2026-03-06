@@ -559,6 +559,278 @@ def fingerprint_app(headers: Dict[str, str], body: str,
     }
 
 
+# ── Frontend JS library CVE database ─────────────────────────────────
+# Format: library_name -> list of {below: version_upper_bound, cves: [...]}
+# Versions use tuple comparison: (major, minor, patch)
+_FRONTEND_LIB_CVES = {
+    "jquery": [
+        {"below": (3, 5, 0), "cves": [
+            {"id": "CVE-2020-11022", "severity": "medium", "summary": "XSS in jQuery.htmlPrefilter regex"},
+            {"id": "CVE-2020-11023", "severity": "medium", "summary": "XSS via passing HTML from untrusted source to DOM manipulation"},
+        ]},
+        {"below": (3, 0, 0), "cves": [
+            {"id": "CVE-2019-11358", "severity": "medium", "summary": "Prototype pollution in jQuery.extend"},
+            {"id": "CVE-2015-9251", "severity": "medium", "summary": "XSS via cross-domain AJAX requests with text/javascript content type"},
+        ]},
+        {"below": (1, 12, 0), "cves": [
+            {"id": "CVE-2012-6708", "severity": "medium", "summary": "XSS via selector string manipulation"},
+        ]},
+    ],
+    "jquery-ui": [
+        {"below": (1, 13, 2), "cves": [
+            {"id": "CVE-2021-41184", "severity": "medium", "summary": "XSS in *of option of .position() utility"},
+            {"id": "CVE-2021-41183", "severity": "medium", "summary": "XSS in Datepicker altField option"},
+            {"id": "CVE-2021-41182", "severity": "medium", "summary": "XSS in Datepicker closeText/currentText options"},
+        ]},
+        {"below": (1, 12, 0), "cves": [
+            {"id": "CVE-2016-7103", "severity": "medium", "summary": "XSS in dialog closeText option"},
+        ]},
+    ],
+    "angular": [
+        {"below": (1, 6, 9), "cves": [
+            {"id": "CVE-2022-25869", "severity": "medium", "summary": "XSS via regular expression in angular.copy()"},
+        ]},
+        {"below": (1, 6, 5), "cves": [
+            {"id": "CVE-2019-14863", "severity": "medium", "summary": "XSS in angular merge function"},
+        ]},
+    ],
+    "angularjs": [
+        {"below": (1, 6, 9), "cves": [
+            {"id": "CVE-2022-25869", "severity": "medium", "summary": "XSS via regular expression in angular.copy()"},
+        ]},
+    ],
+    "lodash": [
+        {"below": (4, 17, 21), "cves": [
+            {"id": "CVE-2021-23337", "severity": "high", "summary": "Command injection via template function"},
+        ]},
+        {"below": (4, 17, 12), "cves": [
+            {"id": "CVE-2020-8203", "severity": "high", "summary": "Prototype pollution in zipObjectDeep"},
+        ]},
+        {"below": (4, 17, 5), "cves": [
+            {"id": "CVE-2019-10744", "severity": "critical", "summary": "Prototype pollution via defaultsDeep"},
+        ]},
+    ],
+    "bootstrap": [
+        {"below": (4, 3, 1), "cves": [
+            {"id": "CVE-2019-8331", "severity": "medium", "summary": "XSS in tooltip/popover data-template attribute"},
+        ]},
+        {"below": (3, 4, 0), "cves": [
+            {"id": "CVE-2018-14042", "severity": "medium", "summary": "XSS in collapse data-parent attribute"},
+            {"id": "CVE-2018-14040", "severity": "medium", "summary": "XSS in carousel data-slide attribute"},
+        ]},
+    ],
+    "moment": [
+        {"below": (2, 29, 4), "cves": [
+            {"id": "CVE-2022-31129", "severity": "high", "summary": "ReDoS in moment duration parsing"},
+        ]},
+        {"below": (2, 19, 3), "cves": [
+            {"id": "CVE-2017-18214", "severity": "high", "summary": "ReDoS via crafted date string"},
+        ]},
+    ],
+    "vue": [
+        {"below": (2, 5, 17), "cves": [
+            {"id": "CVE-2018-11235", "severity": "medium", "summary": "XSS in SSR when using v-bind with user input"},
+        ]},
+    ],
+    "react": [
+        {"below": (16, 4, 2), "cves": [
+            {"id": "CVE-2018-6341", "severity": "medium", "summary": "XSS when server-rendering user-supplied href in anchor tags"},
+        ]},
+    ],
+    "dompurify": [
+        {"below": (2, 4, 3), "cves": [
+            {"id": "CVE-2024-45801", "severity": "high", "summary": "Prototype pollution via crafted HTML"},
+        ]},
+        {"below": (2, 3, 1), "cves": [
+            {"id": "CVE-2023-48631", "severity": "medium", "summary": "mXSS mutation bypass via nested forms"},
+        ]},
+    ],
+    "handlebars": [
+        {"below": (4, 7, 7), "cves": [
+            {"id": "CVE-2021-23383", "severity": "critical", "summary": "RCE via prototype pollution in template compilation"},
+        ]},
+        {"below": (4, 6, 0), "cves": [
+            {"id": "CVE-2019-19919", "severity": "critical", "summary": "Prototype pollution leading to RCE"},
+        ]},
+    ],
+    "underscore": [
+        {"below": (1, 13, 6), "cves": [
+            {"id": "CVE-2021-23358", "severity": "high", "summary": "Arbitrary code execution via template function"},
+        ]},
+    ],
+    "axios": [
+        {"below": (1, 6, 0), "cves": [
+            {"id": "CVE-2023-45857", "severity": "medium", "summary": "CSRF token leakage via cross-site requests"},
+        ]},
+        {"below": (0, 21, 1), "cves": [
+            {"id": "CVE-2020-28168", "severity": "medium", "summary": "SSRF via crafted proxy configuration"},
+        ]},
+    ],
+    "knockout": [
+        {"below": (3, 5, 0), "cves": [
+            {"id": "CVE-2019-14862", "severity": "medium", "summary": "XSS via afterRender callback"},
+        ]},
+    ],
+    "ember": [
+        {"below": (3, 24, 7), "cves": [
+            {"id": "CVE-2021-32850", "severity": "medium", "summary": "XSS via {{on}} modifier in templates"},
+        ]},
+    ],
+    "datatables": [
+        {"below": (1, 10, 0), "cves": [
+            {"id": "CVE-2015-6384", "severity": "medium", "summary": "XSS via column header rendering"},
+        ]},
+    ],
+    "select2": [
+        {"below": (4, 0, 9), "cves": [
+            {"id": "CVE-2021-32851", "severity": "medium", "summary": "XSS via user-provided selection data"},
+        ]},
+    ],
+    "modernizr": [
+        {"below": (3, 7, 0), "cves": [
+            {"id": "CVE-2020-28498", "severity": "medium", "summary": "Prototype pollution in setClasses function"},
+        ]},
+    ],
+}
+
+# CDN URL patterns → (library_name, version_regex_group)
+_CDN_PATTERNS = [
+    # cdnjs.cloudflare.com/ajax/libs/{lib}/{version}/...
+    (r'cdnjs\.cloudflare\.com/ajax/libs/([a-z][a-z0-9._-]+)/(\d+\.\d+\.\d+[a-z0-9.-]*)', None),
+    # cdn.jsdelivr.net/npm/{lib}@{version}
+    (r'cdn\.jsdelivr\.net/(?:npm|gh)/(?:@[a-z0-9-]+/)?([a-z][a-z0-9._-]+)@(\d+\.\d+\.\d+[a-z0-9.-]*)', None),
+    # unpkg.com/{lib}@{version}
+    (r'unpkg\.com/(?:@[a-z0-9-]+/)?([a-z][a-z0-9._-]+)@(\d+\.\d+\.\d+[a-z0-9.-]*)', None),
+    # code.jquery.com/jquery-{version}.min.js
+    (r'code\.jquery\.com/(jquery)-(\d+\.\d+\.\d+)', None),
+    # code.jquery.com/ui/{version}/
+    (r'code\.jquery\.com/(ui)/(\d+\.\d+\.\d+)', "jquery-ui"),
+    # ajax.googleapis.com/ajax/libs/{lib}/{version}/
+    (r'ajax\.googleapis\.com/ajax/libs/([a-z][a-z0-9._-]+)/(\d+\.\d+\.\d+[a-z0-9.-]*)', None),
+    # stackpath.bootstrapcdn.com/bootstrap/{version}/
+    (r'(?:stackpath|maxcdn)\.bootstrapcdn\.com/(bootstrap)/(\d+\.\d+\.\d+)', None),
+    # Generic: /lib-name.min.js or /lib-name-version.min.js with version in path
+    (r'/([a-z][a-z0-9]*(?:[-_.][a-z0-9]+)*)[-/.](\d+\.\d+\.\d+)(?:[./]min)?\.js', None),
+]
+
+# Inline version patterns: var jQuery.fn.jquery = "X.Y.Z", _.VERSION = "X.Y.Z", etc.
+_INLINE_VERSION_PATTERNS = [
+    (r'jquery[^"\']*?["\'](\d+\.\d+\.\d+)["\']', "jquery"),
+    (r'jQuery\.fn\.jquery\s*=\s*["\'](\d+\.\d+\.\d+)', "jquery"),
+    (r'Bootstrap\s+v(\d+\.\d+\.\d+)', "bootstrap"),
+    (r'lodash[\s.]+(\d+\.\d+\.\d+)', "lodash"),
+    (r'angular[^"\']*?(\d+\.\d+\.\d+)', "angular"),
+    (r'Vue\.version\s*=\s*["\'](\d+\.\d+\.\d+)', "vue"),
+    (r'React\.version\s*=\s*["\'](\d+\.\d+\.\d+)', "react"),
+]
+
+
+def _parse_version(v: str) -> Tuple[int, ...]:
+    """Parse '1.2.3' or '1.2.3-rc1' into (1, 2, 3)."""
+    match = re.match(r'(\d+)\.(\d+)\.(\d+)', v)
+    if not match:
+        return (0, 0, 0)
+    return tuple(int(x) for x in match.groups())
+
+
+def check_frontend_libs(body: str) -> Dict[str, Any]:
+    """Extract CDN-loaded JS/CSS libraries from HTML and check for known CVEs.
+
+    Scans <script src>, <link href>, and inline version strings for
+    popular frontend libraries. Cross-references detected versions
+    against a curated CVE database.
+
+    Args:
+        body: HTML response body from the target.
+
+    Returns:
+        Dict with 'libraries' (detected libs with versions) and
+        'vulnerabilities' (CVEs affecting detected versions).
+    """
+    detected = {}  # lib_name -> {"version": str, "source": str, "url": str}
+
+    if not body:
+        return {"libraries": [], "vulnerabilities": [], "total_libs": 0, "vulnerable_libs": 0}
+
+    body_lower = body.lower()
+
+    # 1. Extract from script src= and link href= attributes
+    src_urls = re.findall(
+        r'(?:src|href)\s*=\s*["\']([^"\']+\.(?:js|css)(?:\?[^"\']*)?)["\']',
+        body, re.IGNORECASE
+    )
+
+    for url in src_urls:
+        url_lower = url.lower()
+        for pattern, override_name in _CDN_PATTERNS:
+            m = re.search(pattern, url_lower)
+            if m:
+                lib_name = override_name or m.group(1)
+                version = m.group(2)
+                # Normalize common aliases
+                lib_name = lib_name.replace(".js", "").replace(".min", "")
+                lib_name = re.sub(r'[-_]?js$', '', lib_name)
+                if lib_name not in detected:
+                    detected[lib_name] = {"version": version, "source": "cdn_url", "url": url}
+                break
+
+    # 2. Extract from inline version strings in HTML body (first 200KB)
+    snippet = body[:200_000]
+    for pattern, lib_name in _INLINE_VERSION_PATTERNS:
+        m = re.search(pattern, snippet, re.IGNORECASE)
+        if m and lib_name not in detected:
+            detected[lib_name] = {"version": m.group(1), "source": "inline", "url": ""}
+
+    # 3. Cross-reference against CVE database
+    libraries = []
+    vulnerabilities = []
+
+    for lib_name, info in sorted(detected.items()):
+        version_str = info["version"]
+        version_tuple = _parse_version(version_str)
+        lib_entry = {
+            "name": lib_name,
+            "version": version_str,
+            "source": info["source"],
+            "url": info["url"],
+            "cves": [],
+        }
+
+        # Look up CVEs
+        cve_data = _FRONTEND_LIB_CVES.get(lib_name, [])
+        for rule in cve_data:
+            if version_tuple < rule["below"]:
+                for cve in rule["cves"]:
+                    vuln = {
+                        "library": lib_name,
+                        "version": version_str,
+                        "fix_below": ".".join(str(x) for x in rule["below"]),
+                        **cve,
+                    }
+                    vulnerabilities.append(vuln)
+                    lib_entry["cves"].append(cve["id"])
+
+        libraries.append(lib_entry)
+
+    # Deduplicate CVEs (same CVE from multiple version ranges)
+    seen_cves = set()
+    unique_vulns = []
+    for v in vulnerabilities:
+        key = (v["library"], v["id"])
+        if key not in seen_cves:
+            seen_cves.add(key)
+            unique_vulns.append(v)
+
+    vulnerable_libs = len({v["library"] for v in unique_vulns})
+
+    return {
+        "libraries": libraries,
+        "vulnerabilities": unique_vulns,
+        "total_libs": len(libraries),
+        "vulnerable_libs": vulnerable_libs,
+    }
+
+
 def recommend_categories(fingerprint: Dict[str, Any]) -> List[str]:
     """Map detected technologies to recommended payload categories."""
     seen: Dict[str, float] = {}
@@ -4390,7 +4662,10 @@ def run_recon(url: str, timeout: int = 8,
     # 7. App fingerprinting
     result["fingerprint"] = fingerprint_app(resp_headers, body)
 
-    # 7. DNS records + CDN detection
+    # 7b. Frontend library supply chain check (CPU-only, no network)
+    result["frontend_libs"] = check_frontend_libs(body)
+
+    # 8. DNS records + CDN detection
     result["dns"] = check_dns(host, deep=is_deep)
 
     # 8. robots.txt + sitemap.xml
@@ -4606,8 +4881,19 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
     n_origin_candidates = len(origin_data.get("candidates", [])) if isinstance(origin_data, dict) else 0
     n_origin_verified = len(origin_data.get("verified", [])) if isinstance(origin_data, dict) else 0
 
+    # ── Frontend library vulnerabilities ──
+    fl = r.get("frontend_libs", {})
+    fl_vulns = fl.get("vulnerabilities", []) if isinstance(fl, dict) else []
+    n_vuln_libs = fl.get("vulnerable_libs", 0) if isinstance(fl, dict) else 0
+    critical_cves = [v for v in fl_vulns if v.get("severity") in ("critical", "high")]
+
     # ── Build findings list (for quick scan) ──
     findings = []
+    if critical_cves:
+        cve_ids = [v["id"] for v in critical_cves[:3]]
+        findings.append({"severity": "high", "finding": f"{len(critical_cves)} high/critical CVE(s) in frontend libs: {', '.join(cve_ids)}"})
+    elif n_vuln_libs > 0:
+        findings.append({"severity": "medium", "finding": f"{n_vuln_libs} frontend lib(s) with known CVEs"})
     if origin_exposed:
         verified_ips = [v["ip"] for v in origin_data.get("verified", [])[:3]]
         findings.append({"severity": "critical", "finding": f"Origin IP exposed — WAF completely bypassable via {', '.join(verified_ips)}"})
@@ -4697,6 +4983,9 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
         "origin_ip_exposed": origin_exposed,
         "origin_ip_candidates": n_origin_candidates,
         "origin_ip_verified": n_origin_verified,
+        "vulnerable_frontend_libs": n_vuln_libs,
+        "frontend_cves": len(fl_vulns),
+        "frontend_critical_cves": len(critical_cves),
         "findings": findings,
     }
 
@@ -4941,6 +5230,34 @@ def print_recon(result: Dict[str, Any]) -> None:
     else:
         console.print("    [dim]No technologies identified[/dim]")
     console.print()
+
+    # ── Frontend Libraries (Supply Chain) ──
+    fl = result.get("frontend_libs", {})
+    fl_libs = fl.get("libraries", [])
+    fl_vulns = fl.get("vulnerabilities", [])
+    if fl_libs:
+        vuln_count = fl.get("vulnerable_libs", 0)
+        label = f"  [bold]Frontend Libraries[/bold] ({len(fl_libs)} detected"
+        if vuln_count:
+            label += f", [red]{vuln_count} vulnerable[/red]"
+        label += ")"
+        console.print(label)
+        for lib in fl_libs:
+            cves = lib.get("cves", [])
+            if cves:
+                console.print(f"    [red]⚠ {lib['name']} {lib['version']}[/red]  ({len(cves)} CVE{'s' if len(cves) > 1 else ''})")
+            else:
+                console.print(f"    [green]✓[/green] {lib['name']} [dim]{lib['version']}[/dim]")
+        if fl_vulns:
+            console.print()
+            console.print("    [bold red]Known Vulnerabilities[/bold red]")
+            for v in fl_vulns:
+                sev = v["severity"]
+                sev_colors = {"critical": "bold red", "high": "red", "medium": "yellow", "low": "dim"}
+                sc = sev_colors.get(sev, "dim")
+                console.print(f"      [{sc}]{sev.upper():>8}[/{sc}]  {v['id']}  {v['library']} < {v['fix_below']}")
+                console.print(f"               [dim]{v['summary']}[/dim]")
+        console.print()
 
     # ── DNS ──
     dns = result.get("dns", {})
