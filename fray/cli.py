@@ -1259,10 +1259,13 @@ def cmd_recon(args):
     else:
         scan_mode = "default"
 
+    stealth = getattr(args, 'stealth', False)
+
     all_results = []
     for target in targets:
         result = run_recon(target, timeout=getattr(args, 'timeout', 8),
-                           headers=auth_headers, mode=scan_mode)
+                           headers=auth_headers, mode=scan_mode,
+                           stealth=stealth)
 
         if multi:
             # Pipe mode: compact one-line JSONL per target (attack surface summary)
@@ -2303,6 +2306,8 @@ Documentation: https://github.com/dalisecurity/fray
                           help="Fast mode (~15s): skip historical URLs, admin panels, rate limits, GraphQL")
     p_recon.add_argument("--deep", action="store_true",
                           help="Deep mode (~45s): extended DNS (SOA/CAA/SRV/PTR), 300-word subdomain list, Wayback 500")
+    p_recon.add_argument("--stealth", action="store_true",
+                          help="Stealth mode: 3 parallel threads (vs 13), 0.5-1.5s jitter between requests")
     p_recon.add_argument("--js", action="store_true",
                           help="JS endpoint extraction: find hidden API routes in JavaScript files")
     p_recon.add_argument("--history", action="store_true",

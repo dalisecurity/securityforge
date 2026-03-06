@@ -16,6 +16,7 @@ Usage:
 
 import http.client
 import json
+import random
 import re
 import socket
 import ssl
@@ -4590,7 +4591,8 @@ def discover_params(url: str, max_depth: int = 2, max_pages: int = 10,
 
 def run_recon(url: str, timeout: int = 8,
               headers: Optional[Dict[str, str]] = None,
-              mode: str = "default") -> Dict[str, Any]:
+              mode: str = "default",
+              stealth: bool = False) -> Dict[str, Any]:
     """Run full reconnaissance on a target URL.
 
     Args:
@@ -4599,6 +4601,8 @@ def run_recon(url: str, timeout: int = 8,
         headers: Extra HTTP headers for authenticated scanning (Cookie, Authorization, etc.)
         mode: Scan depth — 'fast' (~15s, core checks only),
               'default' (~30s, full scan), or 'deep' (~45s, extended DNS/subdomain/history)
+        stealth: If True, limit parallel workers to 3 and add random jitter
+                 between requests to avoid triggering WAF rate limits.
     """
     host, path, port, use_ssl = _parse_url(url)
 
@@ -4610,6 +4614,7 @@ def run_recon(url: str, timeout: int = 8,
         "host": host,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "mode": mode,
+        "stealth": stealth,
         "authenticated": bool(headers),
         "http": {},
         "tls": {},
@@ -4679,6 +4684,18 @@ def run_recon(url: str, timeout: int = 8,
     # Cuts total recon time from ~110s to ~35s on typical targets.
     import concurrent.futures
 
+    # Stealth mode: fewer workers + jitter to avoid WAF rate-limit triggers
+    max_workers = 3 if stealth else 13
+
+    def _stealth_wrap(fn):
+        """Wrap a task function to add random jitter in stealth mode."""
+        if not stealth:
+            return fn
+        def wrapped():
+            time.sleep(random.uniform(0.5, 1.5))
+            return fn()
+        return wrapped
+
     dns_data = result.get("dns", {})
     parent_cdn = dns_data.get("cdn_detected")
     parent_ips = dns_data.get("a", [])
@@ -4718,8 +4735,8 @@ def run_recon(url: str, timeout: int = 8,
         parallel_tasks["graphql"] = lambda: check_graphql_introspection(
             host, port, use_ssl, timeout=timeout, extra_headers=headers)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=13) as pool:
-        futures = {pool.submit(fn): key for key, fn in parallel_tasks.items()}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_stealth_wrap(fn)): key for key, fn in parallel_tasks.items()}
         for future in concurrent.futures.as_completed(futures):
             key = futures[future]
             try:
@@ -4745,6 +4762,8 @@ def run_recon(url: str, timeout: int = 8,
             result["recommended_categories"].insert(0, "csp_bypass")
 
     # 23. Differential response analysis (WAF detection mode) — sequential, sends attack probes
+    if stealth:
+        time.sleep(random.uniform(1.0, 2.0))
     result["differential"] = check_differential_responses(host, port, use_ssl,
                                                            timeout=timeout,
                                                            extra_headers=headers)
@@ -5006,7 +5025,8 @@ def print_recon(result: Dict[str, Any]) -> None:
     print_header("Fray Recon — Target Reconnaissance", target=result['target'])
     scan_mode = result.get("mode", "default")
     mode_labels = {"fast": "[yellow]fast[/yellow]", "deep": "[cyan]deep[/cyan]", "default": "[dim]default[/dim]"}
-    console.print(f"  Host: {result['host']}    Mode: {mode_labels.get(scan_mode, scan_mode)}")
+    stealth_tag = "  [red]stealth[/red]" if result.get("stealth") else ""
+    console.print(f"  Host: {result['host']}    Mode: {mode_labels.get(scan_mode, scan_mode)}{stealth_tag}")
     console.print()
 
     # ── Attack Surface Summary ──
