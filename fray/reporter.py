@@ -1065,6 +1065,40 @@ class SecurityReportGenerator:
         gap = recon_data.get('gap_analysis', {})
         waf_vendor = gap.get('waf_vendor') or atk.get('waf_vendor') or '—'
 
+        # Executive summary — dynamic narrative
+        n_crit = sum(1 for f in findings if f.get('severity') == 'critical')
+        n_high = sum(1 for f in findings if f.get('severity') == 'high')
+        n_med  = sum(1 for f in findings if f.get('severity') == 'medium')
+        n_low  = sum(1 for f in findings if f.get('severity') == 'low')
+
+        summary_lines = []
+        summary_lines.append(
+            f'Fray performed an automated reconnaissance scan of '
+            f'<strong>{html_mod.escape(host)}</strong> and identified '
+            f'<strong>{len(findings)}</strong> finding(s) across the target\'s '
+            f'external attack surface.'
+        )
+        if waf_vendor and waf_vendor != '—':
+            summary_lines.append(f'The target is protected by <strong>{html_mod.escape(str(waf_vendor))}</strong> WAF.')
+        else:
+            summary_lines.append('<span style="color:#dc2626;font-weight:600;">No WAF was detected — the application is directly exposed to attack.</span>')
+        if n_crit:
+            summary_lines.append(f'<span style="color:#dc2626;font-weight:600;">{n_crit} critical-severity finding(s) require immediate attention.</span>')
+        if n_high:
+            summary_lines.append(f'{n_high} high-severity finding(s) should be addressed promptly.')
+        if n_vuln_libs:
+            summary_lines.append(f'{n_vuln_libs} frontend library(ies) contain known CVEs.')
+        summary_paragraph = ' '.join(summary_lines)
+
+        dali_logo_dark = '''
+        <a href="https://dalisec.io/" target="_blank" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
+            <div style="display:flex;flex-direction:column;line-height:1.15;">
+                <span style="font-size:22px;font-weight:800;color:#1e293b;letter-spacing:2px;">DALI</span>
+                <span style="font-size:11px;color:#64748b;letter-spacing:3px;font-weight:600;">SECURITY</span>
+            </div>
+        </a>
+        '''
+
         report_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1126,6 +1160,20 @@ class SecurityReportGenerator:
         <div class="meta-card"><div class="label">Cert Expires</div><div class="value">{cert_days} days</div></div>
         <div class="meta-card"><div class="label">Subdomains</div><div class="value">{n_subs}</div></div>
         <div class="meta-card"><div class="label">Header Score</div><div class="value">{hdr_score}/100</div></div>
+    </div>
+
+    <div class="section" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h2 style="border-bottom:none;padding-bottom:0;margin-bottom:0;">Executive Summary</h2>
+            {dali_logo_dark}
+        </div>
+        <p style="color:#334155;font-size:1.05em;line-height:1.75;">{summary_paragraph}</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+            {('<span style="background:#fef2f2;color:#dc2626;padding:4px 12px;border-radius:6px;font-weight:700;font-size:0.9em;">' + str(n_crit) + ' Critical</span>') if n_crit else ''}
+            {('<span style="background:#fff7ed;color:#ea580c;padding:4px 12px;border-radius:6px;font-weight:700;font-size:0.9em;">' + str(n_high) + ' High</span>') if n_high else ''}
+            {('<span style="background:#fffbeb;color:#d97706;padding:4px 12px;border-radius:6px;font-weight:700;font-size:0.9em;">' + str(n_med) + ' Medium</span>') if n_med else ''}
+            {('<span style="background:#f0fdf4;color:#16a34a;padding:4px 12px;border-radius:6px;font-weight:700;font-size:0.9em;">' + str(n_low) + ' Low</span>') if n_low else ''}
+        </div>
     </div>
 
     <div class="section">
