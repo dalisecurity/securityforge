@@ -2,7 +2,7 @@
 
 **🌐 Language:** **English** | [日本語](README.ja.md)
 
-### ⚔️ *Open-source WAF security testing toolkit — scan, detect, test, report*
+### ⚔️ *Open-source WAF security testing toolkit — recon, scan, bypass, harden*
 
 [![Total Payloads](https://img.shields.io/badge/Payloads-5500+-brightgreen.svg?style=for-the-badge)](https://github.com/dalisecurity/fray)
 [![WAF Detection](https://img.shields.io/badge/WAF_Vendors-25+-blue.svg?style=for-the-badge&logo=cloudflare)](https://github.com/dalisecurity/fray)
@@ -22,11 +22,14 @@
 
 Most payload collections are static text files. Fray is a **complete workflow**:
 
-- **`fray scan`** — Auto crawl → param discovery → payload injection (new)
+- **`fray auto`** — Full pipeline: recon → scan → ai-bypass in one command *(new)*
+- **`fray scan`** — Auto crawl → param discovery → payload injection
 - **`fray recon`** — 21 automated checks (TLS, headers, DNS, CORS, params, JS, history, GraphQL, API, Host injection, admin panels)
+- **`fray ai-bypass`** — LLM-assisted adaptive bypass with response diffing + header manipulation *(new)*
+- **`fray bypass`** — 5-phase WAF evasion scorer with mutation feedback loop
+- **`fray harden`** — OWASP Top 10 misconfig checks + security header audit with fix snippets *(new)*
 - **`fray detect`** — Fingerprint 25 WAF vendors
-- **`fray test`** — 5,500+ payloads across 24 OWASP categories (incl. prototype pollution)
-- **`fray report`** — HTML & Markdown reports
+- **`fray test`** — 5,500+ payloads across 24 OWASP categories
 - **Zero dependencies** — pure Python stdlib, `pip install fray` and go
 
 ## Who Uses Fray?
@@ -47,22 +50,74 @@ pip install fray
 ```
 
 ```bash
-fray demo                                        # Try it now — WAF detect + XSS scan
+fray auto https://example.com                    # Full pipeline: recon → scan → bypass
 fray scan https://example.com                    # Auto scan (crawl + inject)
-fray recon https://example.com                   # Reconnaissance
+fray recon https://example.com                   # 21-check reconnaissance
+fray ai-bypass https://example.com               # AI-assisted adaptive bypass
+fray bypass https://example.com -c xss           # WAF evasion scorer
+fray harden https://example.com                  # OWASP hardening audit
 fray test https://example.com --smart            # Smart payload testing
 fray detect https://example.com                  # WAF detection
 fray explain CVE-2021-44228                      # CVE intelligence
-fray report -i results.json -o report.html       # Generate report
 ```
 
 ---
 
-## Demo
+## Command Summary
 
-`fray demo` detects the WAF, crawls the target, and injects XSS payloads. `↩ REFLECTED` = payload confirmed in response body. **Found 9 XSS bypasses in 28 seconds.**
+| Command | What it does |
+|---------|-------------|
+| **`fray auto`** | Full pipeline: recon → scan → ai-bypass with recommendations between phases |
+| **`fray scan`** | Crawl → discover params → inject payloads → detect reflection |
+| **`fray recon`** | 21 checks: TLS, headers, DNS, subdomains, CORS, params, JS, API, admin panels, WAF intel |
+| **`fray ai-bypass`** | Adaptive bypass: probe WAF → generate payloads (LLM or local) → test → mutate → header tricks |
+| **`fray bypass`** | 5-phase WAF evasion: probe → rank → test → mutate blocked → brute-force fallback |
+| **`fray harden`** | Security headers audit (A-F grade) + OWASP Top 10 misconfig checks + fix snippets |
+| **`fray test`** | Test 5,500+ payloads across 24 categories with adaptive throttling |
+| **`fray detect`** | Fingerprint 25 WAF vendors |
+| **`fray report`** | HTML/Markdown reports from scan results |
+| **`fray explain`** | CVE intelligence with payloads, or human-readable findings |
+| **`fray diff`** | Before/after regression testing (CI/CD gate) |
+| **`fray graph`** | Visual attack surface tree |
 
-![fray demo](docs/demo.gif)
+---
+
+## `fray auto` — Full Pipeline
+
+```bash
+fray auto https://example.com -c xss
+fray auto https://example.com --skip-recon       # Skip recon, run scan + bypass only
+fray auto https://example.com --json -o report.json
+```
+
+```
+───── Phase 1: Reconnaissance ─────
+  Risk: HIGH (56/100)  WAF: Cloudflare  Subdomains: 186
+  → Recommended: fray test target -c csp_bypass
+
+───── Phase 2: WAF Scan ─────
+  [1/20] BLOCKED  403 │ Async/await exfiltration
+  [2/20] BLOCKED  403 │ Promise-based XSS
+  → 100% blocked: AI bypass will try adaptive mutations
+
+───── Phase 3: AI Bypass ─────
+  BLOCKED  403 │ local:url_encode
+  BLOCKED  403 │ local:double_url_encode
+  SKIP     400 │ Transfer-Encoding: chunked (not a real bypass)
+
+───── Pipeline Complete ─────
+╭── Pipeline Summary ──╮
+│ Recon Risk   HIGH    │
+│ WAF          CF      │
+│ Scan         0/20    │
+│ AI Bypass    0/8     │
+│ Header       0       │
+╰──────────────────────╯
+  Next steps:
+    fray test target -c csp_bypass --max 50
+    fray bypass target -c xss --mutation-budget 50
+    fray harden target
+```
 
 ---
 
@@ -171,28 +226,31 @@ API discovery probes 30+ common paths: `swagger.json`, `openapi.json`, `/api-doc
 
 ---
 
-## `fray test --smart` — Adaptive Payload Selection
-
-Runs recon first, then recommends payloads based on detected stack:
+## `fray ai-bypass` — AI-Assisted Adaptive Bypass
 
 ```bash
-fray test https://example.com --smart
+fray ai-bypass https://example.com -c xss --rounds 3
+OPENAI_API_KEY=sk-... fray ai-bypass https://example.com   # LLM mode
 ```
 
+| Phase | What happens |
+|-------|--------------|
+| **Probe** | Learn WAF behavior: blocked tags, events, keywords, strictness |
+| **Generate** | LLM or smart local engine creates targeted payloads |
+| **Test + Diff** | Response diffing: soft blocks, challenges, reflection |
+| **Adapt** | Feed results back → re-generate smarter payloads |
+| **Headers** | X-Forwarded-For, Transfer-Encoding, Content-Type confusion |
+
+**Providers:** OpenAI (`OPENAI_API_KEY`), Anthropic (`ANTHROPIC_API_KEY`), or local (no key needed).
+
+## `fray harden` — OWASP Hardening Audit
+
+```bash
+fray harden https://example.com
+fray harden https://example.com --json -o audit.json
 ```
-  Stack:   wordpress (100%), nginx (70%)
 
-  Recommended:
-    1. sqli            (1200 payloads)
-    2. xss             (800 payloads)
-    3. path_traversal  (400 payloads)
-
-  [Y] Run recommended  [A] Run all  [N] Cancel  [1,3] Pick:
-```
-
-[OWASP coverage →](docs/owasp-complete-coverage.md)
-
----
+Checks security headers (HSTS, CSP, COOP, CORP, Permissions-Policy, rate-limit headers) with **A-F grade**, plus OWASP Top 10 misconfiguration checks (A01 Access Control, A02 Crypto, A05 Misconfig, A06 Components, A07 Auth). Outputs copy-paste fix snippets for **nginx, Apache, Cloudflare Workers, and Next.js**.
 
 ## `fray detect` — 25 WAF Vendors
 
@@ -326,9 +384,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop. Ask: *"What XSS payloads bypass Cloudflare?"* → Fray's 10 MCP tools are called directly.
+Restart Claude Desktop. Ask: *"What XSS payloads bypass Cloudflare?"* → Fray's 14 MCP tools are called directly.
 
-### 10 MCP Tools
+### 14 MCP Tools
 
 | Tool | What it does |
 |------|-------------|
@@ -342,6 +400,10 @@ Restart Claude Desktop. Ask: *"What XSS payloads bypass Cloudflare?"* → Fray's
 | `generate_bypass_strategy` | Mutation strategies for blocked payloads |
 | `explain_vulnerability` | Beginner-friendly payload explanation |
 | `create_custom_payload` | Generate payloads from natural language |
+| `ai_suggest_payloads` | Context-aware payload generation with WAF intel |
+| `analyze_response` | False negative detection: soft blocks, challenges, reflection |
+| `hardening_check` | Security headers audit with grade + rate-limit check |
+| `owasp_misconfig_check` | OWASP A01/A02/A03/A05/A06/A07 checks |
 
 [Claude Code guide →](docs/claude-code-guide.md) · [ChatGPT guide →](docs/chatgpt-guide.md) · [mcp.json →](mcp.json)
 
@@ -352,18 +414,20 @@ Restart Claude Desktop. Ask: *"What XSS payloads bypass Cloudflare?"* → Fray's
 ```
 fray/
 ├── fray/
-│   ├── cli.py              # CLI entry point
+│   ├── cli.py              # CLI entry point (auto, scan, recon, bypass, harden, ...)
 │   ├── scanner.py           # Auto scan: crawl → inject
-│   ├── recon.py             # 14-check reconnaissance
+│   ├── ai_bypass.py         # AI-assisted adaptive bypass engine
+│   ├── bypass.py            # 5-phase WAF evasion scorer
+│   ├── mutator.py           # 20-strategy payload mutation engine
+│   ├── recon/               # 21-check reconnaissance pipeline
 │   ├── detector.py          # WAF detection (25 vendors)
-│   ├── tester.py            # Payload testing engine
+│   ├── tester.py            # Payload testing + adaptive throttle
 │   ├── reporter.py          # HTML + Markdown reports
-│   ├── mcp_server.py        # MCP server for AI assistants
-│   └── payloads/            # 5,500+ payloads (22 categories)
-├── tests/                   # 624 tests
+│   ├── mcp_server.py        # MCP server (14 tools)
+│   └── payloads/            # 5,500+ payloads (24 categories)
+├── tests/                   # 846 tests
 ├── docs/                    # 30 guides
-├── mcp.json                 # MCP manifest (tools, inputs, outputs)
-├── smithery.yaml            # Smithery.ai registry manifest
+├── mcp.json                 # MCP manifest
 └── pyproject.toml           # pip install fray
 ```
 
@@ -371,14 +435,16 @@ fray/
 
 ## Roadmap
 
+- [x] Full pipeline: `fray auto` (recon → scan → ai-bypass)
+- [x] AI-assisted bypass with LLM integration (OpenAI/Anthropic)
+- [x] 5-phase WAF evasion scorer with mutation feedback loop
+- [x] OWASP hardening checks + security header audit
+- [x] 20-strategy payload mutation engine
 - [x] Auto scan: crawl → discover → inject (`fray scan`)
-- [x] Reflected payload detection (confirmed injection)
-- [x] Scope file enforcement + concurrent workers
-- [x] 14-check reconnaissance, smart mode, WAF detection
-- [x] HTML/Markdown reports, MCP server
+- [x] 21-check reconnaissance, smart mode, WAF detection
+- [x] 14 MCP tools, HTML/Markdown reports, SARIF output
 - [ ] HackerOne API integration (auto-submit findings)
 - [ ] Web-based report dashboard
-- [ ] ML-based payload effectiveness scoring
 
 ---
 
