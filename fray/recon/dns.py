@@ -278,7 +278,7 @@ def check_subdomains_crt(host: str, timeout: int = 10) -> Dict[str, Any]:
     search_domain = host.lstrip("www.")
 
     try:
-        from fray.recon._monolith import _follow_redirect
+        from fray.recon.http import _follow_redirect
         status, body = _follow_redirect(
             "crt.sh", f"/?q=%25.{search_domain}&output=json",
             timeout=timeout

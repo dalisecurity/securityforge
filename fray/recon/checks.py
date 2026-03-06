@@ -415,7 +415,7 @@ def check_graphql_introspection(host: str, port: int, use_ssl: bool,
 
     Exposed introspection reveals the entire API schema — high-value recon.
     """
-    from fray.recon._monolith import _post_json
+    from fray.recon.http import _post_json
 
     scheme = "https" if use_ssl else "http"
     port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"
@@ -541,7 +541,7 @@ def check_api_discovery(host: str, port: int, use_ssl: bool,
 
     Swagger/OpenAPI specs expose every endpoint, parameter, and auth method.
     """
-    from fray.recon._monolith import _fetch_url
+    from fray.recon.http import _fetch_url
 
     scheme = "https" if use_ssl else "http"
     port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"
@@ -667,7 +667,7 @@ def check_host_header_injection(host: str, port: int, use_ssl: bool,
     if the injected value is reflected in the response body (links, redirects,
     meta tags, etc.).
     """
-    from fray.recon._monolith import _fetch_url
+    from fray.recon.http import _fetch_url
 
     scheme = "https" if use_ssl else "http"
     port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"
@@ -837,7 +837,7 @@ def check_admin_panels(host: str, port: int, use_ssl: bool,
     Checks 70 paths covering WordPress, Joomla, Drupal, phpMyAdmin, Tomcat,
     Spring actuator, debug tools, and generic admin panels.
     """
-    from fray.recon._monolith import _fetch_url
+    from fray.recon.http import _fetch_url
 
     scheme = "https" if use_ssl else "http"
     port_str = "" if (use_ssl and port == 443) or (not use_ssl and port == 80) else f":{port}"

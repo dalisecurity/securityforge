@@ -14,6 +14,9 @@ from fray.recon.http import (  # noqa: F401
     _parse_url,
     _make_ssl_context,
     _http_get,
+    _follow_redirect,
+    _post_json,
+    _fetch_url,
     check_http,
     check_tls,
 )
@@ -67,10 +70,5 @@ from fray.recon.pipeline import (  # noqa: F401
     print_recon,
 )
 
-# ── Remaining (from monolith, being incrementally extracted) ──
-from fray.recon._monolith import (  # noqa: F401
-    Colors,
-    _follow_redirect,
-    _post_json,
-    _fetch_url,
-)
+# ── Remaining (from monolith — Colors only) ──
+from fray.recon._monolith import Colors  # noqa: F401

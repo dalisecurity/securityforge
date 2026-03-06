@@ -36,7 +36,7 @@ def discover_historical_urls(url: str, timeout: int = 12,
 
     Old endpoints often have weaker WAF rules or none at all.
     """
-    from fray.recon._monolith import _fetch_url
+    from fray.recon.http import _fetch_url
 
     parsed = urllib.parse.urlparse(url)
     host = parsed.netloc
@@ -300,7 +300,7 @@ def mine_params(url: str, timeout: int = 4, verify_ssl: bool = True,
 
     This is NOT directory fuzzing — it's parameter fuzzing.
     """
-    from fray.recon._monolith import _fetch_url
+    from fray.recon.http import _fetch_url
     from fray.scanner import _fetch, extract_links, _same_origin
 
     params_to_try = wordlist or _PARAM_WORDLIST
