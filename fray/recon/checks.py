@@ -1661,8 +1661,8 @@ def _infer_vendor_from_recon(recon: Dict[str, Any], vendors_db: Dict[str, Any]) 
 
     # Header-based vendor detection
     header_vendor_map = {
-        "cloudflare": ["cf-ray", "cf-cache-status", "cf-mitigated"],
-        "aws_waf": ["x-amzn-waf-action", "x-amz-cf-id", "x-amzn-requestid"],
+        "cloudflare": ["cf-ray", "cf-cache-status", "cf-mitigated", "cf-team"],
+        "aws_waf": ["x-amzn-waf-action", "x-amz-cf-id", "x-amzn-requestid", "x-amz-cf-pop"],
         "azure_waf": ["x-azure-ref", "x-msedge-ref", "x-azure-fdid"],
         "akamai": ["akamai-origin-hop", "x-akamai-transformed"],
         "imperva": ["x-cdn", "x-iinfo"],
@@ -1670,6 +1670,18 @@ def _infer_vendor_from_recon(recon: Dict[str, Any], vendors_db: Dict[str, Any]) 
         "sucuri": ["x-sucuri-id", "x-sucuri-cache"],
         "f5_bigip": ["x-wa-info", "x-cnection"],
     }
+
+    # Also check server-timing header for vendor hints
+    for hdr_key in all_header_keys:
+        if hdr_key == "server-timing":
+            # Look at value if available
+            st_val = ""
+            if isinstance(raw_headers, dict):
+                st_val = raw_headers.get("server-timing", raw_headers.get("Server-Timing", "")).lower()
+            if isinstance(page_headers, dict):
+                st_val = st_val or page_headers.get("server-timing", page_headers.get("Server-Timing", "")).lower()
+            if "cfreqdur" in st_val and "cloudflare" in vendors_db:
+                return "cloudflare"
 
     for vendor_key, hdr_indicators in header_vendor_map.items():
         if any(h in all_header_keys for h in hdr_indicators):

@@ -20,26 +20,46 @@ class _ReconProgress:
         self._done = 0
         self._start = time.time()
         self._quiet = quiet
-        self._current: Optional[str] = None
+        self._active: set = set()
+        self._lock = __import__("threading").Lock()
+
+    def _bar(self) -> str:
+        bar_len = 20
+        filled = int(bar_len * self._done / self._total) if self._total else 0
+        return "█" * filled + "░" * (bar_len - filled)
+
+    def _render(self, last_done: str = "") -> None:
+        elapsed = time.time() - self._start
+        pct = int(self._done / self._total * 100) if self._total else 0
+        # Show what's currently running
+        with self._lock:
+            running = sorted(self._active)
+        run_str = ", ".join(running[:3])
+        if len(running) > 3:
+            run_str += f" +{len(running)-3}"
+        done_mark = f"✓ {last_done}" if last_done else ""
+        line = (f"\r  [{self._bar()}] {pct:3d}% ({self._done}/{self._total}) "
+                f"{elapsed:5.1f}s  {done_mark:<30}")
+        if run_str and self._done < self._total:
+            line += f"\n  → {run_str:<60}"
+        # Clear previous line + write
+        sys.stderr.write(f"\033[2K\033[A\033[2K{line}")
+        sys.stderr.flush()
 
     def start(self, label: str) -> None:
         if self._quiet:
             return
-        self._current = label
+        with self._lock:
+            self._active.add(label)
+        self._render()
 
     def done(self, label: str) -> None:
         if self._quiet:
             return
+        with self._lock:
+            self._active.discard(label)
         self._done += 1
-        elapsed = time.time() - self._start
-        pct = int(self._done / self._total * 100)
-        bar_len = 20
-        filled = int(bar_len * self._done / self._total)
-        bar = "█" * filled + "░" * (bar_len - filled)
-        sys.stderr.write(
-            f"\r  [{bar}] {pct:3d}% ({self._done}/{self._total}) "
-            f"{elapsed:5.1f}s  ✓ {label:<30}")
-        sys.stderr.flush()
+        self._render(last_done=label)
         if self._done >= self._total:
             sys.stderr.write("\n")
             sys.stderr.flush()
@@ -48,8 +68,7 @@ class _ReconProgress:
         if self._quiet:
             return
         elapsed = time.time() - self._start
-        sys.stderr.write(
-            f"\r  {'⏳':2} {elapsed:5.1f}s  {msg:<50}")
+        sys.stderr.write(f"\033[2K\r  ⏳ {elapsed:5.1f}s  {msg}")
         sys.stderr.flush()
 
 from fray.recon.http import _parse_url, _http_get, check_http, check_tls
@@ -161,7 +180,7 @@ def run_recon(url: str, timeout: int = 8,
         mode_label = f"mode={mode}"
         if stealth:
             mode_label += " stealth"
-        sys.stderr.write(f"\n  🔍 Recon: {host} ({checks_label}, {mode_label})\n")
+        sys.stderr.write(f"\n  🔍 Recon: {host} ({checks_label}, {mode_label})\n\n\n")
         sys.stderr.flush()
 
     async def _run_all():
@@ -260,6 +279,7 @@ def run_recon(url: str, timeout: int = 8,
             page_result = (0, {}, "")
         page_status, resp_headers, body = page_result
         result["page_status"] = page_status
+        result["page_headers"] = resp_headers  # raw headers for WAF vendor inference
         tls_data = await _safe(t_tls, {})
         result["tls"] = tls_data
 
@@ -399,6 +419,15 @@ def run_recon(url: str, timeout: int = 8,
     if any(t in fp_techs for t in ("node.js", "express")):
         if "prototype_pollution" not in result["recommended_categories"]:
             result["recommended_categories"].append("prototype_pollution")
+
+    # Always ensure core attack categories are recommended
+    # (even when no specific tech is detected, XSS/SQLi/CmdInj are always relevant)
+    from pathlib import Path as _P
+    _available = {d.name for d in (_P(__file__).resolve().parent.parent / "payloads").iterdir()
+                  if d.is_dir() and not d.name.startswith(".")} if (_P(__file__).resolve().parent.parent / "payloads").exists() else set()
+    for _core_cat in ("xss", "sqli", "command_injection", "ssrf", "ssti"):
+        if _core_cat in _available and _core_cat not in result["recommended_categories"]:
+            result["recommended_categories"].append(_core_cat)
 
     # 25. Attack surface summary
     result["attack_surface"] = _build_attack_surface_summary(result)
@@ -655,6 +684,215 @@ def _build_attack_surface_summary(r: Dict[str, Any]) -> Dict[str, Any]:
         "sri_missing": n_sri_missing,
         "findings": findings,
     }
+
+
+def export_recon_dir(result: Dict[str, Any], output_dir: str) -> Dict[str, str]:
+    """Export recon results as structured text files to a directory.
+
+    Creates:
+      subdomains.txt     — one subdomain per line
+      endpoints.txt      — discovered API/admin/historical endpoints
+      params.txt         — injectable parameters (method url param source)
+      technologies.txt   — detected technologies
+      high-value.txt     — high-value targets + suggested tests
+      summary.json       — attack surface summary JSON
+
+    Returns dict of {filename: path} for all created files.
+    """
+    import json as _json
+    import os
+    os.makedirs(output_dir, exist_ok=True)
+    created = {}
+
+    def _write(name: str, lines: list) -> None:
+        if not lines:
+            return
+        path = os.path.join(output_dir, name)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        created[name] = path
+
+    # subdomains.txt
+    subs = result.get("subdomains", {}).get("subdomains", [])
+    _write("subdomains.txt", [s if isinstance(s, str) else s.get("name", "") for s in subs])
+
+    # endpoints.txt
+    endpoints = []
+    for ep in result.get("api_discovery", {}).get("endpoints_found", []):
+        endpoints.append(ep.get("path", ""))
+    for spec in result.get("api_discovery", {}).get("specs_found", []):
+        for m in spec.get("methods", []):
+            endpoints.append(m)
+    for p in result.get("admin_panels", {}).get("panels_found", []):
+        endpoints.append(p.get("path", ""))
+    for u in result.get("historical_urls", {}).get("urls", []):
+        endpoints.append(u.get("path", "") if isinstance(u, dict) else str(u))
+    for ef in result.get("exposed_files", {}).get("exposed", []):
+        endpoints.append(ef.get("path", ""))
+    for rp in result.get("robots", {}).get("interesting_paths", []):
+        endpoints.append(rp)
+    _write("endpoints.txt", sorted(set(e for e in endpoints if e)))
+
+    # params.txt
+    param_lines = []
+    for p in result.get("params", {}).get("params", []):
+        param_lines.append(f"{p.get('method','?')}\t{p.get('url','?')}\t{p.get('param','?')}\t{p.get('source','?')}")
+    _write("params.txt", param_lines)
+
+    # technologies.txt
+    techs = result.get("fingerprint", {}).get("technologies", {})
+    tech_lines = [f"{t}\t{c:.0%}" for t, c in sorted(techs.items(), key=lambda x: -x[1])]
+    _write("technologies.txt", tech_lines)
+
+    # high-value.txt
+    hv_lines = _build_high_value_text(result)
+    _write("high-value.txt", hv_lines)
+
+    # summary.json
+    atk = result.get("attack_surface", {})
+    path = os.path.join(output_dir, "summary.json")
+    with open(path, "w", encoding="utf-8") as f:
+        _json.dump(atk, f, indent=2, ensure_ascii=False)
+    created["summary.json"] = path
+
+    return created
+
+
+def _build_high_value_text(result: Dict[str, Any]) -> list:
+    """Build plain-text lines for high-value targets + suggested tests."""
+    lines = []
+    host = result.get("host", "?")
+    targets = []
+    tests = []
+
+    # Staging/dev subdomains
+    atk = result.get("attack_surface", {})
+    staging = atk.get("staging_envs", [])
+    for s in staging:
+        targets.append(s)
+        tests.append(f"Authentication bypass on {s}")
+
+    # Admin panels
+    panels = result.get("admin_panels", {}).get("panels_found", [])
+    for p in panels:
+        path = p.get("path", "")
+        if p.get("protected") is False:
+            targets.append(f"{host}{path}")
+            tests.append(f"Unauthenticated access on {path} (OPEN)")
+        else:
+            tests.append(f"Authentication bypass on {path}")
+
+    # API endpoints
+    api = result.get("api_discovery", {})
+    for spec in api.get("specs_found", []):
+        targets.append(f"{host}{spec.get('path', '')}")
+        tests.append(f"API enumeration on {spec.get('path', '')} ({spec.get('endpoints', 0)} endpoints)")
+    for ep in api.get("endpoints_found", []):
+        if ep.get("docs_page"):
+            targets.append(f"{host}{ep['path']}")
+
+    # GraphQL
+    gql = result.get("graphql", {})
+    for ep in gql.get("endpoints_found", []):
+        targets.append(f"{host}{ep}")
+        tests.append(f"GraphQL introspection + query fuzzing on {ep}")
+
+    # High-risk params
+    params = result.get("params", {}).get("params", [])
+    hr_params = [p for p in params if isinstance(p, dict) and p.get("risk") == "HIGH"]
+    for p in hr_params[:5]:
+        tests.append(f"Injection testing on {p.get('param','')} ({p.get('url','')[:60]})")
+
+    # Exposed files
+    exposed = result.get("exposed_files", {}).get("exposed", [])
+    for ef in exposed:
+        if ef.get("severity") in ("critical", "high"):
+            targets.append(f"{host}{ef['path']}")
+            tests.append(f"Sensitive file access: {ef['path']} ({ef.get('description', '')})")
+
+    # Origin IP bypass
+    origin = result.get("origin_ip", {})
+    for v in origin.get("verified", []):
+        targets.append(f"{v['ip']}:{v.get('port', 443)}")
+        tests.append(f"Direct origin access: curl -k -H 'Host: {host}' https://{v['ip']}/")
+
+    # WAF bypass subdomains
+    active = result.get("subdomains_active", {})
+    for wb in active.get("waf_bypass", []):
+        targets.append(wb.get("subdomain", ""))
+        tests.append(f"WAF bypass via {wb.get('subdomain', '')} (direct origin)")
+
+    # Host header injection
+    hhi = result.get("host_header_injection", {})
+    if hhi.get("reflected"):
+        tests.append(f"Host header poisoning (password reset / cache poisoning)")
+
+    # CORS
+    cors = result.get("cors", {})
+    if cors.get("misconfigured"):
+        tests.append(f"CORS exploitation (misconfigured origin reflection)")
+
+    # Subdomain takeover
+    takeover = result.get("subdomain_takeover", {})
+    for v in takeover.get("vulnerable", []):
+        targets.append(v.get("subdomain", ""))
+        tests.append(f"Subdomain takeover: {v.get('subdomain', '')} -> {v.get('service', '?')}")
+
+    if targets:
+        lines.append("High Value Targets")
+        lines.append("-" * 40)
+        for t in sorted(set(targets)):
+            if t:
+                lines.append(t)
+        lines.append("")
+
+    if tests:
+        lines.append("Suggested Tests")
+        lines.append("-" * 40)
+        for t in tests:
+            lines.append(f"  * {t}")
+    elif not targets:
+        lines.append("No high-value targets identified.")
+
+    return lines
+
+
+def _print_high_value_targets(result: Dict[str, Any], console) -> None:
+    """Print High Value Targets + Suggested Tests section."""
+    lines = _build_high_value_text(result)
+    if not lines:
+        return
+
+    console.print("  [bold]High Value Targets[/bold]")
+    in_targets = False
+    in_tests = False
+    for line in lines:
+        if line.startswith("High Value Targets"):
+            in_targets = True
+            in_tests = False
+            continue
+        elif line.startswith("Suggested Tests"):
+            in_targets = False
+            in_tests = True
+            console.print()
+            console.print("  [bold]Suggested Tests[/bold]")
+            continue
+        elif line.startswith("---") or line.startswith("-" * 10):
+            continue
+        elif line.strip() == "":
+            continue
+        elif line.startswith("No high-value"):
+            console.print(f"    [dim]{line}[/dim]")
+            continue
+
+        if in_targets:
+            console.print(f"    [cyan]{line}[/cyan]")
+        elif in_tests:
+            # Strip the "  * " prefix
+            test = line.lstrip(" *").strip()
+            console.print(f"    [yellow]\u2022[/yellow] {test}")
+
+    console.print()
 
 
 def print_recon(result: Dict[str, Any]) -> None:
@@ -1455,6 +1693,9 @@ def print_recon(result: Dict[str, Any]) -> None:
                 console.print(f"      [red]\u274c Blocked:[/red]   {', '.join(blk_techs)}")
 
         console.print()
+
+    # ── High Value Targets + Suggested Tests ──
+    _print_high_value_targets(result, console)
 
     # ── Recommended Categories ──
     cats = result.get("recommended_categories", [])

@@ -1611,6 +1611,17 @@ def cmd_recon(args):
                     json.dump(result, f, indent=2, ensure_ascii=False)
                 print(f"  Recon saved to {out}")
 
+        # --export-dir: structured text exports
+        export_dir = getattr(args, 'export_dir', None)
+        if export_dir:
+            from fray.recon.pipeline import export_recon_dir
+            created = export_recon_dir(result, export_dir)
+            print(f"\n  📁 Exported to {export_dir}/")
+            for name, path in sorted(created.items()):
+                import os as _os
+                size = _os.path.getsize(path)
+                print(f"     {name:<20} {size:>6,} bytes")
+
     # Multi-target summary
     if multi and all_results:
         total = len(all_results)
@@ -3262,6 +3273,8 @@ Documentation: https://github.com/dalisecurity/fray
                           help="Exit code 1 if any finding >= this severity (implies --ci)")
     p_recon.add_argument("--leak", action="store_true",
                           help="Include leak search: GitHub code + HIBP breach check (needs GITHUB_TOKEN)")
+    p_recon.add_argument("--export-dir", dest="export_dir", default=None, metavar="DIR",
+                          help="Export structured results to DIR (subdomains.txt, endpoints.txt, params.txt, etc.)")
     p_recon.set_defaults(func=cmd_recon)
 
     # detect
