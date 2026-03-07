@@ -421,19 +421,114 @@ def search_leaks(target: str, github: bool = True, hibp: bool = True,
     hb = result.get("hibp") or {}
 
     risk_factors = []
-    if gh.get("repos_with_leaks", 0) > 0:
-        risk_factors.append(f"{gh['repos_with_leaks']} GitHub repos with leaked credentials")
-    if hb.get("breached"):
+    actions = []
+    gh_leaks = gh.get("repos_with_leaks", 0)
+    hb_breached = hb.get("breached", False)
+
+    # ── Collect risk factors ──
+    if gh_leaks > 0:
+        risk_factors.append(f"{gh_leaks} GitHub repos with leaked credentials")
+    if hb_breached:
         if hb.get("total_emails"):
             risk_factors.append(f"{hb['total_emails']} emails in {hb.get('total_breaches', 0)} breaches")
         elif hb.get("breach_count"):
             risk_factors.append(f"{hb['breach_count']} breaches found")
 
+    # ── Determine risk level ──
+    if gh_leaks > 5 or (gh_leaks > 0 and hb_breached):
+        risk_level = "high"
+    elif gh_leaks > 0 or hb_breached:
+        risk_level = "medium"
+    else:
+        risk_level = "low"
+
+    # ── Build recommended actions ──
+    if gh_leaks > 0:
+        # Check which patterns were found across all repos
+        all_patterns = set()
+        for repo in gh.get("repos", []):
+            all_patterns.update(repo.get("patterns_found", []))
+
+        actions.append({
+            "priority": "critical",
+            "action": "Review and revoke exposed credentials",
+            "detail": f"Audit {gh_leaks} repo(s) for live secrets. "
+                       f"Patterns found: {', '.join(sorted(all_patterns)[:6])}",
+        })
+        actions.append({
+            "priority": "high",
+            "action": "Enable GitHub secret scanning",
+            "detail": "Settings → Code security → Secret scanning. "
+                       "Also consider GitHub push protection to block future leaks.",
+        })
+        if any(p in all_patterns for p in ("aws_access_key_id", "aws_secret_access_key")):
+            actions.append({
+                "priority": "critical",
+                "action": "Rotate AWS credentials immediately",
+                "detail": "AWS keys found in public repos. Rotate in IAM console "
+                           "and check CloudTrail for unauthorized usage.",
+            })
+        if any(p in all_patterns for p in ("password", "db_password", "database_url", "smtp_password")):
+            actions.append({
+                "priority": "high",
+                "action": "Rotate exposed passwords and database credentials",
+                "detail": "Change all passwords that match leaked values. "
+                           "Enable MFA on all accounts.",
+            })
+        if any(p in all_patterns for p in ("api_key", "apikey", "api-key", "token", "access_token",
+                                            "client_secret", "secret_key", "secret", "bearer")):
+            actions.append({
+                "priority": "high",
+                "action": "Rotate API keys and tokens",
+                "detail": "Regenerate all API keys/tokens that may match leaked values. "
+                           "Review API access logs for suspicious activity.",
+            })
+
+    if hb_breached:
+        # Get leaked data classes
+        data_classes = set()
+        for b in hb.get("breaches", []):
+            data_classes.update(b.get("data_classes", []))
+
+        if "Passwords" in data_classes or "Password" in data_classes:
+            actions.append({
+                "priority": "critical",
+                "action": "Force password reset for breached accounts",
+                "detail": "Passwords were exposed. Enforce password reset for all "
+                           "affected users and enable MFA.",
+            })
+        if data_classes:
+            actions.append({
+                "priority": "high",
+                "action": "Notify affected users per breach disclosure policy",
+                "detail": f"Exposed data types: {', '.join(sorted(data_classes)[:8])}",
+            })
+        actions.append({
+            "priority": "medium",
+            "action": "Monitor for credential stuffing attacks",
+            "detail": "Breached credentials are commonly used in automated "
+                       "login attacks. Monitor auth logs for unusual patterns.",
+        })
+        actions.append({
+            "priority": "medium",
+            "action": "Verify domain at haveibeenpwned.com/DomainSearch",
+            "detail": "Get per-email breach breakdown after DNS verification.",
+        })
+
+    if risk_level == "low":
+        actions.append({
+            "priority": "low",
+            "action": "No immediate action required",
+            "detail": "Continue monitoring. Set up HIBP domain notifications "
+                       "and enable GitHub secret scanning as preventive measures.",
+        })
+
     result["summary"] = {
-        "github_repos_with_leaks": gh.get("repos_with_leaks", 0),
-        "hibp_breached": hb.get("breached", False),
+        "github_repos_with_leaks": gh_leaks,
+        "hibp_breached": hb_breached,
         "risk_factors": risk_factors,
-        "risk_level": "high" if risk_factors else "low",
+        "risk_level": risk_level,
+        "recommended_actions": actions,
     }
 
     return result
@@ -541,11 +636,22 @@ def print_leak_results(result: Dict[str, Any]) -> None:
     summary = result.get("summary", {})
     risk = summary.get("risk_level", "low")
     factors = summary.get("risk_factors", [])
+    actions = summary.get("recommended_actions", [])
 
     print(f"\n  {'─' * 40}")
-    risk_icon = "🔴" if risk == "high" else "🟢"
-    print(f"  {risk_icon} Risk Level: {risk.upper()}")
+    risk_icons = {"high": "🔴", "medium": "🟡", "low": "🟢"}
+    print(f"  {risk_icons.get(risk, '⚪')} Risk Level: {risk.upper()}")
     if factors:
         for f in factors:
             print(f"     • {f}")
+
+    if actions:
+        print(f"\n  📋 Recommended Actions")
+        print(f"  {'─' * 40}")
+        priority_icons = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        for a in actions:
+            icon = priority_icons.get(a.get("priority", "medium"), "⚪")
+            print(f"  {icon} [{a['priority'].upper()}] {a['action']}")
+            print(f"     {a['detail']}")
+
     print(f"{'═' * 60}\n")
