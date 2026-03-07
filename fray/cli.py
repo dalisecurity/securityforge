@@ -1611,16 +1611,24 @@ def cmd_recon(args):
                     json.dump(result, f, indent=2, ensure_ascii=False)
                 print(f"  Recon saved to {out}")
 
-        # --export-dir: structured text exports
-        export_dir = getattr(args, 'export_dir', None)
-        if export_dir:
+        # Auto-export to ~/.fray/recon/{domain}/ (or --export-dir override)
+        no_export = getattr(args, 'no_export', False)
+        if not no_export and not ci_mode:
+            import os as _os
             from fray.recon.pipeline import export_recon_dir
+            export_dir = getattr(args, 'export_dir', None)
+            if not export_dir:
+                domain = result.get("host", "unknown")
+                export_dir = _os.path.join(_os.path.expanduser("~"), ".fray", "recon", domain)
             created = export_recon_dir(result, export_dir)
-            print(f"\n  📁 Exported to {export_dir}/")
-            for name, path in sorted(created.items()):
-                import os as _os
-                size = _os.path.getsize(path)
-                print(f"     {name:<20} {size:>6,} bytes")
+            # Also save full JSON alongside structured files
+            full_json_path = _os.path.join(export_dir, "recon.json")
+            with open(full_json_path, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+            created["recon.json"] = full_json_path
+            n_files = len(created)
+            total_bytes = sum(_os.path.getsize(p) for p in created.values())
+            print(f"\n  📁 Saved to {export_dir}/  ({n_files} files, {total_bytes:,} bytes)")
 
     # Multi-target summary
     if multi and all_results:
@@ -3274,7 +3282,9 @@ Documentation: https://github.com/dalisecurity/fray
     p_recon.add_argument("--leak", action="store_true",
                           help="Include leak search: GitHub code + HIBP breach check (needs GITHUB_TOKEN)")
     p_recon.add_argument("--export-dir", dest="export_dir", default=None, metavar="DIR",
-                          help="Export structured results to DIR (subdomains.txt, endpoints.txt, params.txt, etc.)")
+                          help="Export structured results to DIR (default: ~/.fray/recon/{domain}/)")
+    p_recon.add_argument("--no-export", dest="no_export", action="store_true",
+                          help="Disable auto-export of structured results")
     p_recon.set_defaults(func=cmd_recon)
 
     # detect
