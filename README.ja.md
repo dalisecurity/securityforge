@@ -484,3 +484,16 @@ Frayはこれらのツールの代替ではありません — WAF検出（wafw0
 ---
 
 **[📖 全ドキュメント（30ガイド）](docs/) · [PyPI](https://pypi.org/project/fray/) · [Issues](https://github.com/dalisecurity/fray/issues) · [Discussions](https://github.com/dalisecurity/fray/discussions)**
+
+---
+
+## 関連プロジェクト
+
+- [wafw00f](https://github.com/EnableSecurity/wafw00f) — WAFフィンガープリント・検出（150社以上対応）
+- [WhatWaf](https://github.com/Ekultek/WhatWaf) — WAF検出・バイパスツール
+- [XSStrike](https://github.com/s0md3v/XSStrike) — WAF回避機能付き高度なXSSスキャナー
+- [sqlmap](https://github.com/sqlmapproject/sqlmap) — SQLインジェクション検出・攻撃ツール
+- [Nuclei](https://github.com/projectdiscovery/nuclei) — テンプレートベースの脆弱性スキャナー
+- [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) — Webセキュリティペイロード・バイパス集
+- [SecLists](https://github.com/danielmiessler/SecLists) — セキュリティ評価用ワードリスト
+- [Awesome WAF](https://github.com/0xInfection/Awesome-WAF) — WAFツール・バイパスのキュレーションリスト

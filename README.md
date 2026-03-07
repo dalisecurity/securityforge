@@ -486,4 +486,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **[📖 All Documentation (30 guides)](docs/) · [PyPI](https://pypi.org/project/fray/) · [Issues](https://github.com/dalisecurity/fray/issues) · [Discussions](https://github.com/dalisecurity/fray/discussions)**
 
+---
+
+## Related Projects
+
+- [wafw00f](https://github.com/EnableSecurity/wafw00f) — WAF fingerprinting and detection (150+ vendors)
+- [WhatWaf](https://github.com/Ekultek/WhatWaf) — WAF detection and bypass tool
+- [XSStrike](https://github.com/s0md3v/XSStrike) — Advanced XSS scanner with WAF evasion
+- [sqlmap](https://github.com/sqlmapproject/sqlmap) — SQL injection detection and exploitation
+- [Nuclei](https://github.com/projectdiscovery/nuclei) — Template-based vulnerability scanner
+- [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) — Web security payloads and bypasses
+- [SecLists](https://github.com/danielmiessler/SecLists) — Security assessment wordlists
+- [Awesome WAF](https://github.com/0xInfection/Awesome-WAF) — Curated list of WAF tools and bypasses
+
 <!-- mcp-name: io.github.dalisecurity/fray -->
