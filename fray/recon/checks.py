@@ -1714,11 +1714,37 @@ def _infer_vendor_from_recon(recon: Dict[str, Any], vendors_db: Dict[str, Any]) 
             if isinstance(c, dict):
                 cookie_names.add(c.get("name", "").lower())
 
-    # Header-based vendor detection
-    # NOTE: cf-team is a Cloudflare Zero Trust header injected by the user's
-    # own WARP/ZT tunnel — it does NOT indicate the target has Cloudflare WAF.
-    # Same for server-timing: cfReqDur which is ZT proxy timing.
-    # Only cf-ray + cf-cache-status + cf-mitigated are reliable target-side indicators.
+    # ── Strip headers injected by user's own ZT/VPN/SASE proxy ──
+    # These are added by the scanning machine's security stack, NOT the target.
+    # Treating them as target WAF indicators causes false positives.
+    zt_proxy_headers = {
+        # Cloudflare Zero Trust / WARP
+        "cf-team", "cf-access-authenticated-user-email", "cf-access-jwt-assertion",
+        "cf-warp-tag-id", "cf-connecting-ip",
+        # Zscaler ZIA / ZPA
+        "x-zscaler-client", "x-zscaler-transactionid", "z-forwarded-for",
+        "x-zscaler-ia", "x-zscaler-sans",
+        # Netskope
+        "x-netskope-client", "x-netskope-transactionid", "ns-client-ip",
+        "x-netskope-activity-id",
+        # Palo Alto Prisma Access / GlobalProtect
+        "x-pan-session-id", "x-panw-region", "x-prisma-access",
+        # Cisco Umbrella / Secure Access
+        "x-umbrella-orgid", "x-umbrella-identity",
+        # Menlo Security
+        "x-menlo-security", "x-menlo-client",
+        # Generic proxy timing (often ZT-injected)
+        "server-timing",  # cfReqDur, etc.
+    }
+    # Remove ZT headers from detection pool so they don't trigger false vendor match
+    all_header_keys -= zt_proxy_headers
+
+    # Also strip ZT-injected cookies
+    zt_proxy_cookies = {
+        "cf_bm",  # Cloudflare bot management (can be ZT-injected)
+    }
+
+    # Header-based vendor detection (ZT headers already excluded above)
     header_vendor_map = {
         "cloudflare": ["cf-ray", "cf-cache-status", "cf-mitigated"],
         "aws_waf": ["x-amzn-waf-action", "x-amz-cf-id", "x-amzn-requestid", "x-amz-cf-pop"],

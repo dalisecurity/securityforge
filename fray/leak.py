@@ -101,8 +101,14 @@ _GITHUB_PATTERNS = [
 
 
 def _github_api_request(url: str, token: str, timeout: int = 10,
-                        max_retries: int = 3) -> Optional[dict]:
-    """Make an authenticated GitHub API request with auto-retry on rate limit."""
+                        max_retries: int = 6) -> Optional[dict]:
+    """Make an authenticated GitHub API request with auto-retry on rate limit.
+
+    GitHub code search: 10 requests/minute for authenticated users.
+    On 403/429, reads X-RateLimit-Reset and waits the exact time needed,
+    retrying up to max_retries times (enough for all 17 patterns across
+    multiple rate-limit windows).
+    """
     req_headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.v3+json",
@@ -118,14 +124,20 @@ def _github_api_request(url: str, token: str, timeout: int = 10,
             if e.code in (403, 429):
                 reset = e.headers.get("X-RateLimit-Reset", "")
                 retry_after = e.headers.get("Retry-After", "")
+                remaining = e.headers.get("X-RateLimit-Remaining", "")
                 if attempt < max_retries - 1:
                     if reset:
-                        wait = min(max(int(reset) - int(time.time()), 1), 65)
+                        wait = max(int(reset) - int(time.time()), 1)
                     elif retry_after:
-                        wait = min(int(retry_after), 65)
+                        wait = int(retry_after)
                     else:
-                        wait = 30
-                    sys.stderr.write(f"  \u23f3 GitHub rate limit \u2014 waiting {wait}s (retry {attempt + 1}/{max_retries})\n")
+                        # Exponential backoff: 30, 45, 60, 60, 60
+                        wait = min(30 * (1.5 ** attempt), 60)
+                    # Cap at 120s per wait (2 rate-limit windows max)
+                    wait = min(int(wait), 120)
+                    sys.stderr.write(
+                        f"  \u23f3 GitHub rate limit \u2014 waiting {wait}s "
+                        f"(attempt {attempt + 1}/{max_retries})\r")
                     sys.stderr.flush()
                     time.sleep(wait)
                     continue
@@ -174,13 +186,20 @@ def search_github(domain: str, token: str, max_patterns: int = 17,
     max_retries = 3 if auto_retry else 1
 
     patterns_to_search = _GITHUB_PATTERNS[:max_patterns]
+    # With auto_retry, use enough retries to span multiple rate-limit windows
+    api_retries = 6 if auto_retry else 1
 
     for i, pattern in enumerate(patterns_to_search):
         query = f'"{domain}" "{pattern}"'
         encoded = urllib.parse.quote(query)
         url = f"https://api.github.com/search/code?q={encoded}&per_page=5&sort=indexed&order=desc"
 
-        data = _github_api_request(url, token, timeout, max_retries=max_retries)
+        sys.stderr.write(
+            f"\r  \U0001f50d GitHub [{i + 1}/{len(patterns_to_search)}] {pattern:<25}"
+        )
+        sys.stderr.flush()
+
+        data = _github_api_request(url, token, timeout, max_retries=api_retries)
         if not data:
             continue
 
@@ -233,8 +252,13 @@ def search_github(domain: str, token: str, max_patterns: int = 17,
 
                 results.append(entry)
 
+        # Pace requests to stay under 10/min limit
+        # GitHub code search: 10 req/min. ~6s between requests avoids hitting it.
         if i < len(patterns_to_search) - 1:
-            time.sleep(2)
+            time.sleep(6)
+
+    sys.stderr.write("\r" + " " * 60 + "\r")  # Clear progress line
+    sys.stderr.flush()
 
     # Deduplicate by repo
     seen_repos = {}

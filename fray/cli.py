@@ -3074,6 +3074,146 @@ def cmd_leak(args):
             print(f"  💾 Results saved to {args.output}")
 
 
+def cmd_osint(args):
+    """Broader OSINT gathering: whois, emails, typosquatting, social profiles."""
+    from fray.osint import run_osint, print_osint
+
+    target = args.target
+    if not target:
+        print("  Error: No target specified.")
+        print("  Usage: fray osint example.com")
+        sys.exit(1)
+
+    do_whois = not getattr(args, 'no_whois', False)
+    do_emails = not getattr(args, 'no_emails', False)
+    do_perms = not getattr(args, 'no_permutations', False)
+    do_social = not getattr(args, 'no_social', False)
+
+    # Individual flags override defaults
+    if getattr(args, 'whois_only', False):
+        do_emails = do_perms = do_social = False
+    elif getattr(args, 'emails_only', False):
+        do_whois = do_perms = do_social = False
+    elif getattr(args, 'social_only', False):
+        do_whois = do_emails = do_perms = False
+    elif getattr(args, 'permutations_only', False):
+        do_whois = do_emails = do_social = False
+
+    result = run_osint(
+        domain=target,
+        whois=do_whois,
+        emails=do_emails,
+        permutations=do_perms,
+        social=do_social,
+        timeout=getattr(args, 'timeout', 10),
+        quiet=getattr(args, 'json', False),
+    )
+
+    if getattr(args, 'json', False):
+        out = json.dumps(result, indent=2, ensure_ascii=False, default=str)
+        if getattr(args, 'output', None):
+            _validate_output_path(args.output)
+            Path(args.output).write_text(out, encoding="utf-8")
+            print(f"  Saved to {args.output}")
+        else:
+            print(out)
+    else:
+        print_osint(result)
+        if getattr(args, 'output', None):
+            _validate_output_path(args.output)
+            out = json.dumps(result, indent=2, ensure_ascii=False, default=str)
+            Path(args.output).write_text(out, encoding="utf-8")
+            print(f"  💾 Results saved to {args.output}")
+
+    # Auto-export to ~/.fray/osint/{domain}/
+    import os as _os
+    domain = result.get("domain", target)
+    export_dir = _os.path.join(_os.path.expanduser("~"), ".fray", "osint", domain)
+    _os.makedirs(export_dir, exist_ok=True)
+    export_path = _os.path.join(export_dir, "osint.json")
+    with open(export_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False, default=str)
+    if not getattr(args, 'json', False):
+        print(f"\n  📁 Saved to {export_dir}/")
+
+
+def cmd_cred(args):
+    """Credential stuffing / reuse testing against login endpoints."""
+    from fray.cred import run_credential_test, print_cred_results
+
+    target = args.target
+    pairs_file = getattr(args, 'pairs', None)
+
+    if not target:
+        print("  Error: No target specified.")
+        print("  Usage: fray cred https://example.com/login --pairs leaked.txt")
+        sys.exit(1)
+
+    if not pairs_file:
+        print("  Error: --pairs file required.")
+        print("  Usage: fray cred https://example.com/login --pairs leaked.txt")
+        sys.exit(1)
+
+    auth_headers = build_auth_headers(args) or None
+
+    result = run_credential_test(
+        url=target,
+        pairs_file=pairs_file,
+        username_field=getattr(args, 'username_field', None),
+        password_field=getattr(args, 'password_field', None),
+        content_type=getattr(args, 'content_type', None),
+        rate=getattr(args, 'rate', 1.0),
+        delay=getattr(args, 'delay', 1.0),
+        max_attempts=getattr(args, 'max', 0),
+        proxy=getattr(args, 'proxy', None),
+        headers=auth_headers,
+        dry_run=getattr(args, 'dry_run', False),
+        timeout=getattr(args, 'timeout', 10),
+    )
+
+    if getattr(args, 'json', False):
+        out = json.dumps(result, indent=2, ensure_ascii=False)
+        if getattr(args, 'output', None):
+            _validate_output_path(args.output)
+            Path(args.output).write_text(out, encoding="utf-8")
+            print(f"  Saved to {args.output}")
+        else:
+            print(out)
+    else:
+        print_cred_results(result)
+        if getattr(args, 'output', None):
+            _validate_output_path(args.output)
+            out = json.dumps(result, indent=2, ensure_ascii=False)
+            Path(args.output).write_text(out, encoding="utf-8")
+            print(f"  💾 Results saved to {args.output}")
+
+
+def cmd_monitor(args):
+    """Continuous monitoring with diff and alerting."""
+    from fray.monitor import run_monitor, list_snapshots
+
+    target = args.target
+    if not target:
+        print("  Error: No target specified.")
+        print("  Usage: fray monitor example.com")
+        print("         fray monitor example.com --interval 12h --webhook https://hooks.slack.com/...")
+        sys.exit(1)
+
+    if getattr(args, 'list', False):
+        list_snapshots(target)
+        return
+
+    run_monitor(
+        domain=target,
+        interval=getattr(args, 'interval', '24h'),
+        webhook=getattr(args, 'webhook', None),
+        email=getattr(args, 'email', None),
+        include_leak=getattr(args, 'leak', False),
+        once=getattr(args, 'once', False),
+        timeout=getattr(args, 'timeout', 10),
+    )
+
+
 def cmd_help(args):
     """Friendly high-level guide to every fray command."""
     print(f"""
@@ -3130,6 +3270,29 @@ def cmd_help(args):
   ─────────────────────────────
   fray report -i results.json   Generate HTML security report
   fray report --sample          Generate a sample demo report
+
+  🌐 OSINT — Open Source Intelligence
+  ─────────────────────────────
+  fray osint example.com         Full OSINT: whois, emails, typosquatting, social profiles
+  fray osint example.com --whois   Whois lookup only
+  fray osint example.com --emails  Email harvesting (Hunter.io + role addresses)
+  fray osint example.com --permutations   Typosquatting / domain permutation check
+  fray osint example.com --social  Social media profile enumeration
+
+  🔑 CRED — Credential Stuffing Test
+  ─────────────────────────────
+  fray cred <login-url> --pairs leaked.txt   Test leaked email:password pairs
+  fray cred <login-url> --pairs leaked.txt --dry-run   Preview without sending
+  fray cred <login-url> --pairs leaked.txt --rate 2 --delay 3   Rate control
+
+  🔄 MONITOR — Continuous Monitoring
+  ─────────────────────────────
+  fray monitor example.com                    Default: scan every 24h
+  fray monitor example.com --interval 12h     Custom interval
+  fray monitor example.com --webhook <url>    Alert via Slack/Discord/Teams
+  fray monitor example.com --email <addr>     Alert via email (needs RESEND_API_KEY)
+  fray monitor example.com --once             Single scan, diff against last
+  fray monitor example.com --list             List previous snapshots
 
   🔎 OTHER TOOLS
   ─────────────────────────────
@@ -3673,6 +3836,78 @@ Documentation: https://github.com/dalisecurity/fray
     p_leak.add_argument("-o", "--output", default=None, help="Save results to file")
     p_leak.add_argument("-t", "--timeout", type=int, default=10, help="Request timeout (default: 10)")
     p_leak.set_defaults(func=cmd_leak)
+
+    # osint
+    p_osint = subparsers.add_parser("osint",
+        help="Broader OSINT: whois, email harvesting, typosquatting, social profiles")
+    p_osint.add_argument("target", nargs="?", default=None,
+                          help="Target domain (e.g. example.com)")
+    p_osint.add_argument("--json", action="store_true", help="Output as JSON")
+    p_osint.add_argument("-o", "--output", default=None, help="Save results to file")
+    p_osint.add_argument("-t", "--timeout", type=int, default=10, help="Request timeout (default: 10)")
+    p_osint.add_argument("--whois", dest="whois_only", action="store_true",
+                          help="Whois lookup only")
+    p_osint.add_argument("--emails", dest="emails_only", action="store_true",
+                          help="Email harvesting only")
+    p_osint.add_argument("--social", dest="social_only", action="store_true",
+                          help="Social media profile enumeration only")
+    p_osint.add_argument("--permutations", dest="permutations_only", action="store_true",
+                          help="Typosquatting / domain permutation check only")
+    p_osint.set_defaults(func=cmd_osint)
+
+    # cred
+    p_cred = subparsers.add_parser("cred",
+        help="Credential stuffing test: test leaked email:password pairs against login endpoints")
+    p_cred.add_argument("target", nargs="?", default=None,
+                         help="Login endpoint URL (e.g. https://example.com/login)")
+    p_cred.add_argument("--pairs", required=False, default=None,
+                         help="File with credential pairs (email:password, one per line)")
+    p_cred.add_argument("--username-field", dest="username_field", default=None,
+                         help="Override username field name (auto-detected by default)")
+    p_cred.add_argument("--password-field", dest="password_field", default=None,
+                         help="Override password field name (auto-detected by default)")
+    p_cred.add_argument("--content-type", dest="content_type", default=None,
+                         help="Override content type (form or json)")
+    p_cred.add_argument("--rate", type=float, default=1.0,
+                         help="Max requests per second (default: 1)")
+    p_cred.add_argument("-d", "--delay", type=float, default=1.0,
+                         help="Delay between attempts in seconds (default: 1)")
+    p_cred.add_argument("-m", "--max", type=int, default=0,
+                         help="Max attempts (default: 0 = unlimited)")
+    p_cred.add_argument("--proxy", default=None,
+                         help="HTTP/HTTPS proxy URL")
+    p_cred.add_argument("--dry-run", dest="dry_run", action="store_true",
+                         help="Preview credential pairs without sending requests")
+    p_cred.add_argument("-t", "--timeout", type=int, default=10,
+                         help="Request timeout (default: 10)")
+    p_cred.add_argument("--json", action="store_true", help="Output as JSON")
+    p_cred.add_argument("-o", "--output", default=None, help="Save results to file")
+    p_cred.add_argument("--cookie", default=None, help="Cookie header")
+    p_cred.add_argument("--bearer", default=None, help="Bearer token")
+    p_cred.add_argument("-H", "--header", action="append",
+                         help="Custom header (repeatable, format: 'Name: Value')")
+    p_cred.set_defaults(func=cmd_cred)
+
+    # monitor
+    p_monitor = subparsers.add_parser("monitor",
+        help="Continuous monitoring: periodic recon + leak, diff against previous, alert on changes")
+    p_monitor.add_argument("target", nargs="?", default=None,
+                            help="Target domain (e.g. example.com)")
+    p_monitor.add_argument("--interval", default="24h",
+                            help="Scan interval: 30m, 6h, 12h, 24h, 7d (default: 24h)")
+    p_monitor.add_argument("--webhook", default=None,
+                            help="Slack/Discord/Teams webhook URL for alerts")
+    p_monitor.add_argument("--email", default=None,
+                            help="Email address for alerts (needs RESEND_API_KEY)")
+    p_monitor.add_argument("--leak", action="store_true",
+                            help="Also run leak search each cycle (needs GITHUB_TOKEN)")
+    p_monitor.add_argument("--once", action="store_true",
+                            help="Run single cycle and exit (compare to last snapshot)")
+    p_monitor.add_argument("--list", action="store_true",
+                            help="List previous monitoring snapshots")
+    p_monitor.add_argument("-t", "--timeout", type=int, default=10,
+                            help="Request timeout (default: 10)")
+    p_monitor.set_defaults(func=cmd_monitor)
 
     # demo
     p_demo = subparsers.add_parser("demo",
